@@ -22,8 +22,9 @@ dev.bat preview
 ```
 
 This mode does not load Whisper, access a microphone, register a global hotkey,
-or insert text. Use the Bragi tray menu under **Preview state** to display the
-loading, ready, recording, transcribing, no-speech, and error indicators.
+or insert text. Use **Settings** in the Bragi tray menu to inspect the window,
+then use **Preview state** to display the loading, ready, recording,
+transcribing, no-speech, and error indicators.
 
 Changes to Python files under `src` cause the managed preview process to restart
 automatically. The launcher waits for the old child process to stop before it
@@ -78,3 +79,10 @@ shown in the tray title.
 Preview artifacts are retained for seven days and are never published as
 releases. They are unsigned development builds and may trigger Windows security
 warnings.
+
+For interface changes, complete
+[the Windows interface acceptance checklist](UI_TEST_CHECKLIST.md) against the
+portable preview before merge. Automated tests cover widget semantics,
+thread-safe status delivery and negative-coordinate overlay placement; Windows
+Narrator, scaling, high-contrast and mixed-DPI behaviour still require a real
+Windows test.

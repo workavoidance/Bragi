@@ -30,7 +30,7 @@ jobs:
           $buildId = "PR-${{ github.event.pull_request.number }}-$shortSha"
           New-Item -ItemType Directory -Path preview -Force | Out-Null
           Copy-Item dist\WhisperDictate.exe preview\
-          Copy-Item README.md, LICENSE, CHANGELOG.md preview\
+          Copy-Item README.md, LICENSE, CHANGELOG.md, THIRD_PARTY_NOTICES.md preview\
           @{
             build_id = $buildId
             commit = $sha

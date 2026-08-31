@@ -1,6 +1,5 @@
 faster-whisper>=1.1,<2
 numpy>=1.26,<3
-Pillow>=10,<13
 pynput>=1.7,<2
-pystray>=0.19,<1
+PySide6-Essentials>=6.11,<6.12
 sounddevice>=0.5,<1

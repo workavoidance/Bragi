@@ -25,7 +25,7 @@ jobs:
         run: |
           New-Item -ItemType Directory -Path release -Force | Out-Null
           Copy-Item dist\WhisperDictate.exe release\
-          Copy-Item README.md, LICENSE, CHANGELOG.md release\
+          Copy-Item README.md, LICENSE, CHANGELOG.md, THIRD_PARTY_NOTICES.md release\
           $archive = "whisper-dictate-${{ github.ref_name }}-windows-x64.zip"
           Compress-Archive -Path release\* -DestinationPath $archive
           $hash = (Get-FileHash $archive -Algorithm SHA256).Hash.ToLower()

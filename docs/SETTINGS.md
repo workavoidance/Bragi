@@ -72,6 +72,14 @@ left intact and the temporary file is removed on a best-effort basis.
 Bragi has a single-instance application model, so concurrent user-interface
 writes are not supported or required.
 
+## Current interface support
+
+The v0.2 settings window can show or hide the compact dictation overlay. It also
+shows the language, model, hotkey and microphone used by the current pipeline,
+but does not yet allow those four values to be changed. Live configuration is
+tracked separately so the interface never suggests a saved value is active
+before the pipeline actually supports it.
+
 ## Privacy and offline operation
 
 The settings schema contains only configuration values. It has no audio,

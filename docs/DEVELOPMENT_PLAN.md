@@ -94,14 +94,14 @@ Tracked by [#5](https://github.com/workavoidance/Bragi/issues/5).
 Tracked by [#9](https://github.com/workavoidance/Bragi/issues/9) and
 [#8](https://github.com/workavoidance/Bragi/issues/8).
 
-- [ ] Add the PySide6 system tray and settings window without changing the
+- [x] Add the PySide6 system tray and settings window without changing the
   proven dictation pipeline.
-- [ ] Keep model loading and transcription away from the UI thread.
-- [ ] Make every settings action operable with the keyboard.
-- [ ] Add accessible names, roles, focus order, and non-colour status cues.
+- [x] Keep model loading and transcription away from the UI thread.
+- [x] Make every settings action operable with the keyboard.
+- [x] Add accessible names, roles, focus order, and non-colour status cues.
 - [ ] Verify high-DPI, 200% text scaling, high-contrast, and multiple-display
   behaviour.
-- [ ] Add UI tests using the mock transcription mode.
+- [x] Add UI tests using the mock transcription mode.
 
 ## Phase 4: live language, microphone, and hotkey configuration
 
