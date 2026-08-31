@@ -13,7 +13,6 @@ keywords = ["dictation", "speech-to-text", "whisper", "windows", "offline"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Environment :: Win32 (MS Windows)",
-    "License :: OSI Approved :: MIT License",
     "Operating System :: Microsoft :: Windows :: Windows 11",
     "Programming Language :: Python :: 3.14",
     "Topic :: Multimedia :: Sound/Audio :: Speech",
