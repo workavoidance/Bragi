@@ -94,8 +94,9 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the complete development workflow,
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the design,
 [docs/DEVELOPMENT_PLAN.md](docs/DEVELOPMENT_PLAN.md) for the live execution
 checklist, [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) for the fast development
-and preview loop, and [docs/ROADMAP.md](docs/ROADMAP.md) for planned releases.
-The project's longer-term credibility requirements are recorded in
+and preview loop, [docs/SETTINGS.md](docs/SETTINGS.md) for the versioned settings
+schema, and [docs/ROADMAP.md](docs/ROADMAP.md) for planned releases. The
+project's longer-term credibility requirements are recorded in
 [docs/QUALITY_BAR.md](docs/QUALITY_BAR.md) without presenting the current alpha
 as school-ready assistive software.
 

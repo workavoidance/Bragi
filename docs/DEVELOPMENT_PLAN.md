@@ -27,8 +27,8 @@ Last reviewed: 2026-08-31
 
 **Current target:** v0.2, a configurable and accessible desktop application.
 
-**Next engineering task:** implement the versioned settings foundation in issue
-[#5](https://github.com/workavoidance/Bragi/issues/5).
+**Next engineering task:** build the accessible PySide6 settings interface in
+issue [#9](https://github.com/workavoidance/Bragi/issues/9).
 
 The v0.2 tracking issue is
 [#10](https://github.com/workavoidance/Bragi/issues/10).
@@ -77,16 +77,16 @@ Tracked by [#11](https://github.com/workavoidance/Bragi/issues/11).
 
 Tracked by [#5](https://github.com/workavoidance/Bragi/issues/5).
 
-- [ ] Define a UI-independent settings model with a schema version.
-- [ ] Store settings in the appropriate per-user Windows application-data
+- [x] Define a UI-independent settings model with a schema version.
+- [x] Store settings in the appropriate per-user Windows application-data
   directory.
-- [ ] Preserve the defaults: automatic language, multilingual `small` model,
+- [x] Preserve the defaults: automatic language, multilingual `small` model,
   Right Ctrl, and Windows default microphone.
-- [ ] Write settings atomically so interruption cannot leave a partial file.
-- [ ] Validate values and recover safely from missing or corrupt settings.
-- [ ] Add migrations for future schema versions.
-- [ ] Confirm that settings never contain audio or transcript content.
-- [ ] Add unit tests for defaults, validation, persistence, corruption, and
+- [x] Write settings atomically so interruption cannot leave a partial file.
+- [x] Validate values and recover safely from missing or corrupt settings.
+- [x] Add migrations for future schema versions.
+- [x] Confirm that settings never contain audio or transcript content.
+- [x] Add unit tests for defaults, validation, persistence, corruption, and
   migration.
 
 ## Phase 3: accessible settings interface
