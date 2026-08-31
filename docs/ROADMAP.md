@@ -1,0 +1,44 @@
+# Roadmap
+
+The project has a long-term assistive-technology ambition, but releases progress
+through evidence-based quality gates. See [QUALITY_BAR.md](QUALITY_BAR.md). The
+current priority is a trustworthy personal desktop application.
+
+## v0.2: configurable desktop application
+
+- Replace the prototype settings experience with a PySide6 settings window.
+- Keep the compact no-focus recording overlay.
+- Add a validated, versioned settings file.
+- Add a curated model selector with download sizes and CPU guidance.
+- Show model download and loading progress.
+- Allow microphone and hotkey selection.
+- Support automatic, English, Norwegian and multilingual language modes.
+- Add start-with-Windows and overlay appearance settings.
+- Preserve the no-audio-history and no-transcript-history defaults.
+
+### Acceptance criteria
+
+- Settings survive restart and recover safely from invalid configuration.
+- Model changes do not require rebuilding the executable.
+- Slow models display a hardware suitability warning before download.
+- No settings operation blocks recording or the UI event loop.
+- Existing push-to-talk behaviour remains covered by automated tests.
+- A tagged commit produces a downloadable Windows release automatically.
+
+## v0.3: reliability and distribution
+
+- Resumable model downloads and integrity checks.
+- Microphone reconnection and clearer error recovery.
+- Portable ZIP and conventional Windows installer.
+- Optional non-content diagnostic logs with redaction tests.
+- Code signing when a sustainable certificate strategy is available.
+- Software bill of materials and automated vulnerability scanning.
+- Keyboard-only, high-contrast and screen-reader verification.
+- A repeatable English and Norwegian accuracy benchmark.
+
+## Later candidates
+
+- Spoken formatting commands as an explicit non-verbatim mode.
+- GPU acceleration where compatible hardware is detected.
+- Additional operating systems after the Windows experience is stable.
+- Opt-in update notifications.

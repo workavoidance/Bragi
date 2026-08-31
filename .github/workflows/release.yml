@@ -1,0 +1,48 @@
+name: Windows release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+          cache: pip
+      - name: Build portable executable
+        shell: powershell
+        run: .\build_portable.ps1
+      - name: Package release
+        shell: powershell
+        run: |
+          New-Item -ItemType Directory -Path release -Force | Out-Null
+          Copy-Item dist\WhisperDictate.exe release\
+          Copy-Item README.md, LICENSE, CHANGELOG.md release\
+          $archive = "whisper-dictate-${{ github.ref_name }}-windows-x64.zip"
+          Compress-Archive -Path release\* -DestinationPath $archive
+          $hash = (Get-FileHash $archive -Algorithm SHA256).Hash.ToLower()
+          "$hash *$archive" | Set-Content "$archive.sha256"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: whisper-dictate-${{ github.ref_name }}-windows-x64
+          path: |
+            whisper-dictate-${{ github.ref_name }}-windows-x64.zip
+            whisper-dictate-${{ github.ref_name }}-windows-x64.zip.sha256
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: powershell
+        run: >-
+          gh release create "${{ github.ref_name }}"
+          "whisper-dictate-${{ github.ref_name }}-windows-x64.zip"
+          "whisper-dictate-${{ github.ref_name }}-windows-x64.zip.sha256"
+          --generate-notes
+          --title "Whisper Dictate ${{ github.ref_name }}"

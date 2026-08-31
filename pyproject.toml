@@ -1,0 +1,42 @@
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "whisper-dictate"
+version = "0.1.0"
+description = "Private, local push-to-talk dictation for Windows"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.14,<3.15"
+keywords = ["dictation", "speech-to-text", "whisper", "windows", "offline"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Win32 (MS Windows)",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: Microsoft :: Windows :: Windows 11",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Multimedia :: Sound/Audio :: Speech",
+]
+dependencies = [
+    "faster-whisper>=1.1,<2",
+    "numpy>=1.26,<3",
+    "Pillow>=10,<13",
+    "pynput>=1.7,<2",
+    "pystray>=0.19,<1",
+    "sounddevice>=0.5,<1",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py314"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
