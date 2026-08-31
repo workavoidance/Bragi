@@ -224,13 +224,13 @@ Example imagery could show a student speaking while text appears on a laptop. Av
 
 - black
 - warm paper-white rather than stark white
-- rich red accent
+- rich orange accent
 
 ### Working accent
 
-`#B33A3A`
+`#E86A33`
 
-This is provisional and should be tuned visually. The red should feel warm, human, and memorable, not like an error or warning state.
+This is provisional and should be tuned visually. The orange should feel warm, human, confident, and energetic, with a subtle association to an active recording microphone rather than a warning or safety colour.
 
 The accent can play a meaningful role in the site rather than being limited to small links and buttons.
 
