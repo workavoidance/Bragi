@@ -1,0 +1,45 @@
+name: Windows preview
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: preview-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+          cache: pip
+      - name: Build portable executable
+        shell: powershell
+        run: .\build_portable.ps1
+      - name: Package identifiable preview
+        shell: powershell
+        run: |
+          $sha = "${{ github.event.pull_request.head.sha }}"
+          $shortSha = $sha.Substring(0, 7)
+          $buildId = "PR-${{ github.event.pull_request.number }}-$shortSha"
+          New-Item -ItemType Directory -Path preview -Force | Out-Null
+          Copy-Item dist\WhisperDictate.exe preview\
+          Copy-Item README.md, LICENSE, CHANGELOG.md preview\
+          @{
+            build_id = $buildId
+            commit = $sha
+            development = $true
+          } | ConvertTo-Json | Set-Content preview\BUILD_INFO.json
+          $archive = "Bragi-$buildId-windows-x64.zip"
+          Compress-Archive -Path preview\* -DestinationPath $archive
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Bragi-PR-${{ github.event.pull_request.number }}-${{ github.event.pull_request.head.sha }}
+          path: Bragi-PR-*-windows-x64.zip
+          retention-days: 7

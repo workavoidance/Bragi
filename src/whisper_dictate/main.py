@@ -1,14 +1,16 @@
 from __future__ import annotations
 
+import argparse
 import ctypes
 import os
 import sys
 
 from whisper_dictate.audio import AudioRecorder
-from whisper_dictate.config import AppConfig, model_cache_directory
+from whisper_dictate.config import AppConfig
 from whisper_dictate.controller import DictationController
 from whisper_dictate.hotkeys import RightControlListener
 from whisper_dictate.indicator import FloatingIndicator
+from whisper_dictate.runtime import detect_build_identity, model_cache_directory
 from whisper_dictate.transcriber import LocalWhisperTranscriber
 from whisper_dictate.tray import TrayIcon
 from whisper_dictate.windows_input import WindowsTextInjector
@@ -27,24 +29,47 @@ def _single_instance_mutex():
     return mutex, already_exists
 
 
-def main() -> None:
+def _arguments(argv: list[str] | None = None) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Bragi local dictation")
+    parser.add_argument(
+        "--development",
+        action="store_true",
+        help="Identify this process as a development build",
+    )
+    parser.add_argument(
+        "--preview",
+        action="store_true",
+        help="Preview indicator states without audio, Whisper, hotkeys or typing",
+    )
+    return parser.parse_args(argv)
+
+
+def main(argv: list[str] | None = None) -> None:
+    args = _arguments(argv)
     if os.name != "nt":
-        print("Whisper Dictate runs on Windows 11.", file=sys.stderr)
+        print("Bragi runs on Windows 11.", file=sys.stderr)
         raise SystemExit(1)
+
+    identity = detect_build_identity(force_development=args.development)
+    if args.preview:
+        from whisper_dictate.preview import run_preview
+
+        run_preview(identity.title)
+        return
 
     mutex, already_exists = _single_instance_mutex()
     if already_exists:
         ctypes.windll.user32.MessageBoxW(
             None,
-            "Whisper Dictate is already running.",
-            "Whisper Dictate",
+            "Bragi is already running.",
+            identity.title,
             0x40,
         )
         ctypes.windll.kernel32.CloseHandle(mutex)
         return
 
     config = AppConfig()
-    indicator = FloatingIndicator()
+    indicator = FloatingIndicator(title=identity.title)
     recorder = AudioRecorder()
     transcriber = LocalWhisperTranscriber(config, model_cache_directory())
     injector = WindowsTextInjector()
@@ -68,7 +93,7 @@ def main() -> None:
         indicator=indicator,
         hotkey_listener=listener,
     )
-    tray = TrayIcon(indicator.request_exit)
+    tray = TrayIcon(indicator.request_exit, title=identity.title)
 
     def shutdown() -> None:
         controller.stop()

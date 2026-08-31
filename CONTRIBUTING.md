@@ -1,4 +1,4 @@
-# Contributing to Whisper Dictate
+# Contributing to Bragi
 
 Thanks for helping improve private, local dictation on Windows.
 
@@ -21,6 +21,9 @@ python -m ruff check .
 python -m pytest
 python -m compileall -q src tests tools
 ```
+
+For quick UI feedback, controlled source restarts, and downloadable pull-request
+artifacts, see [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
 
 ## Pull requests
 

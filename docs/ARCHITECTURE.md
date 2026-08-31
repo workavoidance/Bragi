@@ -1,7 +1,6 @@
 # Architecture
 
-Whisper Dictate is a Windows tray application with a privacy-first local speech
-pipeline.
+Bragi is a Windows tray application with a privacy-first local speech pipeline.
 
 ## Current flow
 
@@ -38,3 +37,9 @@ policy is introduced.
 Models and configuration are persistent. Recordings and transcripts are not.
 Diagnostic logs may contain state transitions, durations, model names and error
 types, but never dictated content or raw audio.
+
+Downloaded models live in `%LOCALAPPDATA%\Bragi\models` and are shared across
+normal, development, and preview builds. Future development settings use a
+separate `%APPDATA%\Bragi\development` location. Initial setup and explicit model
+downloads may use the internet; installed transcription remains local and must
+continue working without it.
