@@ -1,6 +1,6 @@
-# Whisper Dictate
+# Bragi
 
-Whisper Dictate is a private, local push-to-talk dictation app for Windows 11.
+Bragi is a private, local push-to-talk dictation app for Windows 11.
 Hold **Right Ctrl**, speak, and release the key. The complete transcription is
 typed into the application that already has the cursor.
 
@@ -42,7 +42,7 @@ On a Windows 11 PC with standard 64-bit Python 3.14 installed:
 
 1. Double-click `build_portable.bat`.
 2. Wait for the dependencies and packaging step to finish.
-3. Run `dist\WhisperDictate.exe`.
+3. Run the executable created in the `dist` folder.
 
 The output is a single executable. It creates a `models` folder beside itself on
 first launch. Keep the executable and that folder together if you move the app.
@@ -76,7 +76,7 @@ forensic guarantees that an immutable string has vanished instantly from RAM.
 - **Default microphone unavailable:** select the intended input under Windows
   Settings → System → Sound → Input, then restart the app.
 - **Nothing is typed:** test in Notepad first. Confirm the target app is not
-  running as administrator while Whisper Dictate is running normally.
+  running as administrator while Bragi is running normally.
 - **Too slow:** the first candidate change is the model from `small` to `base` in
   `src\whisper_dictate\config.py`; rebuild afterward. Accuracy will decrease.
 
@@ -98,5 +98,5 @@ as school-ready assistive software.
 
 ## Licence
 
-Whisper Dictate is released under the [MIT licence](LICENSE). Third-party
+Bragi is released under the [MIT licence](LICENSE). Third-party
 libraries and downloaded speech models retain their own licences.
