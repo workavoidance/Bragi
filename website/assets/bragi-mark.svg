@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-label="Bragi">
+  <title>Bragi</title>
+  <g fill="none" stroke="#181817" stroke-linecap="round" stroke-linejoin="round">
+    <!-- rounded single-storey g: the counter reads as the head -->
+    <circle cx="45" cy="39" r="22" stroke-width="7"/>
+    <!-- g tail becomes the headset boom -->
+    <path d="M64 42v10c0 9-3 15-10 18-6 3-14 2-19-1-4-2-6-5-6-8" stroke-width="7"/>
+    <path d="M35 70c8 5 18 6 27 2 5-2 9-5 12-9" stroke-width="7"/>
+    <!-- headset band -->
+    <path d="M20 39c0-19 10-31 25-31 15 0 25 12 25 31" stroke-width="5"/>
+  </g>
+  <!-- ear pad -->
+  <rect x="15" y="34" width="10" height="18" rx="5" fill="#f05a24"/>
+  <!-- boom continuation and foam mic -->
+  <path d="M72 63c5 0 8 2 10 5" fill="none" stroke="#181817" stroke-width="5" stroke-linecap="round"/>
+  <circle cx="84" cy="70" r="6" fill="#f05a24"/>
+</svg>
