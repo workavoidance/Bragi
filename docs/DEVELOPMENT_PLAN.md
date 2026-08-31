@@ -27,8 +27,7 @@ Last reviewed: 2026-08-31
 
 **Current target:** v0.2, a configurable and accessible desktop application.
 
-**Next engineering task:** build the fast development and preview loop, then
-implement the versioned settings foundation in issue
+**Next engineering task:** implement the versioned settings foundation in issue
 [#5](https://github.com/workavoidance/Bragi/issues/5).
 
 The v0.2 tracking issue is
@@ -56,21 +55,23 @@ The v0.2 tracking issue is
 
 ## Phase 1: fast development and preview loop
 
-- [ ] Create a focused GitHub issue with acceptance criteria for the development
+Tracked by [#11](https://github.com/workavoidance/Bragi/issues/11).
+
+- [x] Create a focused GitHub issue with acceptance criteria for the development
   workflow.
-- [ ] Add a `dev.bat` launcher that runs Bragi directly from an editable source
+- [x] Add a `dev.bat` launcher that runs Bragi directly from an editable source
   installation.
-- [ ] Add automatic controlled restart when application source files change.
-- [ ] Add a mock transcription mode that requires neither Whisper nor a
+- [x] Add automatic controlled restart when application source files change.
+- [x] Add a mock transcription mode that requires neither Whisper nor a
   microphone and can simulate loading, ready, recording, transcribing, success,
   and error states.
-- [ ] Keep development settings separate from normal user settings.
-- [ ] Move downloaded models to a stable per-user location so development and
+- [x] Keep development settings separate from normal user settings.
+- [x] Move downloaded models to a stable per-user location so development and
   preview builds do not download them repeatedly.
-- [ ] Clearly identify development builds and expose the tested commit ID.
-- [ ] Make each pull request produce a labelled portable Windows preview
+- [x] Clearly identify development builds and expose the tested commit ID.
+- [x] Make each pull request produce a labelled portable Windows preview
   artifact.
-- [ ] Document the one-command development and preview workflow.
+- [x] Document the one-command development and preview workflow.
 
 ## Phase 2: versioned settings foundation
 

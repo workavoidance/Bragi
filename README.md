@@ -29,7 +29,8 @@ any additional rewriting or filler-word removal.
    free-threaded build. Enable **Add Python to PATH** during installation.
 2. Double-click `run_from_source.bat`.
 3. On the first run, wait while the multilingual `small` speech model downloads
-   into the local `models` folder. This is a one-time download of roughly 500 MB.
+   into `%LOCALAPPDATA%\Bragi\models`. This is a one-time download of roughly
+   500 MB shared by later Bragi versions.
 4. Put the cursor in Word, Outlook, Notepad, or a browser text field.
 5. Hold **Right Ctrl**, speak, then release it.
 
@@ -44,8 +45,8 @@ On a Windows 11 PC with standard 64-bit Python 3.14 installed:
 2. Wait for the dependencies and packaging step to finish.
 3. Run the executable created in the `dist` folder.
 
-The output is a single executable. It creates a `models` folder beside itself on
-first launch. Keep the executable and that folder together if you move the app.
+The output is a single executable. Downloaded models are kept in the stable
+per-user `%LOCALAPPDATA%\Bragi\models` directory so later builds can reuse them.
 Python is not required on PCs that only run the finished executable.
 
 ## Privacy behaviour
@@ -92,8 +93,9 @@ python -m ruff check .
 See [CONTRIBUTING.md](CONTRIBUTING.md) for the complete development workflow,
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the design,
 [docs/DEVELOPMENT_PLAN.md](docs/DEVELOPMENT_PLAN.md) for the live execution
-checklist, and [docs/ROADMAP.md](docs/ROADMAP.md) for planned releases. The
-project's longer-term credibility requirements are recorded in
+checklist, [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) for the fast development
+and preview loop, and [docs/ROADMAP.md](docs/ROADMAP.md) for planned releases.
+The project's longer-term credibility requirements are recorded in
 [docs/QUALITY_BAR.md](docs/QUALITY_BAR.md) without presenting the current alpha
 as school-ready assistive software.
 

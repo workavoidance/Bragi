@@ -10,6 +10,10 @@ here before a release.
 - Open-source project governance and contribution documentation.
 - Automated Windows quality checks and tagged release builds.
 - Dependency update automation and reproducible direct-dependency constraints.
+- Fast source development launcher with controlled restart on Python changes.
+- No-audio, no-model indicator preview mode.
+- Stable per-user model cache shared by later and preview builds.
+- Identifiable Windows preview artifacts for every pull request.
 
 ## [0.1.0] - 2026-08-31
 

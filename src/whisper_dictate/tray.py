@@ -1,11 +1,19 @@
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 
 
 class TrayIcon:
-    def __init__(self, on_exit: Callable[[], None]) -> None:
+    def __init__(
+        self,
+        on_exit: Callable[[], None],
+        *,
+        title: str = "Bragi",
+        preview_actions: Mapping[str, Callable[[], None]] | None = None,
+    ) -> None:
         self._on_exit = on_exit
+        self._title = title
+        self._preview_actions = dict(preview_actions or {})
         self._icon = None
 
     @staticmethod
@@ -24,15 +32,33 @@ class TrayIcon:
     def start(self) -> None:
         import pystray
 
-        menu = pystray.Menu(
-            pystray.MenuItem("Whisper Dictate", None, enabled=False),
+        items = [
+            pystray.MenuItem(self._title, None, enabled=False),
             pystray.Menu.SEPARATOR,
-            pystray.MenuItem("Exit", self._exit_clicked),
-        )
-        self._icon = pystray.Icon(
-            "whisper_dictate", self._image(), "Whisper Dictate", menu
-        )
+        ]
+        if self._preview_actions:
+            preview_items = [
+                pystray.MenuItem(label, self._preview_clicked(action))
+                for label, action in self._preview_actions.items()
+            ]
+            items.extend(
+                [
+                    pystray.MenuItem("Preview state", pystray.Menu(*preview_items)),
+                    pystray.Menu.SEPARATOR,
+                ]
+            )
+        items.append(pystray.MenuItem("Exit", self._exit_clicked))
+        menu = pystray.Menu(*items)
+        self._icon = pystray.Icon("bragi", self._image(), self._title, menu)
         self._icon.run_detached()
+
+    @staticmethod
+    def _preview_clicked(action: Callable[[], None]):
+        def clicked(icon, item) -> None:
+            del icon, item
+            action()
+
+        return clicked
 
     def _exit_clicked(self, icon, item) -> None:
         del item

@@ -20,9 +20,9 @@ class FloatingIndicator:
         "error": ("#9a3412", "Something went wrong"),
     }
 
-    def __init__(self) -> None:
+    def __init__(self, title: str = "Bragi") -> None:
         self.root = tk.Tk()
-        self.root.title("Whisper Dictate")
+        self.root.title(title)
         self.root.overrideredirect(True)
         self.root.attributes("-topmost", True)
         self.root.configure(bg="#0f172a")
