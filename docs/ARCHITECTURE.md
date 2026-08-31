@@ -43,3 +43,8 @@ normal, development, and preview builds. Future development settings use a
 separate `%APPDATA%\Bragi\development` location. Initial setup and explicit model
 downloads may use the internet; installed transcription remains local and must
 continue working without it.
+
+The UI-independent settings module accepts and emits an explicit versioned
+schema. It validates a strict field allowlist, migrates old schemas in memory,
+returns privacy-safe recovery warnings, and replaces settings files atomically.
+Invalid and newer-version files are preserved for diagnosis or recovery.

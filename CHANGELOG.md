@@ -14,6 +14,9 @@ here before a release.
 - No-audio, no-model indicator preview mode.
 - Stable per-user model cache shared by later and preview builds.
 - Identifiable Windows preview artifacts for every pull request.
+- Versioned, validated settings storage with migration and atomic writes.
+- Separate normal and development settings locations with privacy-safe recovery
+  warnings.
 
 ## [0.1.0] - 2026-08-31
 
