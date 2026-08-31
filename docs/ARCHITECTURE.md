@@ -48,3 +48,16 @@ The UI-independent settings module accepts and emits an explicit versioned
 schema. It validates a strict field allowlist, migrates old schemas in memory,
 returns privacy-safe recovery warnings, and replaces settings files atomically.
 Invalid and newer-version files are preserved for diagnosis or recovery.
+
+## Interface implementation
+
+PySide6 Essentials provides the tray, settings window and compact status
+overlay. Qt's event loop stays on the main thread. Controller workers report
+state through queued Qt signals, so model loading and transcription never
+update widgets directly. The controller itself imports no Qt modules.
+
+The overlay is a tool window that cannot accept focus or activate itself. It
+uses the native system palette and a text symbol plus a message for every state,
+so meaning does not depend on colour. Qt 6 supplies per-display DPI scaling.
+Overlay placement uses the work area of the display containing the pointer and
+supports displays with negative desktop coordinates.

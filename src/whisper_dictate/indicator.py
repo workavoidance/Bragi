@@ -1,117 +1,164 @@
 from __future__ import annotations
 
-import ctypes
-import os
-import queue
-import tkinter as tk
 from collections.abc import Callable
 
+from PySide6.QtCore import Qt, QTimer, Signal, Slot
+from PySide6.QtGui import QCursor, QGuiApplication
+from PySide6.QtWidgets import QApplication, QFrame, QHBoxLayout, QLabel, QWidget
 
-class FloatingIndicator:
-    WIDTH = 290
-    HEIGHT = 58
 
-    THEMES = {
-        "loading": ("#334155", "Preparing local speech model…"),
-        "ready": ("#15803d", "Ready — hold Right Ctrl to dictate"),
-        "recording": ("#b91c1c", "●  Listening — release Right Ctrl"),
-        "transcribing": ("#1d4ed8", "Transcribing locally…"),
-        "empty": ("#92400e", "No speech detected"),
-        "error": ("#9a3412", "Something went wrong"),
+def overlay_position(
+    screen: tuple[int, int, int, int],
+    overlay: tuple[int, int],
+    *,
+    bottom_margin: int = 64,
+) -> tuple[int, int]:
+    """Place an overlay at the bottom-centre of one display's work area."""
+    left, top, screen_width, screen_height = screen
+    overlay_width, overlay_height = overlay
+    x = left + max(0, (screen_width - overlay_width) // 2)
+    y = top + max(0, screen_height - overlay_height - bottom_margin)
+    return x, y
+
+
+class FloatingIndicator(QWidget):
+    """Compact, non-activating status overlay safe to update from workers."""
+
+    state_requested = Signal(str, object)
+    exit_requested = Signal()
+    status_changed = Signal(str, str)
+
+    STATES = {
+        "loading": ("…", "Preparing local speech model…"),
+        "ready": ("✓", "Ready. Hold Right Ctrl to dictate"),
+        "recording": ("●", "Listening. Release Right Ctrl"),
+        "transcribing": ("↻", "Transcribing locally…"),
+        "empty": ("!", "No speech detected"),
+        "error": ("!", "Something went wrong"),
     }
+    HIDE_DELAYS_MS = {"ready": 1400, "empty": 1800, "error": 6000}
 
-    def __init__(self, title: str = "Bragi") -> None:
-        self.root = tk.Tk()
-        self.root.title(title)
-        self.root.overrideredirect(True)
-        self.root.attributes("-topmost", True)
-        self.root.configure(bg="#0f172a")
-        self.root.withdraw()
-
-        self.label = tk.Label(
-            self.root,
-            text="",
-            fg="white",
-            bg="#334155",
-            font=("Segoe UI", 11, "bold"),
-            padx=18,
-            pady=16,
+    def __init__(self, title: str = "Bragi", *, enabled: bool = True) -> None:
+        if QApplication.instance() is None:
+            raise RuntimeError("create_application() must be called before the UI")
+        super().__init__(
+            None,
+            Qt.WindowType.Tool
+            | Qt.WindowType.FramelessWindowHint
+            | Qt.WindowType.WindowStaysOnTopHint
+            | Qt.WindowType.WindowDoesNotAcceptFocus,
         )
-        self.label.pack(fill="both", expand=True)
-        self._events: queue.SimpleQueue[tuple[str, str | None]] = queue.SimpleQueue()
-        self._hide_job = None
+        self.setWindowTitle(title)
+        self.setAttribute(Qt.WidgetAttribute.WA_ShowWithoutActivating)
+        self.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
+        self.setAccessibleName("Bragi dictation status")
+        self.setAccessibleDescription(
+            "Shows whether Bragi is loading, listening, or transcribing."
+        )
+        self.setMinimumWidth(300)
+        self.setMaximumWidth(480)
+
+        self._enabled = enabled
         self._exit_handler: Callable[[], None] | None = None
-        self.root.protocol("WM_DELETE_WINDOW", self.request_exit)
-        self.root.after(30, self._poll)
+        self._exiting = False
+
+        frame = QFrame(self)
+        frame.setFrameShape(QFrame.Shape.StyledPanel)
+        frame.setLineWidth(2)
+        layout = QHBoxLayout(frame)
+        layout.setContentsMargins(16, 12, 18, 12)
+        layout.setSpacing(12)
+
+        self._state_mark = QLabel("…", frame)
+        state_font = self._state_mark.font()
+        state_font.setBold(True)
+        state_font.setPointSize(max(state_font.pointSize() + 4, 14))
+        self._state_mark.setFont(state_font)
+        self._state_mark.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self._state_mark.setAccessibleName("Status symbol")
+        layout.addWidget(self._state_mark)
+
+        self._message = QLabel("", frame)
+        message_font = self._message.font()
+        message_font.setBold(True)
+        self._message.setFont(message_font)
+        self._message.setWordWrap(True)
+        self._message.setAccessibleName("Dictation status message")
+        layout.addWidget(self._message, 1)
+
+        outer = QHBoxLayout(self)
+        outer.setContentsMargins(0, 0, 0, 0)
+        outer.addWidget(frame)
+
+        self._hide_timer = QTimer(self)
+        self._hide_timer.setSingleShot(True)
+        self._hide_timer.timeout.connect(self.hide)
+        self.state_requested.connect(self._render)
+        self.exit_requested.connect(self._exit)
 
     def set_exit_handler(self, handler: Callable[[], None]) -> None:
         self._exit_handler = handler
 
     def post(self, state: str, detail: str | None = None) -> None:
-        self._events.put((state, detail))
+        self.state_requested.emit(state, detail)
 
     def request_exit(self) -> None:
-        self._events.put(("exit", None))
+        self.exit_requested.emit()
 
-    def _poll(self) -> None:
-        try:
-            while True:
-                state, detail = self._events.get_nowait()
-                if state == "exit":
-                    if self._exit_handler:
-                        self._exit_handler()
-                    self.root.quit()
-                    return
-                self._render(state, detail)
-        except queue.Empty:
-            pass
-        self.root.after(30, self._poll)
+    @Slot(bool)
+    def set_enabled(self, enabled: bool) -> None:
+        self._enabled = enabled
+        if not enabled:
+            self._hide_timer.stop()
+            self.hide()
 
-    def _render(self, state: str, detail: str | None) -> None:
-        color, default_text = self.THEMES.get(state, self.THEMES["error"])
-        text = detail or default_text
-        self.label.configure(text=text, bg=color)
-        self.root.configure(bg=color)
-        self.root.update_idletasks()
-        screen_width = self.root.winfo_screenwidth()
-        screen_height = self.root.winfo_screenheight()
-        x = max(0, (screen_width - self.WIDTH) // 2)
-        y = max(0, screen_height - self.HEIGHT - 92)
-        self.root.geometry(f"{self.WIDTH}x{self.HEIGHT}+{x}+{y}")
-        self._show_without_activation()
+    @Slot(str, object)
+    def _render(self, state: str, detail: object) -> None:
+        symbol, default_text = self.STATES.get(state, self.STATES["error"])
+        text = detail if isinstance(detail, str) and detail else default_text
+        self._state_mark.setText(symbol)
+        self._state_mark.setAccessibleDescription(text)
+        self._message.setText(text)
+        self.status_changed.emit(state, text)
 
-        if self._hide_job is not None:
-            self.root.after_cancel(self._hide_job)
-            self._hide_job = None
-        delay = {
-            "ready": 1400,
-            "empty": 1800,
-            "error": 6000,
-        }.get(state)
-        if delay:
-            self._hide_job = self.root.after(delay, self.root.withdraw)
-
-    def _show_without_activation(self) -> None:
-        self.root.deiconify()
-        if os.name != "nt":
+        self._hide_timer.stop()
+        delay = self.HIDE_DELAYS_MS.get(state)
+        if delay is not None:
+            self._hide_timer.start(delay)
+        if not self._enabled:
             return
-        self.root.update_idletasks()
-        user32 = ctypes.windll.user32
-        user32.GetParent.argtypes = (ctypes.c_void_p,)
-        user32.GetParent.restype = ctypes.c_void_p
-        hwnd = user32.GetParent(self.root.winfo_id())
-        if not hwnd:
-            hwnd = self.root.winfo_id()
-        gwl_exstyle = -20
-        ws_ex_toolwindow = 0x00000080
-        ws_ex_noactivate = 0x08000000
-        style = user32.GetWindowLongW(hwnd, gwl_exstyle)
-        user32.SetWindowLongW(
-            hwnd, gwl_exstyle, style | ws_ex_toolwindow | ws_ex_noactivate
-        )
-        sw_shownoactivate = 4
-        user32.ShowWindow(hwnd, sw_shownoactivate)
 
-    def run(self) -> None:
-        self.root.mainloop()
-        self.root.destroy()
+        self.adjustSize()
+        screen = QGuiApplication.screenAt(QCursor.pos())
+        if screen is None:
+            screen = QGuiApplication.primaryScreen()
+        if screen is not None:
+            available = screen.availableGeometry()
+            x, y = overlay_position(
+                (available.x(), available.y(), available.width(), available.height()),
+                (self.width(), self.height()),
+            )
+            self.move(x, y)
+        self.show()
+        self.raise_()
+
+    @Slot()
+    def _exit(self) -> None:
+        if self._exiting:
+            return
+        self._exiting = True
+        self._hide_timer.stop()
+        self.hide()
+        try:
+            if self._exit_handler is not None:
+                self._exit_handler()
+        finally:
+            app = QApplication.instance()
+            if app is not None:
+                app.quit()
+
+    def run(self) -> int:
+        app = QApplication.instance()
+        if app is None:
+            raise RuntimeError("The Qt application is not available")
+        return app.exec()

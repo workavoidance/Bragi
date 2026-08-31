@@ -17,7 +17,9 @@ hardware testing are being developed.
 - Shows a small indicator while loading, recording, and transcribing.
 - Types Unicode directly through Windows, without putting text on the clipboard.
 - Does not write recordings, transcripts, or content logs to disk.
-- Provides a tray icon with an Exit command.
+- Provides a keyboard-operable Qt tray menu with status, Settings, and Exit.
+- Uses the native Windows palette and scaling, including high-DPI displays and
+  high-contrast themes.
 
 Whisper itself may add punctuation or omit hesitations. The app does not perform
 any additional rewriting or filler-word removal.
@@ -102,5 +104,7 @@ as school-ready assistive software.
 
 ## Licence
 
-Bragi is released under the [MIT licence](LICENSE). Third-party
-libraries and downloaded speech models retain their own licences.
+Bragi is released under the [MIT licence](LICENSE). Third-party libraries and
+downloaded speech models retain their own licences. PySide6 and Qt notices are
+listed in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) and included with
+packaged builds.

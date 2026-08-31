@@ -5,12 +5,15 @@ import ctypes
 import os
 import sys
 
+from whisper_dictate.application import create_application
 from whisper_dictate.audio import AudioRecorder
 from whisper_dictate.config import AppConfig
 from whisper_dictate.controller import DictationController
 from whisper_dictate.hotkeys import RightControlListener
 from whisper_dictate.indicator import FloatingIndicator
 from whisper_dictate.runtime import detect_build_identity, model_cache_directory
+from whisper_dictate.settings import SettingsStore
+from whisper_dictate.settings_window import SettingsWindow
 from whisper_dictate.transcriber import LocalWhisperTranscriber
 from whisper_dictate.tray import TrayIcon
 from whisper_dictate.windows_input import WindowsTextInjector
@@ -68,8 +71,15 @@ def main(argv: list[str] | None = None) -> None:
         ctypes.windll.kernel32.CloseHandle(mutex)
         return
 
+    _application = create_application(identity.title)
+    settings_store = SettingsStore.for_user(development=identity.development)
+    settings = settings_store.load().settings
+
     config = AppConfig()
-    indicator = FloatingIndicator(title=identity.title)
+    indicator = FloatingIndicator(
+        title=identity.title, enabled=settings.overlay_enabled
+    )
+    settings_window = SettingsWindow(settings_store, title=identity.title)
     recorder = AudioRecorder()
     transcriber = LocalWhisperTranscriber(config, model_cache_directory())
     injector = WindowsTextInjector()
@@ -93,7 +103,16 @@ def main(argv: list[str] | None = None) -> None:
         indicator=indicator,
         hotkey_listener=listener,
     )
-    tray = TrayIcon(indicator.request_exit, title=identity.title)
+    tray = TrayIcon(
+        indicator.request_exit,
+        on_settings=settings_window.show_settings,
+        title=identity.title,
+    )
+    indicator.status_changed.connect(tray.set_status)
+    indicator.status_changed.connect(settings_window.set_status)
+    settings_window.settings_saved.connect(
+        lambda saved: indicator.set_enabled(saved.overlay_enabled)
+    )
 
     def shutdown() -> None:
         controller.stop()

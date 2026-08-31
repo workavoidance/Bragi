@@ -17,6 +17,11 @@ here before a release.
 - Versioned, validated settings storage with migration and atomic writes.
 - Separate normal and development settings locations with privacy-safe recovery
   warnings.
+- Accessible PySide6 system tray, settings window, and non-activating status
+  overlay using native Windows scaling and colours.
+- Multi-display overlay placement tests and a real-Windows interface acceptance
+  checklist.
+- PySide6 and Qt notices in preview and release archives.
 
 ## [0.1.0] - 2026-08-31
 

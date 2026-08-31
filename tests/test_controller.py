@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import threading
+import time
 from dataclasses import dataclass
 
 import numpy as np
@@ -14,6 +16,9 @@ class FakeRecorder:
 
 
 class FakeHotkey:
+    def start(self) -> None:
+        pass
+
     def stop(self) -> None:
         pass
 
@@ -86,3 +91,32 @@ def test_silent_dictation_is_not_typed() -> None:
     assert injector.typed == []
     assert ("empty", None) in indicator.events
     assert controller.state is AppState.READY
+
+
+def test_model_loading_does_not_block_the_calling_thread() -> None:
+    started = threading.Event()
+    release = threading.Event()
+
+    class BlockingTranscriber(FakeTranscriber):
+        def load(self) -> None:
+            started.set()
+            release.wait(timeout=1.0)
+
+    controller = DictationController(
+        config=AppConfig(),
+        recorder=FakeRecorder(),
+        transcriber=BlockingTranscriber(""),
+        injector=FakeInjector(),
+        indicator=FakeIndicator(),
+        hotkey_listener=FakeHotkey(),
+    )
+
+    before = time.monotonic()
+    controller.start()
+    elapsed = time.monotonic() - before
+
+    assert elapsed < 0.2
+    assert started.wait(timeout=0.5)
+    assert controller.state is AppState.LOADING
+    release.set()
+    controller.stop()
