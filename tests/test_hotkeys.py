@@ -11,10 +11,13 @@ from whisper_dictate.hotkeys import (
 
 
 class FakeNativeListener:
-    def __init__(self, identifier, on_press, on_release, events, fail=False) -> None:
+    def __init__(
+        self, identifier, on_press, on_release, on_cancel, events, fail=False
+    ) -> None:
         self.identifier = identifier
         self.on_press = on_press
         self.on_release = on_release
+        self.on_cancel = on_cancel
         self.events = events
         self.fail = fail
 
@@ -37,8 +40,10 @@ def test_hotkey_replacement_stops_old_listener_and_ignores_old_callbacks() -> No
     events: list[str] = []
     listeners: list[FakeNativeListener] = []
 
-    def factory(identifier, on_press, on_release):
-        listener = FakeNativeListener(identifier, on_press, on_release, events)
+    def factory(identifier, on_press, on_release, on_cancel):
+        listener = FakeNativeListener(
+            identifier, on_press, on_release, on_cancel, events
+        )
         listeners.append(listener)
         return listener
 
@@ -70,11 +75,12 @@ def test_hotkey_replacement_stops_old_listener_and_ignores_old_callbacks() -> No
 def test_failed_replacement_restores_previous_hotkey() -> None:
     events: list[str] = []
 
-    def factory(identifier, on_press, on_release):
+    def factory(identifier, on_press, on_release, on_cancel):
         return FakeNativeListener(
             identifier,
             on_press,
             on_release,
+            on_cancel,
             events,
             fail=identifier == "f8",
         )
@@ -97,3 +103,29 @@ def test_failed_replacement_restores_previous_hotkey() -> None:
         "start:f8",
         "start:right_ctrl",
     ]
+
+
+def test_escape_requests_cancellation_without_changing_key_state() -> None:
+    events: list[str] = []
+    listeners: list[FakeNativeListener] = []
+
+    def factory(identifier, on_press, on_release, on_cancel):
+        listener = FakeNativeListener(
+            identifier, on_press, on_release, on_cancel, events
+        )
+        listeners.append(listener)
+        return listener
+
+    listener = PushToTalkListener(
+        lambda: events.append("press"),
+        lambda: events.append("release"),
+        on_cancel=lambda: events.append("cancel"),
+        listener_factory=factory,
+    )
+    listener.start()
+
+    listeners[0].on_press()
+    listeners[0].on_cancel()
+    listeners[0].on_release()
+
+    assert events == ["start:right_ctrl", "press", "cancel", "release"]

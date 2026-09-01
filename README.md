@@ -5,6 +5,10 @@ Hold **Right Ctrl**, speak, and release the key. The complete transcription is
 typed into the application that already has the cursor. Language, microphone,
 and push-to-talk key can be changed from the tray's Settings window.
 
+Press **Escape** while Bragi is recording or transcribing to cancel the current
+dictation. Recordings are automatically cancelled after five minutes so an
+accidentally held key cannot leave the microphone recording indefinitely.
+
 The project is open source under the MIT licence. It is currently alpha
 software: the core dictation workflow works, while configuration and broader
 hardware testing are being developed.
@@ -38,7 +42,7 @@ any additional rewriting or filler-word removal.
    and is verified under `%LOCALAPPDATA%\Bragi\models`. This is a one-time
    download of roughly 486 MB shared by later Bragi versions.
 4. Put the cursor in Word, Outlook, Notepad, or a browser text field.
-5. Hold **Right Ctrl**, speak, then release it.
+5. Hold **Right Ctrl**, speak, then release it. Press **Escape** to cancel.
 
 After the first model download, speech recognition does not require an internet
 connection and no speech is sent to a cloud service.

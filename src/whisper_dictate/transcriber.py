@@ -111,7 +111,14 @@ class LocalWhisperTranscriber:
             self._active_model_name = snapshot.identifier
             self._model_name = snapshot.identifier
 
-    def transcribe(self, audio_16khz: np.ndarray) -> Transcription:
+    def transcribe(
+        self,
+        audio_16khz: np.ndarray,
+        *,
+        cancel_event: threading.Event | None = None,
+    ) -> Transcription:
+        if cancel_event is not None and cancel_event.is_set():
+            return Transcription("", None, None)
         self.load()
         with self._settings_lock:
             mode = self._language
@@ -128,7 +135,15 @@ class LocalWhisperTranscriber:
             word_timestamps=False,
             multilingual=multilingual,
         )
-        text = join_segments(segments)
+        if cancel_event is None:
+            text = join_segments(segments)
+        else:
+            text_parts = []
+            for segment in segments:
+                if cancel_event.is_set():
+                    break
+                text_parts.append(segment.text)
+            text = "" if cancel_event.is_set() else "".join(text_parts).strip()
         return Transcription(
             text=text,
             detected_language=getattr(info, "language", None),

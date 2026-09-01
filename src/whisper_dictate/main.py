@@ -120,7 +120,16 @@ def main(argv: list[str] | None = None) -> None:
         if controller is not None:
             controller.on_hotkey_release()
 
-    listener = PushToTalkListener(pressed, released, settings.hotkey)
+    def cancelled() -> None:
+        if controller is not None:
+            controller.cancel_current()
+
+    listener = PushToTalkListener(
+        pressed,
+        released,
+        settings.hotkey,
+        on_cancel=cancelled,
+    )
     controller = DictationController(
         config=config,
         recorder=recorder,

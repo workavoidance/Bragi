@@ -27,9 +27,9 @@ Last reviewed: 2026-09-01
 
 **Current target:** v0.2, a configurable and accessible desktop application.
 
-**Current engineering task:** add the curated local model manager in issue
-[#7](https://github.com/workavoidance/Bragi/issues/7). This work is stacked on
-the still-unmerged issue #6 branch so deferred manual QA is not bypassed.
+**Current engineering task:** reliability and privacy hardening in issue
+[#4](https://github.com/workavoidance/Bragi/issues/4). The first bounded change
+adds user cancellation and a safe maximum recording duration.
 
 The manual high-DPI, high-contrast, multi-display, and screen-reader checks for
 issue [#8](https://github.com/workavoidance/Bragi/issues/8) are intentionally
@@ -113,31 +113,31 @@ Tracked by [#9](https://github.com/workavoidance/Bragi/issues/9) and
 
 Tracked by [#6](https://github.com/workavoidance/Bragi/issues/6).
 
-- [ ] Offer Automatic, English, Norwegian, and Multilingual language modes.
-- [ ] Apply language changes to the next recording without restarting Bragi.
-- [ ] Enumerate microphones while keeping Windows Default as the default.
-- [ ] Recover clearly when a selected microphone is disconnected.
-- [ ] Add hotkey capture, validation, conflict guidance, and Restore Default.
-- [ ] Replace the active global hotkey listener atomically without leaving a
+- [x] Offer Automatic, English, Norwegian, and Multilingual language modes.
+- [x] Apply language changes to the next recording without restarting Bragi.
+- [x] Enumerate microphones while keeping Windows Default as the default.
+- [x] Recover clearly when a selected microphone is disconnected.
+- [x] Add hotkey capture, validation, conflict guidance, and Restore Default.
+- [x] Replace the active global hotkey listener atomically without leaving a
   duplicate listener.
-- [ ] Preserve correct insertion of Norwegian characters.
+- [x] Preserve correct insertion of Norwegian characters.
 
 ## Phase 5: local model manager
 
 Tracked by [#7](https://github.com/workavoidance/Bragi/issues/7).
 
-- [ ] Ship a local model catalogue containing identifiers, download sizes, CPU
+- [x] Ship a local model catalogue containing identifiers, download sizes, CPU
   guidance, and checksums.
-- [ ] Offer a small curated set of multilingual models and keep `small` as the
+- [x] Offer a small curated set of multilingual models and keep `small` as the
   recommended CPU default.
-- [ ] Show which models are installed and which require a user-requested
+- [x] Show which models are installed and which require a user-requested
   download.
-- [ ] Download to a temporary file, verify integrity, then install atomically.
-- [ ] Recover from interrupted or corrupt downloads without damaging an
+- [x] Download to a temporary file, verify integrity, then install atomically.
+- [x] Recover from interrupted or corrupt downloads without damaging an
   existing working model.
-- [ ] Allow installed models to be selected and used while completely offline.
-- [ ] Provide file or USB import for offline model installation.
-- [ ] Load a newly selected model in the background and recover to the previous
+- [x] Allow installed models to be selected and used while completely offline.
+- [x] Provide file or USB import for offline model installation.
+- [x] Load a newly selected model in the background and recover to the previous
   working model if loading fails.
 
 ## Phase 6: reliability and privacy hardening
@@ -145,7 +145,7 @@ Tracked by [#7](https://github.com/workavoidance/Bragi/issues/7).
 Tracked by [#4](https://github.com/workavoidance/Bragi/issues/4).
 
 - [ ] Handle microphone removal and default-device changes.
-- [ ] Add cancellation and an accidental long-recording limit.
+- [x] Add cancellation and an accidental long-recording limit.
 - [ ] Recover from model-load and transcription failures.
 - [ ] Shut down cleanly during recording, download, and transcription.
 - [ ] Test repeated start and stop cycles for leaked streams or listeners.

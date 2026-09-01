@@ -11,5 +11,6 @@ class AppConfig:
     target_sample_rate: int = 16_000
     beam_size: int = 5
     min_recording_seconds: float = 0.25
+    max_recording_seconds: float = 300.0
     silence_rms_threshold: float = 0.0015
     injection_delay_seconds: float = 0.08
