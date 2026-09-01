@@ -67,21 +67,45 @@ class DictationController:
         try:
             self._transcriber.load()
         except Exception:
-            self._set_state(AppState.ERROR)
+            with self._lock:
+                if self._stopping.is_set() or self._state is AppState.STOPPED:
+                    return
+                self._state = AppState.ERROR
             self._indicator.post(
-                "error", "Model unavailable — check internet, then restart"
+                "model_error",
+                "Speech model unavailable. Choose Retry speech model from the "
+                "tray, or open Settings → Models.",
             )
             return
-        if not self._stopping.is_set():
-            self._set_state(AppState.READY)
-            self._indicator.post("ready")
+        with self._lock:
+            if self._stopping.is_set() or self._state is AppState.STOPPED:
+                return
+            self._state = AppState.READY
+        self._indicator.post("ready")
+
+    def retry_model_load(self) -> bool:
+        """Retry a failed startup model load without restarting Bragi."""
+        with self._lock:
+            if self._stopping.is_set() or self._state is not AppState.ERROR:
+                return False
+            self._state = AppState.LOADING
+        self._indicator.post("loading", "Retrying local speech model…")
+        threading.Thread(target=self._load_model, daemon=True).start()
+        return True
 
     def on_hotkey_press(self) -> None:
         with self._lock:
-            if self._state is not AppState.READY:
+            if self._state is AppState.ERROR:
+                retry_model = True
+            elif self._state is AppState.READY:
+                retry_model = False
+                self._state = AppState.RECORDING
+                self._cancel_requested.clear()
+            else:
                 return
-            self._state = AppState.RECORDING
-            self._cancel_requested.clear()
+        if retry_model:
+            self.retry_model_load()
+            return
         try:
             self._recorder.start()
         except MicrophoneUnavailableError as error:
@@ -233,7 +257,10 @@ class DictationController:
             self._injector.type_text(text)
             self._indicator.post("ready")
         except Exception:
-            self._indicator.post("error", "Transcription failed — please try again")
+            self._indicator.post(
+                "error",
+                "Transcription failed. Audio was discarded; hold the key to try again.",
+            )
         finally:
             # Best-effort removal from process memory. Python strings are
             # immutable, so no forensic zeroisation guarantee is possible.

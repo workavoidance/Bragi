@@ -16,6 +16,7 @@ class TrayIcon:
         on_exit: Callable[[], None],
         *,
         on_settings: Callable[[], None],
+        on_retry_model: Callable[[], object] | None = None,
         title: str = "Bragi",
         preview_actions: Mapping[str, Callable[[], None]] | None = None,
     ) -> None:
@@ -24,6 +25,7 @@ class TrayIcon:
             raise RuntimeError("create_application() must be called before the UI")
         self._on_exit = on_exit
         self._on_settings = on_settings
+        self._on_retry_model = on_retry_model
         self._title = title
         self._preview_actions = dict(preview_actions or {})
 
@@ -39,6 +41,14 @@ class TrayIcon:
         self.settings_action.setToolTip("Open Bragi settings")
         self.settings_action.triggered.connect(self._settings_clicked)
         self._menu.addAction(self.settings_action)
+
+        self.retry_model_action = QAction("&Retry speech model", self._menu)
+        self.retry_model_action.setToolTip(
+            "Try loading the selected local speech model again"
+        )
+        self.retry_model_action.setVisible(False)
+        self.retry_model_action.triggered.connect(self._retry_model_clicked)
+        self._menu.addAction(self.retry_model_action)
 
         if self._preview_actions:
             preview_menu = self._menu.addMenu("Preview &state")
@@ -69,9 +79,11 @@ class TrayIcon:
         self._icon.hide()
 
     def set_status(self, state: str, text: str) -> None:
-        del state
         self._status_action.setText(f"Status: {text}")
         self._icon.setToolTip(f"{self._title}\n{text}")
+        self.retry_model_action.setVisible(
+            state == "model_error" and self._on_retry_model is not None
+        )
 
     def _settings_clicked(self, checked: bool = False) -> None:
         del checked
@@ -80,6 +92,11 @@ class TrayIcon:
     def _exit_clicked(self, checked: bool = False) -> None:
         del checked
         self._on_exit()
+
+    def _retry_model_clicked(self, checked: bool = False) -> None:
+        del checked
+        if self._on_retry_model is not None:
+            self._on_retry_model()
 
     def _activated(self, reason: QSystemTrayIcon.ActivationReason) -> None:
         if reason == QSystemTrayIcon.ActivationReason.DoubleClick:

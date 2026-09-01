@@ -45,6 +45,12 @@ issue #8.
   Bragi, import the copied folder, and confirm it passes verification.
 - Disconnect the network, restart Windows, switch between two installed models,
   and dictate successfully with both.
+- Make the selected model temporarily unavailable before startup and confirm
+  the tray offers **Retry speech model**. Restore the model, retry, and confirm
+  Bragi reaches Ready without restarting. Confirm repeated clicks do not start
+  overlapping loads.
+- After a simulated transcription failure, confirm the recording is discarded,
+  Bragi returns to Ready, and the next normal dictation succeeds.
 
 ## Keyboard and assistive access
 

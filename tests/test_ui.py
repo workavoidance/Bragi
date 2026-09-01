@@ -203,3 +203,25 @@ def test_tray_exposes_status_settings_and_exit() -> None:
     tray.settings_action.trigger()
     tray.exit_action.trigger()
     assert events == ["settings", "exit"]
+
+
+def test_tray_offers_model_retry_only_after_model_load_failure() -> None:
+    application()
+    events: list[str] = []
+    tray = TrayIcon(
+        lambda: None,
+        on_settings=lambda: None,
+        on_retry_model=lambda: events.append("retry"),
+    )
+
+    assert tray.retry_model_action.isVisible() is False
+
+    tray.set_status("model_error", "Speech model unavailable")
+
+    assert tray.retry_model_action.isVisible() is True
+    assert tray.retry_model_action.text().replace("&", "") == "Retry speech model"
+    tray.retry_model_action.trigger()
+    assert events == ["retry"]
+
+    tray.set_status("ready", "Ready")
+    assert tray.retry_model_action.isVisible() is False

@@ -111,6 +111,15 @@ def make_controller(text: str = "Hei, this is local."):
     return controller, indicator, injector
 
 
+def wait_until(predicate, timeout: float = 1.0) -> bool:
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        if predicate():
+            return True
+        time.sleep(0.005)
+    return predicate()
+
+
 def test_completed_dictation_is_typed_and_audio_is_cleared() -> None:
     controller, indicator, injector = make_controller()
     samples = np.full(48_000, 0.1, dtype=np.float32)
@@ -261,6 +270,158 @@ def test_model_loading_does_not_block_the_calling_thread() -> None:
     assert controller.state is AppState.LOADING
     release.set()
     controller.stop()
+
+
+def test_failed_model_load_can_be_retried_without_restarting() -> None:
+    loaded = threading.Event()
+
+    class RecoveringTranscriber(FakeTranscriber):
+        def __init__(self) -> None:
+            super().__init__("")
+            self.attempts = 0
+
+        def load(self) -> None:
+            self.attempts += 1
+            if self.attempts == 1:
+                raise RuntimeError("private model error")
+            loaded.set()
+
+    transcriber = RecoveringTranscriber()
+    indicator = FakeIndicator()
+    controller = DictationController(
+        config=AppConfig(),
+        recorder=FakeRecorder(),
+        transcriber=transcriber,
+        injector=FakeInjector(),
+        indicator=indicator,
+        hotkey_listener=FakeHotkey(),
+    )
+
+    controller.start()
+
+    assert wait_until(lambda: controller.state is AppState.ERROR)
+    assert indicator.events[-1] == (
+        "model_error",
+        "Speech model unavailable. Choose Retry speech model from the tray, or "
+        "open Settings → Models.",
+    )
+    assert "private model error" not in str(indicator.events)
+
+    assert controller.retry_model_load() is True
+    assert loaded.wait(timeout=0.5)
+    assert wait_until(lambda: controller.state is AppState.READY)
+    assert transcriber.attempts == 2
+    assert ("loading", "Retrying local speech model…") in indicator.events
+    assert indicator.events[-1] == ("ready", None)
+    controller.stop()
+
+
+def test_hotkey_retries_failed_model_load_without_starting_microphone() -> None:
+    loaded = threading.Event()
+
+    class LoadableTranscriber(FakeTranscriber):
+        def load(self) -> None:
+            loaded.set()
+
+    recorder = FakeRecorder()
+    controller = DictationController(
+        config=AppConfig(),
+        recorder=recorder,
+        transcriber=LoadableTranscriber(""),
+        injector=FakeInjector(),
+        indicator=FakeIndicator(),
+        hotkey_listener=FakeHotkey(),
+    )
+    controller._set_state(AppState.ERROR)
+
+    controller.on_hotkey_press()
+
+    assert loaded.wait(timeout=0.5)
+    assert wait_until(lambda: controller.state is AppState.READY)
+    assert recorder.is_recording is False
+    controller.stop()
+
+
+def test_duplicate_model_load_retry_is_ignored() -> None:
+    started = threading.Event()
+    release = threading.Event()
+
+    class BlockingTranscriber(FakeTranscriber):
+        def load(self) -> None:
+            started.set()
+            release.wait(timeout=1.0)
+
+    controller = DictationController(
+        config=AppConfig(),
+        recorder=FakeRecorder(),
+        transcriber=BlockingTranscriber(""),
+        injector=FakeInjector(),
+        indicator=FakeIndicator(),
+        hotkey_listener=FakeHotkey(),
+    )
+    controller._set_state(AppState.ERROR)
+
+    assert controller.retry_model_load() is True
+    assert started.wait(timeout=0.5)
+    assert controller.retry_model_load() is False
+
+    release.set()
+    assert wait_until(lambda: controller.state is AppState.READY)
+    controller.stop()
+
+
+def test_transcription_failure_discards_audio_and_next_dictation_succeeds() -> None:
+    class RecoveringTranscriber(FakeTranscriber):
+        def __init__(self) -> None:
+            super().__init__("Recovered text")
+            self.attempts = 0
+
+        def transcribe(
+            self,
+            audio: np.ndarray,
+            *,
+            cancel_event: threading.Event | None = None,
+        ) -> FakeResult:
+            self.attempts += 1
+            if self.attempts == 1:
+                raise RuntimeError("private transcription error")
+            return super().transcribe(audio, cancel_event=cancel_event)
+
+    indicator = FakeIndicator()
+    injector = FakeInjector()
+    controller = DictationController(
+        config=AppConfig(injection_delay_seconds=0.0),
+        recorder=FakeRecorder(),
+        transcriber=RecoveringTranscriber(),
+        injector=injector,
+        indicator=indicator,
+        hotkey_listener=FakeHotkey(),
+    )
+    first_samples = np.full(48_000, 0.1, dtype=np.float32)
+    controller._set_state(AppState.TRANSCRIBING)
+
+    controller._process_recording(
+        CapturedAudio(samples=first_samples, sample_rate=48_000)
+    )
+
+    assert controller.state is AppState.READY
+    assert injector.typed == []
+    assert np.count_nonzero(first_samples) == 0
+    assert indicator.events[-1] == (
+        "error",
+        "Transcription failed. Audio was discarded; hold the key to try again.",
+    )
+    assert "private transcription error" not in str(indicator.events)
+
+    second_samples = np.full(48_000, 0.1, dtype=np.float32)
+    controller._set_state(AppState.TRANSCRIBING)
+    controller._process_recording(
+        CapturedAudio(samples=second_samples, sample_rate=48_000)
+    )
+
+    assert injector.typed == ["Recovered text"]
+    assert controller.state is AppState.READY
+    assert np.count_nonzero(second_samples) == 0
 
 
 def test_escape_cancels_recording_without_transcribing() -> None:

@@ -166,6 +166,7 @@ def main(argv: list[str] | None = None) -> None:
     tray = TrayIcon(
         indicator.request_exit,
         on_settings=settings_window.show_settings,
+        on_retry_model=controller.retry_model_load,
         title=identity.title,
     )
     indicator.status_changed.connect(tray.set_status)
@@ -175,6 +176,9 @@ def main(argv: list[str] | None = None) -> None:
     )
     settings_window.hotkey_capture_started.connect(listener.stop)
     settings_window.hotkey_capture_finished.connect(listener.start)
+    settings_window.model_panel.model_activated.connect(
+        lambda _identifier: controller.retry_model_load()
+    )
 
     def shutdown() -> None:
         model_manager.cancel_active()
