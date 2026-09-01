@@ -22,11 +22,11 @@ Downloaded models remain separately stored under
 `%LOCALAPPDATA%\Bragi\models`. Settings contain model identifiers, never model
 data.
 
-## Version 1 schema
+## Version 2 schema
 
 ```json
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "language": "auto",
   "model": "small",
   "hotkey": "right_ctrl",
@@ -35,9 +35,17 @@ data.
 }
 ```
 
-The defaults preserve Bragi's existing behaviour. Supported language values in
-this schema are `auto`, `en`, and `no`. The later settings interface and model
-catalogue will constrain selectable values further before saving them.
+The defaults preserve Bragi's existing behaviour. Supported language values are
+`auto`, `en`, `no`, and `multilingual`. Automatic detects one language for a
+recording. Multilingual allows faster-whisper to detect the language again for
+individual segments. Very short automatic-language recordings may not contain
+enough speech for reliable detection.
+
+Supported push-to-talk identifiers are `right_ctrl`, `right_alt`, and `f6`
+through `f12`. Microphones use `windows_default` or a stable `portaudio:`
+identifier derived from the Windows audio host API and device name. A device is
+resolved to its current PortAudio index when recording begins, so stored indexes
+do not become stale.
 
 ## Validation and recovery
 
@@ -56,7 +64,8 @@ silently overwriting it.
 Every document has an integer schema version. Migrations are applied in order in
 memory before validation. Version 0 is the reserved unversioned prototype shape
 and maps `language_mode`, `model_name`, and `show_overlay` to their version 1
-equivalents.
+equivalents. Version 1 documents migrate to version 2 without changing their
+existing choices.
 
 A migrated document is written in the current format the next time settings are
 explicitly saved. A schema newer than this Bragi version is never downgraded or
@@ -74,11 +83,15 @@ writes are not supported or required.
 
 ## Current interface support
 
-The v0.2 settings window can show or hide the compact dictation overlay. It also
-shows the language, model, hotkey and microphone used by the current pipeline,
-but does not yet allow those four values to be changed. Live configuration is
-tracked separately so the interface never suggests a saved value is active
-before the pipeline actually supports it.
+The v0.2 settings window can change language, microphone, push-to-talk key, and
+overlay visibility. Language changes affect the next recording. Microphones are
+enumerated locally and validated before a selection becomes active. Hotkey
+capture accepts a deliberately small safe set and replaces the active global
+listener before saving, with rollback if activation fails. These changes do not
+require an application restart.
+
+Model selection remains read-only until the local model manager is implemented
+in issue #7.
 
 ## Privacy and offline operation
 

@@ -4,6 +4,13 @@ Use this checklist on the portable pull-request build before merging a major
 interface change. Record the Windows version, display arrangement, scaling,
 theme, keyboard used, and result in the pull request.
 
+## Deferred manual QA
+
+This manual interface pass was deferred on 2026-09-01 so issue #6 development
+could continue. Nothing below is considered complete by deferral. Run and
+record the full checklist before the v0.2 release candidate, and before closing
+issue #8.
+
 ## Core workflow
 
 - Start Bragi and confirm the tray status changes from loading to ready without
@@ -13,6 +20,15 @@ theme, keyboard used, and result in the pull request.
 - Confirm recording and transcription continue while the Settings window is
   open.
 - Exit from the tray during idle, then repeat during recording.
+- In Settings, change the language between Automatic, English, Norwegian, and
+  Multilingual. Confirm the next recording uses the new choice without a restart.
+- Select an available microphone, save, and dictate without restarting. Then
+  disconnect that microphone and confirm Bragi directs the user to Settings and
+  Windows Default.
+- Change the push-to-talk key, confirm the old key no longer records, and confirm
+  the new key records exactly once per press. Restore Right Ctrl afterward.
+- Dictate Norwegian text containing `æ`, `ø`, and `å` after each configuration
+  change and confirm direct insertion is still correct.
 
 ## Keyboard and assistive access
 
@@ -21,7 +37,8 @@ theme, keyboard used, and result in the pull request.
 - In Settings, use Tab, Shift+Tab, arrow keys, Alt+G, Alt+P, Alt+A, Ctrl+S and
   Escape. Confirm every action has a visible focus indicator.
 - With Windows Narrator, confirm the window, tabs, overlay option, Save, Cancel,
-  status text, and any settings warning have useful names.
+  language, microphone, hotkey controls, status text, and any settings warning
+  have useful names.
 - Confirm loading, ready, listening, transcribing, no-speech and error states
   are understandable without relying on colour.
 

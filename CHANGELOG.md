@@ -22,6 +22,10 @@ here before a release.
 - Multi-display overlay placement tests and a real-Windows interface acceptance
   checklist.
 - PySide6 and Qt notices in preview and release archives.
+- Live Automatic, English, Norwegian, and Multilingual language selection.
+- Live Windows microphone selection with disconnected-device recovery.
+- Validated push-to-talk capture for Right Ctrl, Right Alt, and F6 through F12,
+  including safe listener replacement and Restore Default.
 
 ## [0.1.0] - 2026-08-31
 

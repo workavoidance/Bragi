@@ -8,9 +8,10 @@ from dataclasses import dataclass
 from enum import StrEnum
 from pathlib import Path
 
+from whisper_dictate.hotkeys import HotkeyValidationError, validate_hotkey
 from whisper_dictate.runtime import settings_directory
 
-CURRENT_SCHEMA_VERSION = 1
+CURRENT_SCHEMA_VERSION = 2
 SETTINGS_FILENAME = "settings.json"
 READ_ERRORS = (OSError, UnicodeError)
 JSON_ERRORS = (json.JSONDecodeError, RecursionError)
@@ -29,6 +30,7 @@ class LanguageMode(StrEnum):
     AUTOMATIC = "auto"
     ENGLISH = "en"
     NORWEGIAN = "no"
+    MULTILINGUAL = "multilingual"
 
 
 class SettingsValidationError(ValueError):
@@ -90,7 +92,13 @@ class UserSettings:
 
         model = _validated_text(document["model"], "model", 128)
         hotkey = _validated_text(document["hotkey"], "hotkey", 64)
+        try:
+            hotkey = validate_hotkey(hotkey)
+        except HotkeyValidationError:
+            raise SettingsValidationError("hotkey is unsupported") from None
         microphone = _validated_text(document["microphone"], "microphone", 512)
+        if microphone != "windows_default" and not microphone.startswith("portaudio:"):
+            raise SettingsValidationError("microphone identifier is unsupported")
         overlay_enabled = document["overlay_enabled"]
         if not isinstance(overlay_enabled, bool):
             raise SettingsValidationError("overlay_enabled must be true or false")
@@ -145,7 +153,13 @@ def _migrate_v0_to_v1(document: dict[str, object]) -> dict[str, object]:
     return migrated
 
 
-MIGRATIONS = {0: _migrate_v0_to_v1}
+def _migrate_v1_to_v2(document: dict[str, object]) -> dict[str, object]:
+    migrated = dict(document)
+    migrated["schema_version"] = 2
+    return migrated
+
+
+MIGRATIONS = {0: _migrate_v0_to_v1, 1: _migrate_v1_to_v2}
 
 
 def migrate_document(

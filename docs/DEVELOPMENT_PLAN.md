@@ -5,7 +5,7 @@ for development progress. Update it in the same pull request that completes or
 changes an item. The [roadmap](ROADMAP.md) describes intended releases; this
 file records the work, its order, and its status.
 
-Last reviewed: 2026-08-31
+Last reviewed: 2026-09-01
 
 ## Product requirements that must remain true
 
@@ -27,8 +27,13 @@ Last reviewed: 2026-08-31
 
 **Current target:** v0.2, a configurable and accessible desktop application.
 
-**Next engineering task:** build the accessible PySide6 settings interface in
-issue [#9](https://github.com/workavoidance/Bragi/issues/9).
+**Current engineering task:** add live language, microphone, and push-to-talk
+configuration in issue [#6](https://github.com/workavoidance/Bragi/issues/6).
+
+The manual high-DPI, high-contrast, multi-display, and screen-reader checks for
+issue [#8](https://github.com/workavoidance/Bragi/issues/8) are intentionally
+deferred while issue #6 is built. They remain required in
+[`UI_TEST_CHECKLIST.md`](UI_TEST_CHECKLIST.md) and do not block development.
 
 The v0.2 tracking issue is
 [#10](https://github.com/workavoidance/Bragi/issues/10).
@@ -107,7 +112,7 @@ Tracked by [#9](https://github.com/workavoidance/Bragi/issues/9) and
 
 Tracked by [#6](https://github.com/workavoidance/Bragi/issues/6).
 
-- [ ] Offer Automatic, English, and Norwegian language modes.
+- [ ] Offer Automatic, English, Norwegian, and Multilingual language modes.
 - [ ] Apply language changes to the next recording without restarting Bragi.
 - [ ] Enumerate microphones while keeping Windows Default as the default.
 - [ ] Recover clearly when a selected microphone is disconnected.

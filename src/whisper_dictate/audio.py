@@ -2,8 +2,30 @@ from __future__ import annotations
 
 import threading
 from dataclasses import dataclass
+from urllib.parse import quote, unquote
 
 import numpy as np
+
+WINDOWS_DEFAULT_MICROPHONE = "windows_default"
+MICROPHONE_ID_PREFIX = "portaudio:"
+
+
+class MicrophoneUnavailableError(RuntimeError):
+    """Raised when the selected input device cannot currently be used."""
+
+
+@dataclass(frozen=True)
+class MicrophoneDevice:
+    identifier: str
+    name: str
+    host_api: str
+    device_index: int | None
+
+    @property
+    def label(self) -> str:
+        if self.identifier == WINDOWS_DEFAULT_MICROPHONE:
+            return "Windows Default"
+        return f"{self.name} ({self.host_api})"
 
 
 @dataclass
@@ -12,28 +34,148 @@ class CapturedAudio:
     sample_rate: int
 
 
-class AudioRecorder:
-    """Capture the Windows default input device into memory only."""
+def microphone_identifier(host_api: str, name: str) -> str:
+    return f"{MICROPHONE_ID_PREFIX}{quote(host_api, safe='')}:{quote(name, safe='')}"
 
-    def __init__(self) -> None:
+
+def microphone_name_from_identifier(identifier: str) -> str:
+    if identifier == WINDOWS_DEFAULT_MICROPHONE:
+        return "Windows Default"
+    if not identifier.startswith(MICROPHONE_ID_PREFIX):
+        return "Unknown microphone"
+    encoded = identifier.removeprefix(MICROPHONE_ID_PREFIX)
+    _separator, _colon, encoded_name = encoded.partition(":")
+    return unquote(encoded_name) if encoded_name else "Unknown microphone"
+
+
+def _sounddevice():
+    import sounddevice as sd
+
+    return sd
+
+
+def list_input_devices(backend=None) -> list[MicrophoneDevice]:
+    """Return the current input devices with a stable, human-readable identity."""
+    sd = backend or _sounddevice()
+    devices = sd.query_devices()
+    host_apis = sd.query_hostapis()
+    result = [
+        MicrophoneDevice(
+            identifier=WINDOWS_DEFAULT_MICROPHONE,
+            name="Windows Default",
+            host_api="Windows",
+            device_index=None,
+        )
+    ]
+    seen = {WINDOWS_DEFAULT_MICROPHONE}
+    for index, device in enumerate(devices):
+        if int(device.get("max_input_channels", 0)) <= 0:
+            continue
+        host_index = int(device.get("hostapi", -1))
+        if 0 <= host_index < len(host_apis):
+            host_name = str(host_apis[host_index].get("name", "Windows audio"))
+        else:
+            host_name = "Windows audio"
+        name = str(device.get("name", f"Input {index}"))
+        identifier = microphone_identifier(host_name, name)
+        if identifier in seen:
+            continue
+        seen.add(identifier)
+        result.append(
+            MicrophoneDevice(
+                identifier=identifier,
+                name=name,
+                host_api=host_name,
+                device_index=index,
+            )
+        )
+    return result
+
+
+def resolve_input_device(identifier: str, backend=None) -> MicrophoneDevice:
+    sd = backend or _sounddevice()
+    if identifier == WINDOWS_DEFAULT_MICROPHONE:
+        try:
+            sd.query_devices(kind="input")
+        except Exception as error:
+            raise MicrophoneUnavailableError(
+                "Windows Default microphone is unavailable. Check Windows Sound "
+                "settings."
+            ) from error
+        return MicrophoneDevice(identifier, "Windows Default", "Windows", None)
+
+    try:
+        devices = list_input_devices(sd)
+    except Exception as error:
+        raise MicrophoneUnavailableError(
+            "Microphones could not be checked. Try Windows Default or reconnect "
+            "the device."
+        ) from error
+    for device in devices:
+        if device.identifier == identifier:
+            return device
+    raise MicrophoneUnavailableError(
+        "The selected microphone is unavailable. Open Settings and choose another "
+        "microphone or Windows Default."
+    )
+
+
+class AudioRecorder:
+    """Capture one selected Windows input device into memory only."""
+
+    def __init__(
+        self,
+        microphone: str = WINDOWS_DEFAULT_MICROPHONE,
+        *,
+        backend=None,
+    ) -> None:
         self._lock = threading.Lock()
+        self._configuration_lock = threading.Lock()
         self._blocks: list[np.ndarray] = []
         self._stream = None
         self._sample_rate = 0
+        self._microphone = microphone
+        self._backend = backend
 
     @property
     def is_recording(self) -> bool:
         return self._stream is not None
 
-    def start(self) -> None:
-        import sounddevice as sd
+    @property
+    def microphone(self) -> str:
+        with self._configuration_lock:
+            return self._microphone
 
+    def set_microphone(self, identifier: str) -> None:
+        with self._configuration_lock:
+            self._microphone = identifier
+
+    def validate_microphone(self, identifier: str) -> None:
+        resolve_input_device(identifier, self._backend)
+
+    def start(self) -> None:
+        sd = self._backend or _sounddevice()
         if self._stream is not None:
             return
-        device_info = sd.query_devices(kind="input")
+        with self._configuration_lock:
+            selected = self._microphone
+        device = resolve_input_device(selected, sd)
+        try:
+            if device.device_index is None:
+                device_info = sd.query_devices(kind="input")
+            else:
+                device_info = sd.query_devices(device=device.device_index, kind="input")
+        except Exception as error:
+            raise MicrophoneUnavailableError(
+                "The selected microphone is unavailable. Open Settings and choose "
+                "another microphone or Windows Default."
+            ) from error
         sample_rate = int(round(float(device_info["default_samplerate"])))
         if sample_rate <= 0:
-            raise RuntimeError("The default microphone reported an invalid sample rate")
+            raise MicrophoneUnavailableError(
+                "The selected microphone reported an invalid sample rate. Choose "
+                "another microphone in Settings."
+            )
 
         with self._lock:
             self._blocks.clear()
@@ -49,7 +191,7 @@ class AudioRecorder:
                 self._blocks.append(indata.copy())
 
         stream = sd.InputStream(
-            device=None,
+            device=device.device_index,
             channels=1,
             samplerate=sample_rate,
             dtype="float32",

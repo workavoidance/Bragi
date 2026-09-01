@@ -6,9 +6,10 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from whisper_dictate.audio import CapturedAudio
+from whisper_dictate.audio import CapturedAudio, MicrophoneUnavailableError
 from whisper_dictate.config import AppConfig
 from whisper_dictate.controller import AppState, DictationController
+from whisper_dictate.settings import LanguageMode
 
 
 class FakeRecorder:
@@ -52,6 +53,8 @@ class FakeTranscriber:
         assert audio.dtype == np.float32
         return FakeResult(self.text)
 
+    language_mode = LanguageMode.AUTOMATIC
+
 
 def make_controller(text: str = "Hei, this is local."):
     indicator = FakeIndicator()
@@ -91,6 +94,49 @@ def test_silent_dictation_is_not_typed() -> None:
     assert injector.typed == []
     assert ("empty", None) in indicator.events
     assert controller.state is AppState.READY
+
+
+def test_very_short_automatic_recording_explains_detection_limit() -> None:
+    controller, indicator, injector = make_controller()
+    samples = np.full(1_000, 0.1, dtype=np.float32)
+
+    controller._process_recording(CapturedAudio(samples=samples, sample_rate=48_000))
+
+    assert injector.typed == []
+    assert indicator.events[-1] == (
+        "empty",
+        "Phrase too short. Automatic language detection works better with a "
+        "longer phrase.",
+    )
+
+
+def test_disconnected_microphone_error_is_shown_without_entering_recording() -> None:
+    class MissingRecorder(FakeRecorder):
+        def start(self) -> None:
+            raise MicrophoneUnavailableError(
+                "The selected microphone is unavailable. Choose Windows Default."
+            )
+
+    indicator = FakeIndicator()
+    controller = DictationController(
+        config=AppConfig(),
+        recorder=MissingRecorder(),
+        transcriber=FakeTranscriber(""),
+        injector=FakeInjector(),
+        indicator=indicator,
+        hotkey_listener=FakeHotkey(),
+    )
+    controller._set_state(AppState.READY)
+
+    controller.on_hotkey_press()
+
+    assert controller.state is AppState.READY
+    assert indicator.events == [
+        (
+            "error",
+            "The selected microphone is unavailable. Choose Windows Default.",
+        )
+    ]
 
 
 def test_model_loading_does_not_block_the_calling_thread() -> None:
