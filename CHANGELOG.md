@@ -33,9 +33,13 @@ here before a release.
   rebuild requirement.
 - Per-model byte and percentage progress for downloading and verification, with
   safe cancellation that preserves installed and active models.
+- Retry failed startup model loading from the tray, the dictation key, or after
+  activating a model in Settings without restarting Bragi.
 
 ### Fixed
 
+- Return to Ready after a transcription failure, discard the recording, and
+  allow the next dictation to proceed without restarting.
 - Wait for a newly captured push-to-talk key to be released before restarting
   the global listener, preventing hotkey changes from leaving dictation stuck.
 - Recognise the extended Windows scan code Qt reports for Right Ctrl while

@@ -52,6 +52,12 @@ path rather than a remote model identifier, preventing an accidental network
 lookup during normal dictation. Candidate models load before the active model is
 swapped, and settings failures restore the previous in-memory model.
 
+If the startup model cannot load, the controller enters a recoverable error
+state. Only one background retry can run at a time. The tray, dictation key, and
+a successful model activation can request that retry. A transcription failure
+discards the current in-memory audio and returns the controller to Ready so the
+next dictation can proceed without restarting the process.
+
 The UI-independent settings module accepts and emits an explicit versioned
 schema. It validates a strict field allowlist, migrates old schemas in memory,
 returns privacy-safe recovery warnings, and replaces settings files atomically.

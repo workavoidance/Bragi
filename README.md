@@ -84,8 +84,12 @@ forensic guarantees that an immutable string has vanished instantly from RAM.
 
 ## Troubleshooting
 
-- **Model unavailable:** connect to the internet for the first launch, ensure the
-  executable's folder is writable, then restart it.
+- **Model unavailable:** open the tray menu and choose **Retry speech model**.
+  If the selected model is not installed, open Settings → Models and download or
+  select an installed model. Bragi retries automatically after activation, so
+  the application does not need to restart.
+- **Transcription failed:** the recording is discarded from memory and Bragi
+  returns to Ready. Hold the dictation key and try again.
 - **Microphone unavailable:** if a specifically selected microphone is
   disconnected, Bragi temporarily uses Windows Default and automatically returns
   to the selected microphone when it reconnects. If no Windows input is

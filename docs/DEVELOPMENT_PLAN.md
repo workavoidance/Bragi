@@ -148,7 +148,7 @@ Tracked by [#4](https://github.com/workavoidance/Bragi/issues/4).
 - [x] Add cancellation and an accidental long-recording limit.
 - [x] Show per-model download and verification progress and allow model
   downloads to be cancelled safely.
-- [ ] Recover from model-load and transcription failures.
+- [x] Recover from model-load and transcription failures.
 - [ ] Shut down cleanly during recording, download, and transcription.
 - [ ] Test repeated start and stop cycles for leaked streams or listeners.
 - [ ] If diagnostic logs are added, document every field and prove through tests

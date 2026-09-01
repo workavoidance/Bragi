@@ -38,12 +38,14 @@ class FloatingIndicator(QWidget):
         "transcribing": ("↻", "Transcribing locally…"),
         "cancelled": ("×", "Dictation cancelled"),
         "empty": ("!", "No speech detected"),
+        "model_error": ("!", "Speech model unavailable"),
         "error": ("!", "Something went wrong"),
     }
     HIDE_DELAYS_MS = {
         "ready": 1400,
         "cancelled": 1800,
         "empty": 1800,
+        "model_error": 6000,
         "error": 6000,
     }
 
