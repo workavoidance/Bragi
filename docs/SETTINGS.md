@@ -45,7 +45,9 @@ enough speech for reliable detection.
 Supported interface-language values are `auto`, `en`, and `nb`. Automatic uses
 the Windows display language when it is Norwegian and otherwise uses English.
 Users can explicitly select English or Norwegian Bokmål in Settings. An
-interface-language change takes effect after Bragi restarts.
+interface-language change updates the open Settings window, tray, overlay, and
+model status immediately. Cancel restores the previously saved language, while
+Save persists the previewed choice.
 
 Supported push-to-talk identifiers are `right_ctrl` and `f6` through `f12`.
 Letters, Windows keys, modifier keys such as Alt, and common editing keys are
@@ -99,9 +101,10 @@ writes are not supported or required.
 
 The v0.2 settings window can change dictation language, interface language,
 microphone, push-to-talk key, speech model, and overlay visibility. Dictation
-language changes affect the next recording. Interface language changes after
-Bragi restarts. Microphones are enumerated locally and validated before a
-selection becomes active. Hotkey
+language changes affect the next recording. Interface language changes are
+previewed immediately and do not restart dictation or model activity.
+Microphones are enumerated locally and validated before a selection becomes
+active. Hotkey
 capture accepts a deliberately small safe set and replaces the active global
 listener before saving, with rollback if activation fails. These changes do not
 require an application restart. The Models tab shows local installation state,

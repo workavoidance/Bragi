@@ -3,7 +3,6 @@ from __future__ import annotations
 from collections.abc import Callable
 
 from whisper_dictate.application import create_application
-from whisper_dictate.i18n import tr
 from whisper_dictate.indicator import FloatingIndicator
 from whisper_dictate.settings import SettingsStore
 from whisper_dictate.settings_window import SettingsWindow
@@ -52,5 +51,5 @@ def run_preview(title: str) -> None:
 
     indicator.set_exit_handler(shutdown)
     tray.start()
-    indicator.post("ready", tr("Preview ready — choose a state from the tray icon"))
+    indicator.post("ready", "Preview ready — choose a state from the tray icon")
     indicator.run()

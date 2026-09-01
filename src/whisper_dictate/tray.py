@@ -6,7 +6,7 @@ from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QApplication, QMenu, QSystemTrayIcon
 
 from whisper_dictate.application import bragi_icon
-from whisper_dictate.i18n import tr
+from whisper_dictate.i18n import add_interface_language_listener, tr
 
 
 class TrayIcon:
@@ -29,6 +29,10 @@ class TrayIcon:
         self._on_retry_model = on_retry_model
         self._title = title
         self._preview_actions = dict(preview_actions or {})
+        self._status_state = "starting"
+        self._status_text = tr("Starting")
+        self._preview_menu = None
+        self._preview_action_items: list[tuple[str, QAction]] = []
 
         self._menu = QMenu()
         self._menu.setAccessibleName(tr("Bragi tray menu"))
@@ -54,9 +58,10 @@ class TrayIcon:
         self._menu.addAction(self.retry_model_action)
 
         if self._preview_actions:
-            preview_menu = self._menu.addMenu(f"&{tr('Preview state')}")
+            self._preview_menu = self._menu.addMenu(f"&{tr('Preview state')}")
             for label, callback in self._preview_actions.items():
-                action = preview_menu.addAction(tr(label))
+                action = self._preview_menu.addAction(tr(label))
+                self._preview_action_items.append((label, action))
                 action.triggered.connect(
                     lambda _checked=False, callback=callback: callback()
                 )
@@ -70,6 +75,7 @@ class TrayIcon:
         self._icon.setToolTip(title)
         self._icon.setContextMenu(self._menu)
         self._icon.activated.connect(self._activated)
+        add_interface_language_listener(self.retranslate_ui)
 
     @property
     def menu(self) -> QMenu:
@@ -82,11 +88,28 @@ class TrayIcon:
         self._icon.hide()
 
     def set_status(self, state: str, text: str) -> None:
+        self._status_state = state
+        self._status_text = text
         self._status_action.setText(tr("Status: {text}", text=text))
         self._icon.setToolTip(f"{self._title}\n{text}")
         self.retry_model_action.setVisible(
             state == "model_error" and self._on_retry_model is not None
         )
+
+    def retranslate_ui(self) -> None:
+        self._menu.setAccessibleName(tr("Bragi tray menu"))
+        self.settings_action.setText(f"&{tr('Settings')}…")
+        self.settings_action.setToolTip(tr("Open Bragi settings"))
+        self.retry_model_action.setText(f"&{tr('Retry speech model')}")
+        self.retry_model_action.setToolTip(
+            tr("Try loading the selected local speech model again")
+        )
+        if self._preview_menu is not None:
+            self._preview_menu.setTitle(f"&{tr('Preview state')}")
+        for label, action in self._preview_action_items:
+            action.setText(tr(label))
+        self.exit_action.setText(f"&{tr('Exit')}")
+        self.set_status(self._status_state, self._status_text)
 
     def _settings_clicked(self, checked: bool = False) -> None:
         del checked

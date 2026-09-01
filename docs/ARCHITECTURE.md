@@ -77,6 +77,12 @@ Windows display language for Norwegian Windows installations and otherwise
 falls back to English. Translation does not affect transcription language or
 introduce network access.
 
+Interface components subscribe through weak callbacks to language changes.
+Existing Qt widgets retranslate in place, so the tray, settings, accessibility
+labels, overlay state, and active model progress update without restarting
+audio, transcription, or model work. Settings previews are reversible until
+saved.
+
 Live settings are coordinated as a recoverable operation. A microphone choice
 is validated before activation. A replacement global key listener invalidates
 and stops the previous generation before starting the next, so callbacks from a

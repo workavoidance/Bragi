@@ -3,7 +3,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import replace
 
-from PySide6.QtCore import Qt, Signal, Slot
+from PySide6.QtCore import QSignalBlocker, Qt, Signal, Slot
 from PySide6.QtGui import QKeyEvent, QKeySequence, QShortcut
 from PySide6.QtWidgets import (
     QCheckBox,
@@ -33,7 +33,12 @@ from whisper_dictate.hotkeys import (
     hotkey_display_name,
     validate_hotkey,
 )
-from whisper_dictate.i18n import InterfaceLanguage, tr
+from whisper_dictate.i18n import (
+    InterfaceLanguage,
+    add_interface_language_listener,
+    set_interface_language,
+    tr,
+)
 from whisper_dictate.model_runtime import ModelRuntime
 from whisper_dictate.model_ui import ModelManagerPanel
 from whisper_dictate.models import LocalModelManager
@@ -180,6 +185,20 @@ class HotkeyCaptureButton(QPushButton):
             self._finish_capture()
         event.accept()
 
+    def retranslate_ui(self) -> None:
+        self.setAccessibleDescription(
+            tr("Press this button, then press Right Ctrl or F6 through F12.")
+        )
+        if not self._capturing:
+            self.setText(f"&{tr('Change…')}")
+            self.setAccessibleName(tr("Change push-to-talk key"))
+        elif self._captured_identifier is None:
+            self.setText(tr("Press a key…"))
+            self.setAccessibleName(tr("Waiting for a push-to-talk key"))
+        else:
+            self.setText(tr("Release key…"))
+            self.setAccessibleName(tr("Release the selected push-to-talk key"))
+
 
 class SettingsWindow(QDialog):
     """Keyboard-operable settings that can update a running Bragi instance."""
@@ -205,9 +224,12 @@ class SettingsWindow(QDialog):
         self._save_settings = save_settings or store.save
         self._microphone_provider = microphone_provider or self._default_microphones
         self._can_change_input = can_change_input or (lambda: True)
+        self._title = title
         self._active_model = active_model
         self._model_runtime = model_runtime
         self._settings = UserSettings()
+        self._settings_warning: str | None = None
+        self._status_state = "starting"
         self._selected_hotkey = DEFAULT_HOTKEY
         self.setWindowTitle(tr("{title} Settings", title=title))
         self.setWindowModality(Qt.WindowModality.NonModal)
@@ -221,13 +243,13 @@ class SettingsWindow(QDialog):
         root.setContentsMargins(20, 20, 20, 16)
         root.setSpacing(14)
 
-        heading = QLabel(tr("Bragi settings"), self)
-        heading.setAccessibleName(tr("Bragi settings heading"))
-        heading_font = heading.font()
+        self._heading = QLabel(tr("Bragi settings"), self)
+        self._heading.setAccessibleName(tr("Bragi settings heading"))
+        heading_font = self._heading.font()
         heading_font.setBold(True)
         heading_font.setPointSize(max(heading_font.pointSize() + 5, 16))
-        heading.setFont(heading_font)
-        root.addWidget(heading)
+        self._heading.setFont(heading_font)
+        root.addWidget(self._heading)
 
         self._warning = QLabel(self)
         self._warning.setWordWrap(True)
@@ -269,6 +291,10 @@ class SettingsWindow(QDialog):
         self.save_shortcut = QShortcut(QKeySequence.StandardKey.Save, self)
         self.save_shortcut.setContext(Qt.ShortcutContext.WindowShortcut)
         self.save_shortcut.activated.connect(self._save)
+        self.interface_language_combo.currentIndexChanged.connect(
+            self._preview_interface_language
+        )
+        add_interface_language_listener(self.retranslate_ui)
         self.reload()
 
     @staticmethod
@@ -285,50 +311,57 @@ class SettingsWindow(QDialog):
         layout.setContentsMargins(12, 14, 12, 12)
         layout.setSpacing(16)
 
-        status_group = QGroupBox(tr("Current status"), page)
-        status_layout = QVBoxLayout(status_group)
-        self._status = QLabel(tr("Starting"), status_group)
+        self._status_group = QGroupBox(tr("Current status"), page)
+        status_layout = QVBoxLayout(self._status_group)
+        self._status = QLabel(tr("Starting"), self._status_group)
         self._status.setWordWrap(True)
         self._status.setAccessibleName(tr("Current dictation status"))
         status_layout.addWidget(self._status)
-        layout.addWidget(status_group)
+        layout.addWidget(self._status_group)
 
-        setup_group = QGroupBox(tr("Dictation setup"), page)
-        setup_layout = QFormLayout(setup_group)
+        self._setup_group = QGroupBox(tr("Dictation setup"), page)
+        setup_layout = QFormLayout(self._setup_group)
 
-        self.language_combo = QComboBox(setup_group)
+        self.language_combo = QComboBox(self._setup_group)
         self.language_combo.setAccessibleName(tr("Dictation language"))
         for label, mode in LANGUAGE_CHOICES:
             self.language_combo.addItem(tr(label), mode.value)
-        setup_layout.addRow(f"&{tr('Language')}:", self.language_combo)
-        language_help = QLabel(
+        self._language_label = QLabel(f"&{tr('Language')}:", self._setup_group)
+        self._language_label.setBuddy(self.language_combo)
+        setup_layout.addRow(self._language_label, self.language_combo)
+        self._language_help = QLabel(
             tr(
                 "Automatic detects one language per recording and works best with a "
                 "complete phrase. Multilingual can detect language again within a "
                 "recording."
             ),
-            setup_group,
+            self._setup_group,
         )
-        language_help.setWordWrap(True)
-        setup_layout.addRow(language_help)
+        self._language_help.setWordWrap(True)
+        setup_layout.addRow(self._language_help)
 
         self._model = self._value_label(tr("Speech model value"))
-        setup_layout.addRow(f"{tr('Speech model')}:", self._model)
+        self._model_label = QLabel(f"{tr('Speech model')}:", self._setup_group)
+        setup_layout.addRow(self._model_label, self._model)
 
-        self.interface_language_combo = QComboBox(setup_group)
+        self.interface_language_combo = QComboBox(self._setup_group)
         self.interface_language_combo.setAccessibleName(tr("Interface language"))
         for label, language in INTERFACE_LANGUAGE_CHOICES:
             self.interface_language_combo.addItem(tr(label), language.value)
+        self._interface_language_label = QLabel(
+            f"{tr('Interface language')}:", self._setup_group
+        )
+        self._interface_language_label.setBuddy(self.interface_language_combo)
         setup_layout.addRow(
-            f"{tr('Interface language')}:", self.interface_language_combo
+            self._interface_language_label, self.interface_language_combo
         )
-        interface_help = QLabel(
-            tr("Interface language changes after Bragi restarts."), setup_group
+        self._interface_help = QLabel(
+            tr("Interface language updates immediately."), self._setup_group
         )
-        interface_help.setWordWrap(True)
-        setup_layout.addRow(interface_help)
+        self._interface_help.setWordWrap(True)
+        setup_layout.addRow(self._interface_help)
 
-        microphone_row = QWidget(setup_group)
+        microphone_row = QWidget(self._setup_group)
         microphone_layout = QHBoxLayout(microphone_row)
         microphone_layout.setContentsMargins(0, 0, 0, 0)
         self.microphone_combo = QComboBox(microphone_row)
@@ -340,13 +373,15 @@ class SettingsWindow(QDialog):
         self.refresh_microphones_button.clicked.connect(self._refresh_microphones)
         microphone_layout.addWidget(self.microphone_combo, 1)
         microphone_layout.addWidget(self.refresh_microphones_button)
-        setup_layout.addRow(f"&{tr('Microphone')}:", microphone_row)
-        self._microphone_help = QLabel(setup_group)
+        self._microphone_label = QLabel(f"&{tr('Microphone')}:", self._setup_group)
+        self._microphone_label.setBuddy(self.microphone_combo)
+        setup_layout.addRow(self._microphone_label, microphone_row)
+        self._microphone_help = QLabel(self._setup_group)
         self._microphone_help.setWordWrap(True)
         self._microphone_help.setAccessibleName(tr("Microphone availability"))
         setup_layout.addRow(self._microphone_help)
 
-        hotkey_row = QWidget(setup_group)
+        hotkey_row = QWidget(self._setup_group)
         hotkey_layout = QHBoxLayout(hotkey_row)
         hotkey_layout.setContentsMargins(0, 0, 0, 0)
         self._hotkey = self._value_label(tr("Push-to-talk key value"))
@@ -362,13 +397,14 @@ class SettingsWindow(QDialog):
         hotkey_layout.addWidget(self._hotkey, 1)
         hotkey_layout.addWidget(self.hotkey_capture_button)
         hotkey_layout.addWidget(self.restore_hotkey_button)
-        setup_layout.addRow(f"{tr('Push-to-talk key')}:", hotkey_row)
+        self._hotkey_label = QLabel(f"{tr('Push-to-talk key')}:", self._setup_group)
+        setup_layout.addRow(self._hotkey_label, hotkey_row)
         self._hotkey_help = QLabel(
             tr(
                 "Safe choices are Right Ctrl and F6 through F12. "
                 "Press Escape to cancel key capture."
             ),
-            setup_group,
+            self._setup_group,
         )
         self._hotkey_help.setWordWrap(True)
         self._hotkey_help.setAccessibleName(tr("Push-to-talk key guidance"))
@@ -382,13 +418,13 @@ class SettingsWindow(QDialog):
         self.restore_hotkey_button.clicked.connect(
             lambda: self._set_hotkey(DEFAULT_HOTKEY)
         )
-        layout.addWidget(setup_group)
+        layout.addWidget(self._setup_group)
 
-        appearance_group = QGroupBox(tr("Appearance"), page)
-        appearance_layout = QVBoxLayout(appearance_group)
+        self._appearance_group = QGroupBox(tr("Appearance"), page)
+        appearance_layout = QVBoxLayout(self._appearance_group)
         self.overlay_checkbox = QCheckBox(
             f"&{tr('Show the compact status overlay while dictating')}",
-            appearance_group,
+            self._appearance_group,
         )
         self.overlay_checkbox.setAccessibleName(tr("Show dictation status overlay"))
         self.overlay_checkbox.setAccessibleDescription(
@@ -398,7 +434,7 @@ class SettingsWindow(QDialog):
             )
         )
         appearance_layout.addWidget(self.overlay_checkbox)
-        layout.addWidget(appearance_group)
+        layout.addWidget(self._appearance_group)
         layout.addStretch(1)
 
         scroll = QScrollArea(self)
@@ -418,7 +454,7 @@ class SettingsWindow(QDialog):
         page = QWidget(self)
         layout = QVBoxLayout(page)
         layout.setContentsMargins(12, 14, 12, 12)
-        privacy = QLabel(
+        self._privacy = QLabel(
             tr(
                 "Speech is processed locally on this PC. Bragi does not save your "
                 "recordings or transcripts, does not use the clipboard for dictated "
@@ -427,11 +463,15 @@ class SettingsWindow(QDialog):
             ),
             page,
         )
-        privacy.setWordWrap(True)
-        privacy.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
-        privacy.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByKeyboard)
-        privacy.setAccessibleName(tr("Bragi privacy summary"))
-        layout.addWidget(privacy)
+        self._privacy.setWordWrap(True)
+        self._privacy.setAlignment(
+            Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft
+        )
+        self._privacy.setTextInteractionFlags(
+            Qt.TextInteractionFlag.TextSelectableByKeyboard
+        )
+        self._privacy.setAccessibleName(tr("Bragi privacy summary"))
+        layout.addWidget(self._privacy)
         layout.addStretch(1)
         return page
 
@@ -439,7 +479,7 @@ class SettingsWindow(QDialog):
         page = QWidget(self)
         layout = QVBoxLayout(page)
         layout.setContentsMargins(12, 14, 12, 12)
-        about = QLabel(
+        self._about = QLabel(
             tr(
                 "Bragi is free and open-source local speech-to-text software.\n\n"
                 "The interface uses PySide6 and Qt under their open-source licences. "
@@ -448,10 +488,12 @@ class SettingsWindow(QDialog):
             ),
             page,
         )
-        about.setWordWrap(True)
-        about.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByKeyboard)
-        about.setAccessibleName(tr("About Bragi"))
-        layout.addWidget(about)
+        self._about.setWordWrap(True)
+        self._about.setTextInteractionFlags(
+            Qt.TextInteractionFlag.TextSelectableByKeyboard
+        )
+        self._about.setAccessibleName(tr("About Bragi"))
+        layout.addWidget(self._about)
         layout.addStretch(1)
         return page
 
@@ -472,6 +514,119 @@ class SettingsWindow(QDialog):
     def _select_language(self, language: LanguageMode) -> None:
         index = self.language_combo.findData(language.value)
         self.language_combo.setCurrentIndex(max(index, 0))
+
+    @staticmethod
+    def _replace_choices(combo: QComboBox, choices) -> None:
+        selected = combo.currentData()
+        blocker = QSignalBlocker(combo)
+        combo.clear()
+        for label, value in choices:
+            combo.addItem(tr(label), value.value)
+        index = combo.findData(selected)
+        combo.setCurrentIndex(max(index, 0))
+        del blocker
+
+    @Slot(int)
+    def _preview_interface_language(self, index: int) -> None:
+        if index < 0:
+            return
+        set_interface_language(
+            InterfaceLanguage(self.interface_language_combo.itemData(index))
+        )
+
+    def retranslate_ui(self) -> None:
+        self.setWindowTitle(tr("{title} Settings", title=self._title))
+        self.setAccessibleName(tr("Bragi settings"))
+        self.setAccessibleDescription(
+            tr("Configure Bragi and review its local privacy behaviour.")
+        )
+        self._heading.setText(tr("Bragi settings"))
+        self._heading.setAccessibleName(tr("Bragi settings heading"))
+        self._warning.setAccessibleName(tr("Settings warning"))
+        self._warning.setText(
+            tr(self._settings_warning) if self._settings_warning else ""
+        )
+        self.tabs.setAccessibleName(tr("Settings sections"))
+        self.tabs.setTabText(0, f"&{tr('General')}")
+        self.tabs.setTabText(1, f"&{tr('Models')}")
+        self.tabs.setTabText(2, f"&{tr('Privacy')}")
+        self.tabs.setTabText(3, f"&{tr('About')}")
+        self.buttons.setAccessibleName(tr("Settings actions"))
+        save_button = self.buttons.button(QDialogButtonBox.StandardButton.Save)
+        if save_button is not None:
+            save_button.setText(f"&{tr('Save')}")
+            save_button.setAccessibleName(tr("Save settings"))
+        cancel_button = self.buttons.button(QDialogButtonBox.StandardButton.Cancel)
+        if cancel_button is not None:
+            cancel_button.setText(f"&{tr('Cancel')}")
+            cancel_button.setAccessibleName(tr("Cancel changes"))
+
+        self._status_group.setTitle(tr("Current status"))
+        if self._status_state == "starting":
+            self._status.setText(tr("Starting"))
+        self._status.setAccessibleName(tr("Current dictation status"))
+        self._setup_group.setTitle(tr("Dictation setup"))
+        self._replace_choices(self.language_combo, LANGUAGE_CHOICES)
+        self.language_combo.setAccessibleName(tr("Dictation language"))
+        self._language_label.setText(f"&{tr('Language')}:")
+        self._language_help.setText(
+            tr(
+                "Automatic detects one language per recording and works best with a "
+                "complete phrase. Multilingual can detect language again within a "
+                "recording."
+            )
+        )
+        self._model_label.setText(f"{tr('Speech model')}:")
+        self._model.setAccessibleName(tr("Speech model value"))
+        self._replace_choices(self.interface_language_combo, INTERFACE_LANGUAGE_CHOICES)
+        self.interface_language_combo.setAccessibleName(tr("Interface language"))
+        self._interface_language_label.setText(f"{tr('Interface language')}:")
+        self._interface_help.setText(tr("Interface language updates immediately."))
+        self.microphone_combo.setAccessibleName(tr("Microphone"))
+        self.refresh_microphones_button.setText(f"&{tr('Refresh')}")
+        self.refresh_microphones_button.setAccessibleName(tr("Refresh microphones"))
+        self._microphone_label.setText(f"&{tr('Microphone')}:")
+        self._microphone_help.setAccessibleName(tr("Microphone availability"))
+        self._hotkey_label.setText(f"{tr('Push-to-talk key')}:")
+        self._hotkey.setAccessibleName(tr("Push-to-talk key value"))
+        self.hotkey_capture_button.retranslate_ui()
+        self.restore_hotkey_button.setText(f"&{tr('Restore Default')}")
+        self.restore_hotkey_button.setAccessibleName(
+            tr("Restore default push-to-talk key")
+        )
+        self._set_hotkey(self._selected_hotkey)
+        self._hotkey_help.setAccessibleName(tr("Push-to-talk key guidance"))
+        self._appearance_group.setTitle(tr("Appearance"))
+        self.overlay_checkbox.setText(
+            f"&{tr('Show the compact status overlay while dictating')}"
+        )
+        self.overlay_checkbox.setAccessibleName(tr("Show dictation status overlay"))
+        self.overlay_checkbox.setAccessibleDescription(
+            tr(
+                "Show a non-activating message while Bragi loads, listens and "
+                "transcribes."
+            )
+        )
+        self._privacy.setText(
+            tr(
+                "Speech is processed locally on this PC. Bragi does not save your "
+                "recordings or transcripts, does not use the clipboard for dictated "
+                "text, and needs no account. After the selected speech model has been "
+                "downloaded, normal dictation does not require internet access."
+            )
+        )
+        self._privacy.setAccessibleName(tr("Bragi privacy summary"))
+        self._about.setText(
+            tr(
+                "Bragi is free and open-source local speech-to-text software.\n\n"
+                "The interface uses PySide6 and Qt under their open-source licences. "
+                "See THIRD_PARTY_NOTICES.md included with Bragi for copyright and "
+                "licence information."
+            )
+        )
+        self._about.setAccessibleName(tr("About Bragi"))
+        self._refresh_microphones()
+        self.model_panel.retranslate_ui()
 
     @Slot()
     def _refresh_microphones(self) -> None:
@@ -511,14 +666,18 @@ class SettingsWindow(QDialog):
     def reload(self) -> SettingsLoadResult:
         result = self._store.load()
         self._settings = result.settings
+        self._settings_warning = result.warning
+        set_interface_language(self._settings.interface_language)
         self._warning.setText(tr(result.warning) if result.warning else "")
         self._warning.setVisible(result.warning is not None)
         self.overlay_checkbox.setChecked(self._settings.overlay_enabled)
         self._select_language(self._settings.language)
+        blocker = QSignalBlocker(self.interface_language_combo)
         interface_index = self.interface_language_combo.findData(
             self._settings.interface_language.value
         )
         self.interface_language_combo.setCurrentIndex(max(interface_index, 0))
+        del blocker
         active_model = (
             self._model_runtime.active_model
             if self._model_runtime is not None
@@ -548,12 +707,13 @@ class SettingsWindow(QDialog):
 
     @Slot(str, str)
     def set_status(self, state: str, text: str) -> None:
-        del state
+        self._status_state = state
         self._status.setText(text)
 
     @Slot()
     def reject(self) -> None:
         self.hotkey_capture_button.cancel_capture()
+        set_interface_language(self._settings.interface_language)
         super().reject()
 
     @Slot()
