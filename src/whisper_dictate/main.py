@@ -6,12 +6,13 @@ import os
 import sys
 
 from whisper_dictate.application import create_application
-from whisper_dictate.audio import AudioRecorder
+from whisper_dictate.audio import AudioRecorder, list_input_devices
 from whisper_dictate.config import AppConfig
 from whisper_dictate.controller import DictationController
-from whisper_dictate.hotkeys import RightControlListener
+from whisper_dictate.hotkeys import PushToTalkListener
 from whisper_dictate.indicator import FloatingIndicator
 from whisper_dictate.runtime import detect_build_identity, model_cache_directory
+from whisper_dictate.runtime_settings import RuntimeSettingsApplier
 from whisper_dictate.settings import SettingsStore
 from whisper_dictate.settings_window import SettingsWindow
 from whisper_dictate.transcriber import LocalWhisperTranscriber
@@ -79,9 +80,10 @@ def main(argv: list[str] | None = None) -> None:
     indicator = FloatingIndicator(
         title=identity.title, enabled=settings.overlay_enabled
     )
-    settings_window = SettingsWindow(settings_store, title=identity.title)
-    recorder = AudioRecorder()
-    transcriber = LocalWhisperTranscriber(config, model_cache_directory())
+    recorder = AudioRecorder(settings.microphone)
+    transcriber = LocalWhisperTranscriber(
+        config, model_cache_directory(), language=settings.language
+    )
     injector = WindowsTextInjector()
 
     controller = None
@@ -94,7 +96,7 @@ def main(argv: list[str] | None = None) -> None:
         if controller is not None:
             controller.on_hotkey_release()
 
-    listener = RightControlListener(pressed, released)
+    listener = PushToTalkListener(pressed, released, settings.hotkey)
     controller = DictationController(
         config=config,
         recorder=recorder,
@@ -102,6 +104,22 @@ def main(argv: list[str] | None = None) -> None:
         injector=injector,
         indicator=indicator,
         hotkey_listener=listener,
+    )
+    settings_applier = RuntimeSettingsApplier(
+        settings_store,
+        settings,
+        recorder,
+        transcriber,
+        listener,
+        can_change_input=lambda: not recorder.is_recording,
+    )
+    settings_window = SettingsWindow(
+        settings_store,
+        title=identity.title,
+        save_settings=settings_applier.apply,
+        microphone_provider=list_input_devices,
+        can_change_input=lambda: not recorder.is_recording,
+        active_model=config.model_name,
     )
     tray = TrayIcon(
         indicator.request_exit,
@@ -113,6 +131,8 @@ def main(argv: list[str] | None = None) -> None:
     settings_window.settings_saved.connect(
         lambda saved: indicator.set_enabled(saved.overlay_enabled)
     )
+    settings_window.hotkey_capture_started.connect(listener.stop)
+    settings_window.hotkey_capture_finished.connect(listener.start)
 
     def shutdown() -> None:
         controller.stop()

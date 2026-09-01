@@ -2,7 +2,8 @@
 
 Bragi is a private, local push-to-talk dictation app for Windows 11.
 Hold **Right Ctrl**, speak, and release the key. The complete transcription is
-typed into the application that already has the cursor.
+typed into the application that already has the cursor. Language, microphone,
+and push-to-talk key can be changed from the tray's Settings window.
 
 The project is open source under the MIT licence. It is currently alpha
 software: the core dictation workflow works, while configuration and broader
@@ -10,9 +11,10 @@ hardware testing are being developed.
 
 ## What this first version does
 
-- Recognises English and Norwegian automatically with multilingual Whisper,
-  including language detection on each segment for occasional code-switching.
-- Uses the Windows default microphone.
+- Recognises English and Norwegian automatically, with fixed English, fixed
+  Norwegian, and per-segment Multilingual modes available in Settings.
+- Uses the Windows default microphone initially and can select another Windows
+  input device.
 - Runs transcription locally on the CPU using `int8` inference.
 - Shows a small indicator while loading, recording, and transcribing.
 - Types Unicode directly through Windows, without putting text on the clipboard.
@@ -76,8 +78,8 @@ forensic guarantees that an immutable string has vanished instantly from RAM.
 
 - **Model unavailable:** connect to the internet for the first launch, ensure the
   executable's folder is writable, then restart it.
-- **Default microphone unavailable:** select the intended input under Windows
-  Settings → System → Sound → Input, then restart the app.
+- **Microphone unavailable:** open Bragi Settings and choose another microphone
+  or Windows Default. Use Refresh after reconnecting a device.
 - **Nothing is typed:** test in Notepad first. Confirm the target app is not
   running as administrator while Bragi is running normally.
 - **Too slow:** the first candidate change is the model from `small` to `base` in

@@ -4,6 +4,7 @@ import json
 
 import pytest
 
+from whisper_dictate.audio import microphone_identifier
 from whisper_dictate.settings import (
     CURRENT_SCHEMA_VERSION,
     INVALID_WARNING,
@@ -46,7 +47,7 @@ def test_settings_survive_save_and_reload(tmp_path) -> None:
         language=LanguageMode.NORWEGIAN,
         model="base",
         hotkey="f8",
-        microphone="USB microphone æøå",
+        microphone=microphone_identifier("Windows WASAPI", "USB microphone æøå"),
         overlay_enabled=False,
     )
 
@@ -56,6 +57,22 @@ def test_settings_survive_save_and_reload(tmp_path) -> None:
     assert result.settings == expected
     assert result.warning is None
     assert json.loads(store.path.read_text(encoding="utf-8")) == expected.to_document()
+
+
+def test_removed_right_alt_choice_returns_to_default_without_losing_settings(
+    tmp_path,
+) -> None:
+    document = defaults_document()
+    document["language"] = LanguageMode.NORWEGIAN.value
+    document["hotkey"] = "right_alt"
+    path = tmp_path / "settings.json"
+    path.write_text(json.dumps(document), encoding="utf-8")
+
+    result = SettingsStore(path).load()
+
+    assert result.settings.language is LanguageMode.NORWEGIAN
+    assert result.settings.hotkey == "right_ctrl"
+    assert result.warning is None
 
 
 @pytest.mark.parametrize(
@@ -146,6 +163,18 @@ def test_unversioned_v0_document_is_migrated_in_memory(tmp_path) -> None:
     assert result.migrated_from == 0
     assert result.warning is None
     assert json.loads(path.read_text(encoding="utf-8")) == legacy
+
+
+def test_version_1_document_migrates_to_multilingual_capable_schema(tmp_path) -> None:
+    legacy = defaults_document()
+    legacy["schema_version"] = 1
+    path = tmp_path / "settings.json"
+    path.write_text(json.dumps(legacy), encoding="utf-8")
+
+    result = SettingsStore(path).load()
+
+    assert result.settings == UserSettings()
+    assert result.migrated_from == 1
 
 
 def test_save_rejects_an_invalid_directly_constructed_model(tmp_path) -> None:

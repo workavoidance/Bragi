@@ -4,8 +4,9 @@ Bragi is a Windows tray application with a privacy-first local speech pipeline.
 
 ## Current flow
 
-1. A global Right Ctrl listener starts in-memory microphone capture.
-2. Releasing Right Ctrl closes the audio stream.
+1. A configurable global push-to-talk listener starts in-memory microphone
+   capture. Right Ctrl is the default.
+2. Releasing the configured key closes the audio stream.
 3. Audio is normalised to mono 16 kHz float32 data.
 4. faster-whisper detects the language and transcribes locally.
 5. Windows `SendInput` inserts UTF-16 text at the existing cursor.
@@ -48,6 +49,12 @@ The UI-independent settings module accepts and emits an explicit versioned
 schema. It validates a strict field allowlist, migrates old schemas in memory,
 returns privacy-safe recovery warnings, and replaces settings files atomically.
 Invalid and newer-version files are preserved for diagnosis or recovery.
+
+Live settings are coordinated as a recoverable operation. A microphone choice
+is validated before activation. A replacement global key listener invalidates
+and stops the previous generation before starting the next, so callbacks from a
+late old listener cannot trigger dictation. If activation or persistence fails,
+the previous runtime configuration is restored where possible.
 
 ## Interface implementation
 

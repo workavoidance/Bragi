@@ -4,9 +4,14 @@ import enum
 import threading
 import time
 
-from whisper_dictate.audio import AudioRecorder, CapturedAudio
+from whisper_dictate.audio import (
+    AudioRecorder,
+    CapturedAudio,
+    MicrophoneUnavailableError,
+)
 from whisper_dictate.config import AppConfig
 from whisper_dictate.core import audio_rms, resample_audio
+from whisper_dictate.settings import LanguageMode
 
 
 class AppState(enum.Enum):
@@ -72,9 +77,15 @@ class DictationController:
             self._state = AppState.RECORDING
         try:
             self._recorder.start()
+        except MicrophoneUnavailableError as error:
+            self._set_state(AppState.READY)
+            self._indicator.post("error", str(error))
+            return
         except Exception:
             self._set_state(AppState.READY)
-            self._indicator.post("error", "Default microphone is unavailable")
+            self._indicator.post(
+                "error", "The microphone could not start. Check Bragi Settings."
+            )
             return
         self._indicator.post("recording")
 
@@ -104,7 +115,17 @@ class DictationController:
                 else 0.0
             )
             if duration < self._config.min_recording_seconds:
-                self._indicator.post("empty")
+                if (
+                    getattr(self._transcriber, "language_mode", None)
+                    is LanguageMode.AUTOMATIC
+                ):
+                    self._indicator.post(
+                        "empty",
+                        "Phrase too short. Automatic language detection works "
+                        "better with a longer phrase.",
+                    )
+                else:
+                    self._indicator.post("empty")
                 return
             prepared = resample_audio(
                 captured.samples,
