@@ -39,6 +39,7 @@ def test_bokmal_translates_and_formats_interface_text() -> None:
     assert tr("Settings") == "Innstillinger"
     assert tr("{title} Settings", title="Bragi") == "Innstillinger for Bragi"
     assert tr("Downloading {name}…", name="Small") == "Laster ned Small …"
+    assert tr("English") == "English"
 
 
 def test_unknown_text_is_safely_left_unchanged() -> None:
