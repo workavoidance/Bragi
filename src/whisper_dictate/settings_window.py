@@ -53,11 +53,22 @@ LANGUAGE_CHOICES = (
 )
 
 
-def hotkey_from_qt_key(key: int, native_virtual_key: int) -> str | None:
+def hotkey_from_qt_key(
+    key: int, native_virtual_key: int, native_scan_code: int = 0
+) -> str | None:
     """Translate a captured Windows key into a supported Bragi identifier."""
-    if native_virtual_key == 0xA3:
+    # Qt normally receives the generic VK_CONTROL/VK_MENU values from Windows.
+    # Right-side modifier keys are distinguished by their extended scan codes.
+    # Accept the side-specific virtual keys too, because synthetic events and
+    # some keyboard drivers provide those instead.
+    if native_virtual_key == 0xA3 or (
+        key == int(Qt.Key.Key_Control)
+        and native_scan_code in {0xE01D, 0x11D}
+    ):
         return "right_ctrl"
-    if native_virtual_key == 0xA5:
+    if native_virtual_key == 0xA5 or (
+        key == int(Qt.Key.Key_Alt) and native_scan_code in {0xE038, 0x138}
+    ):
         return "right_alt"
     function_keys = {
         int(getattr(Qt.Key, f"Key_F{number}")): f"f{number}" for number in range(6, 13)
@@ -132,7 +143,9 @@ class HotkeyCaptureButton(QPushButton):
             self._finish_capture()
             event.accept()
             return
-        identifier = hotkey_from_qt_key(event.key(), event.nativeVirtualKey())
+        identifier = hotkey_from_qt_key(
+            event.key(), event.nativeVirtualKey(), event.nativeScanCode()
+        )
         if identifier is None:
             self.capture_rejected.emit(
                 "Use Right Ctrl, Right Alt, or F6 through F12. Letters, Windows "
@@ -153,7 +166,9 @@ class HotkeyCaptureButton(QPushButton):
         if event.isAutoRepeat():
             event.accept()
             return
-        identifier = hotkey_from_qt_key(event.key(), event.nativeVirtualKey())
+        identifier = hotkey_from_qt_key(
+            event.key(), event.nativeVirtualKey(), event.nativeScanCode()
+        )
         if identifier == self._captured_identifier:
             # Keep the global listener stopped until the selected key is
             # physically up. Restarting it on key-down can give pynput half of

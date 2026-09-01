@@ -36,6 +36,8 @@ here before a release.
 
 - Wait for a newly captured push-to-talk key to be released before restarting
   the global listener, preventing hotkey changes from leaving dictation stuck.
+- Recognise the extended Windows scan codes Qt reports for Right Ctrl and Right
+  Alt while keeping the left-side modifier keys unavailable.
 
 ## [0.1.0] - 2026-08-31
 
