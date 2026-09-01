@@ -23,8 +23,12 @@ issue #8.
 - In Settings, change the language between Automatic, English, Norwegian, and
   Multilingual. Confirm the next recording uses the new choice without a restart.
 - Select an available microphone, save, and dictate without restarting. Then
-  disconnect that microphone and confirm Bragi directs the user to Settings and
-  Windows Default.
+  disconnect it and confirm the next dictation temporarily uses Windows Default.
+  Reconnect it and confirm Bragi automatically returns to the selection.
+- With Windows Default selected, change the default input in Windows Sound
+  settings and confirm the next dictation uses the new default without restarting.
+- Disconnect a microphone during a recording and confirm that recording is
+  discarded, Bragi returns to Ready, and the next dictation can start normally.
 - Change the push-to-talk key, confirm the old key no longer records, and confirm
   the new key records exactly once per press. Restore Right Ctrl afterward.
 - Dictate Norwegian text containing `æ`, `ø`, and `å` after each configuration

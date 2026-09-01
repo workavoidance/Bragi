@@ -16,6 +16,7 @@ class FakeRecorder:
     def __init__(self) -> None:
         self.is_recording = False
         self.cancel_count = 0
+        self.using_default_fallback = False
 
     def start(self) -> None:
         self.is_recording = True
@@ -175,6 +176,62 @@ def test_disconnected_microphone_error_is_shown_without_entering_recording() -> 
             "The selected microphone is unavailable. Choose Windows Default.",
         )
     ]
+
+
+def test_temporary_default_microphone_fallback_is_explained() -> None:
+    recorder = FakeRecorder()
+    recorder.using_default_fallback = True
+    indicator = FakeIndicator()
+    controller = DictationController(
+        config=AppConfig(),
+        recorder=recorder,
+        transcriber=FakeTranscriber(""),
+        injector=FakeInjector(),
+        indicator=indicator,
+        hotkey_listener=FakeHotkey(),
+    )
+    controller._set_state(AppState.READY)
+
+    controller.on_hotkey_press()
+
+    assert controller.state is AppState.RECORDING
+    assert indicator.events[-1] == (
+        "recording",
+        "Selected microphone unavailable. Using Windows Default temporarily. "
+        "Release your dictation key, or press Esc to cancel.",
+    )
+
+
+def test_device_removal_while_recording_returns_to_ready() -> None:
+    class RemovedRecorder(FakeRecorder):
+        def stop(self) -> CapturedAudio:
+            self.is_recording = False
+            raise MicrophoneUnavailableError(
+                "The microphone was disconnected. This recording was discarded; "
+                "try dictating again."
+            )
+
+    recorder = RemovedRecorder()
+    indicator = FakeIndicator()
+    controller = DictationController(
+        config=AppConfig(),
+        recorder=recorder,
+        transcriber=FakeTranscriber(""),
+        injector=FakeInjector(),
+        indicator=indicator,
+        hotkey_listener=FakeHotkey(),
+    )
+    controller._set_state(AppState.READY)
+    controller.on_hotkey_press()
+
+    controller.on_hotkey_release()
+
+    assert controller.state is AppState.READY
+    assert indicator.events[-1] == (
+        "error",
+        "The microphone was disconnected. This recording was discarded; "
+        "try dictating again.",
+    )
 
 
 def test_model_loading_does_not_block_the_calling_thread() -> None:

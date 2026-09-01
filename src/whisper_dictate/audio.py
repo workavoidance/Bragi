@@ -135,6 +135,7 @@ class AudioRecorder:
         self._stream = None
         self._sample_rate = 0
         self._microphone = microphone
+        self._using_default_fallback = False
         self._backend = backend
 
     @property
@@ -145,6 +146,11 @@ class AudioRecorder:
     def microphone(self) -> str:
         with self._configuration_lock:
             return self._microphone
+
+    @property
+    def using_default_fallback(self) -> bool:
+        with self._configuration_lock:
+            return self._using_default_fallback
 
     def set_microphone(self, identifier: str) -> None:
         with self._configuration_lock:
@@ -159,7 +165,14 @@ class AudioRecorder:
             return
         with self._configuration_lock:
             selected = self._microphone
-        device = resolve_input_device(selected, sd)
+        using_default_fallback = False
+        try:
+            device = resolve_input_device(selected, sd)
+        except MicrophoneUnavailableError:
+            if selected == WINDOWS_DEFAULT_MICROPHONE:
+                raise
+            device = resolve_input_device(WINDOWS_DEFAULT_MICROPHONE, sd)
+            using_default_fallback = True
         try:
             if device.device_index is None:
                 device_info = sd.query_devices(kind="input")
@@ -190,33 +203,55 @@ class AudioRecorder:
             with self._lock:
                 self._blocks.append(indata.copy())
 
-        stream = sd.InputStream(
-            device=device.device_index,
-            channels=1,
-            samplerate=sample_rate,
-            dtype="float32",
-            callback=callback,
-        )
+        stream = None
         try:
+            stream = sd.InputStream(
+                device=device.device_index,
+                channels=1,
+                samplerate=sample_rate,
+                dtype="float32",
+                callback=callback,
+            )
             stream.start()
-        except Exception:
-            stream.close()
-            raise
+        except Exception as error:
+            if stream is not None:
+                try:
+                    stream.close()
+                except Exception:
+                    pass
+            raise MicrophoneUnavailableError(
+                "The microphone could not start. Check Windows Sound settings."
+            ) from error
         self._stream = stream
+        with self._configuration_lock:
+            self._using_default_fallback = using_default_fallback
 
     def stop(self) -> CapturedAudio:
         stream = self._stream
         self._stream = None
         if stream is None:
             return CapturedAudio(np.empty(0, dtype=np.float32), self._sample_rate)
+        stream_error = None
         try:
             stream.stop()
-        finally:
+        except Exception as error:
+            stream_error = error
+        try:
             stream.close()
+        except Exception as error:
+            if stream_error is None:
+                stream_error = error
 
         with self._lock:
             blocks = self._blocks
             self._blocks = []
+        if stream_error is not None:
+            for block in blocks:
+                block.fill(0)
+            raise MicrophoneUnavailableError(
+                "The microphone was disconnected. This recording was discarded; "
+                "try dictating again."
+            ) from stream_error
         if not blocks:
             samples = np.empty(0, dtype=np.float32)
         else:
