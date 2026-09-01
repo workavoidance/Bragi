@@ -13,10 +13,11 @@ from whisper_dictate.hotkeys import (
     HotkeyValidationError,
     validate_hotkey,
 )
+from whisper_dictate.i18n import InterfaceLanguage
 from whisper_dictate.models import MODEL_BY_ID
 from whisper_dictate.runtime import settings_directory
 
-CURRENT_SCHEMA_VERSION = 3
+CURRENT_SCHEMA_VERSION = 4
 SETTINGS_FILENAME = "settings.json"
 READ_ERRORS = (OSError, UnicodeError)
 JSON_ERRORS = (json.JSONDecodeError, RecursionError)
@@ -68,6 +69,7 @@ class UserSettings:
     hotkey: str = "right_ctrl"
     microphone: str = "windows_default"
     overlay_enabled: bool = True
+    interface_language: InterfaceLanguage = InterfaceLanguage.AUTOMATIC
 
     @classmethod
     def from_document(cls, document: Mapping[str, object]) -> UserSettings:
@@ -78,6 +80,7 @@ class UserSettings:
             "hotkey",
             "microphone",
             "overlay_enabled",
+            "interface_language",
         }
         if set(document) != expected:
             raise SettingsValidationError("settings fields do not match the schema")
@@ -109,6 +112,10 @@ class UserSettings:
         overlay_enabled = document["overlay_enabled"]
         if not isinstance(overlay_enabled, bool):
             raise SettingsValidationError("overlay_enabled must be true or false")
+        try:
+            interface_language = InterfaceLanguage(document["interface_language"])
+        except LANGUAGE_ERRORS:
+            raise SettingsValidationError("interface language is unsupported") from None
 
         return cls(
             schema_version=CURRENT_SCHEMA_VERSION,
@@ -117,6 +124,7 @@ class UserSettings:
             hotkey=hotkey,
             microphone=microphone,
             overlay_enabled=overlay_enabled,
+            interface_language=interface_language,
         )
 
     def to_document(self) -> dict[str, object]:
@@ -125,6 +133,11 @@ class UserSettings:
             if isinstance(self.language, LanguageMode)
             else self.language
         )
+        interface_language = (
+            self.interface_language.value
+            if isinstance(self.interface_language, InterfaceLanguage)
+            else self.interface_language
+        )
         return {
             "schema_version": self.schema_version,
             "language": language,
@@ -132,6 +145,7 @@ class UserSettings:
             "hotkey": self.hotkey,
             "microphone": self.microphone,
             "overlay_enabled": self.overlay_enabled,
+            "interface_language": interface_language,
         }
 
 
@@ -172,7 +186,19 @@ def _migrate_v2_to_v3(document: dict[str, object]) -> dict[str, object]:
     return migrated
 
 
-MIGRATIONS = {0: _migrate_v0_to_v1, 1: _migrate_v1_to_v2, 2: _migrate_v2_to_v3}
+def _migrate_v3_to_v4(document: dict[str, object]) -> dict[str, object]:
+    migrated = dict(document)
+    migrated["interface_language"] = InterfaceLanguage.AUTOMATIC.value
+    migrated["schema_version"] = 4
+    return migrated
+
+
+MIGRATIONS = {
+    0: _migrate_v0_to_v1,
+    1: _migrate_v1_to_v2,
+    2: _migrate_v2_to_v3,
+    3: _migrate_v3_to_v4,
+}
 
 
 def migrate_document(

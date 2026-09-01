@@ -3,6 +3,8 @@ from __future__ import annotations
 import threading
 from collections.abc import Callable
 
+from whisper_dictate.i18n import tr
+
 DEFAULT_HOTKEY = "right_ctrl"
 SUPPORTED_HOTKEYS = {
     "right_ctrl": "Right Ctrl",
@@ -27,14 +29,16 @@ class HotkeyActivationError(RuntimeError):
 def validate_hotkey(identifier: str) -> str:
     if identifier not in SUPPORTED_HOTKEYS:
         raise HotkeyValidationError(
-            "Use Right Ctrl or F6 through F12. Letters, Windows "
-            "keys, and common editing keys are not safe push-to-talk choices."
+            tr(
+                "Use Right Ctrl or F6 through F12. Letters, Windows keys, and "
+                "common editing keys are not safe push-to-talk choices."
+            )
         )
     return identifier
 
 
 def hotkey_display_name(identifier: str) -> str:
-    return SUPPORTED_HOTKEYS.get(identifier, "Unsupported key")
+    return SUPPORTED_HOTKEYS.get(identifier, tr("Unsupported key"))
 
 
 def _pynput_listener_factory(
@@ -175,8 +179,10 @@ class PushToTalkListener:
             except Exception:
                 pass
             raise HotkeyActivationError(
-                "That push-to-talk key could not be activated. The previous key "
-                "has been restored where possible."
+                tr(
+                    "That push-to-talk key could not be activated. The previous key "
+                    "has been restored where possible."
+                )
             ) from error
 
 

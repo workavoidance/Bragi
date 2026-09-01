@@ -68,6 +68,22 @@ issue #8.
 - Confirm loading, ready, listening, transcribing, no-speech and error states
   are understandable without relying on colour.
 
+## English and Norwegian interface
+
+- With the interface language set to Automatic, change the Windows display
+  language between English and Norwegian where practical, restart Bragi, and
+  confirm the matching interface is selected.
+- Explicitly select English and Norsk bokmål in Settings, restart after each
+  choice, and confirm the explicit choice overrides the Windows display
+  language.
+- In Norwegian, review the tray, every Settings tab, model details, download and
+  verification progress, cancellation, microphone recovery, model errors, and
+  status overlay. Confirm no user-facing English remains except model names,
+  product names, and technical file names.
+- Repeat keyboard navigation and Narrator checks in both interface languages.
+- At 100%, 150%, and 200% text scaling, confirm the longer Norwegian labels and
+  messages are not clipped.
+
 ## Display and theme matrix
 
 - Test Windows text scaling at 100%, 150% and 200%. Confirm no text is clipped.

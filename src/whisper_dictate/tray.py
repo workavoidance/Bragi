@@ -6,6 +6,7 @@ from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QApplication, QMenu, QSystemTrayIcon
 
 from whisper_dictate.application import bragi_icon
+from whisper_dictate.i18n import tr
 
 
 class TrayIcon:
@@ -30,36 +31,38 @@ class TrayIcon:
         self._preview_actions = dict(preview_actions or {})
 
         self._menu = QMenu()
-        self._menu.setAccessibleName("Bragi tray menu")
+        self._menu.setAccessibleName(tr("Bragi tray menu"))
         title_action = self._menu.addAction(title)
         title_action.setEnabled(False)
-        self._status_action = self._menu.addAction("Status: Starting")
+        self._status_action = self._menu.addAction(
+            tr("Status: {text}", text=tr("Starting"))
+        )
         self._status_action.setEnabled(False)
         self._menu.addSeparator()
 
-        self.settings_action = QAction("&Settings…", self._menu)
-        self.settings_action.setToolTip("Open Bragi settings")
+        self.settings_action = QAction(f"&{tr('Settings')}…", self._menu)
+        self.settings_action.setToolTip(tr("Open Bragi settings"))
         self.settings_action.triggered.connect(self._settings_clicked)
         self._menu.addAction(self.settings_action)
 
-        self.retry_model_action = QAction("&Retry speech model", self._menu)
+        self.retry_model_action = QAction(f"&{tr('Retry speech model')}", self._menu)
         self.retry_model_action.setToolTip(
-            "Try loading the selected local speech model again"
+            tr("Try loading the selected local speech model again")
         )
         self.retry_model_action.setVisible(False)
         self.retry_model_action.triggered.connect(self._retry_model_clicked)
         self._menu.addAction(self.retry_model_action)
 
         if self._preview_actions:
-            preview_menu = self._menu.addMenu("Preview &state")
+            preview_menu = self._menu.addMenu(f"&{tr('Preview state')}")
             for label, callback in self._preview_actions.items():
-                action = preview_menu.addAction(label)
+                action = preview_menu.addAction(tr(label))
                 action.triggered.connect(
                     lambda _checked=False, callback=callback: callback()
                 )
 
         self._menu.addSeparator()
-        self.exit_action = QAction("E&xit", self._menu)
+        self.exit_action = QAction(f"&{tr('Exit')}", self._menu)
         self.exit_action.triggered.connect(self._exit_clicked)
         self._menu.addAction(self.exit_action)
 
@@ -79,7 +82,7 @@ class TrayIcon:
         self._icon.hide()
 
     def set_status(self, state: str, text: str) -> None:
-        self._status_action.setText(f"Status: {text}")
+        self._status_action.setText(tr("Status: {text}", text=text))
         self._icon.setToolTip(f"{self._title}\n{text}")
         self.retry_model_action.setVisible(
             state == "model_error" and self._on_retry_model is not None

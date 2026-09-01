@@ -37,6 +37,9 @@ here before a release.
   activating a model in Settings without restarting Bragi.
 - Coordinated shutdown that stops input, cancels model operations, prevents late
   text insertion, and waits briefly for in-memory cleanup.
+- Complete Norwegian Bokmål interface for the tray, settings, status messages,
+  model manager, errors, guidance, and accessibility labels, with automatic
+  Windows-language selection and an explicit language setting.
 
 ### Fixed
 

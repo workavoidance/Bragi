@@ -11,6 +11,7 @@ from whisper_dictate.audio import AudioRecorder, list_input_devices
 from whisper_dictate.config import AppConfig
 from whisper_dictate.controller import AppState, DictationController
 from whisper_dictate.hotkeys import PushToTalkListener
+from whisper_dictate.i18n import set_interface_language, tr
 from whisper_dictate.indicator import FloatingIndicator
 from whisper_dictate.lifecycle import shutdown_runtime
 from whisper_dictate.model_runtime import ModelRuntime
@@ -55,10 +56,13 @@ def _arguments(argv: list[str] | None = None) -> argparse.Namespace:
 def main(argv: list[str] | None = None) -> None:
     args = _arguments(argv)
     if os.name != "nt":
-        print("Bragi runs on Windows 11.", file=sys.stderr)
+        print(tr("Bragi runs on Windows 11."), file=sys.stderr)
         raise SystemExit(1)
 
     identity = detect_build_identity(force_development=args.development)
+    settings_store = SettingsStore.for_user(development=identity.development)
+    settings = settings_store.load().settings
+    set_interface_language(settings.interface_language)
     if args.preview:
         from whisper_dictate.preview import run_preview
 
@@ -69,7 +73,7 @@ def main(argv: list[str] | None = None) -> None:
     if already_exists:
         ctypes.windll.user32.MessageBoxW(
             None,
-            "Bragi is already running.",
+            tr("Bragi is already running."),
             identity.title,
             0x40,
         )
@@ -77,9 +81,6 @@ def main(argv: list[str] | None = None) -> None:
         return
 
     _application = create_application(identity.title)
-    settings_store = SettingsStore.for_user(development=identity.development)
-    settings = settings_store.load().settings
-
     config = AppConfig(model_name=settings.model)
     indicator = FloatingIndicator(
         title=identity.title, enabled=settings.overlay_enabled

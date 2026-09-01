@@ -33,6 +33,7 @@ from whisper_dictate.hotkeys import (
     hotkey_display_name,
     validate_hotkey,
 )
+from whisper_dictate.i18n import InterfaceLanguage, tr
 from whisper_dictate.model_runtime import ModelRuntime
 from whisper_dictate.model_ui import ModelManagerPanel
 from whisper_dictate.models import LocalModelManager
@@ -50,6 +51,12 @@ LANGUAGE_CHOICES = (
     ("English", LanguageMode.ENGLISH),
     ("Norwegian", LanguageMode.NORWEGIAN),
     ("Multilingual", LanguageMode.MULTILINGUAL),
+)
+
+INTERFACE_LANGUAGE_CHOICES = (
+    ("Automatic (Windows display language)", InterfaceLanguage.AUTOMATIC),
+    ("English", InterfaceLanguage.ENGLISH),
+    ("Norwegian Bokmål", InterfaceLanguage.NORWEGIAN_BOKMAL),
 )
 
 
@@ -83,13 +90,13 @@ class HotkeyCaptureButton(QPushButton):
         *,
         can_capture: Callable[[], bool] | None = None,
     ) -> None:
-        super().__init__("&Change…", parent)
+        super().__init__(f"&{tr('Change…')}", parent)
         self._capturing = False
         self._captured_identifier: str | None = None
         self._can_capture = can_capture or (lambda: True)
-        self.setAccessibleName("Change push-to-talk key")
+        self.setAccessibleName(tr("Change push-to-talk key"))
         self.setAccessibleDescription(
-            "Press this button, then press Right Ctrl or F6 through F12."
+            tr("Press this button, then press Right Ctrl or F6 through F12.")
         )
         self.clicked.connect(self.begin_capture)
 
@@ -103,13 +110,13 @@ class HotkeyCaptureButton(QPushButton):
             return
         if not self._can_capture():
             self.capture_rejected.emit(
-                "Finish the current recording before changing the push-to-talk key."
+                tr("Finish the current recording before changing the push-to-talk key.")
             )
             return
         self._capturing = True
         self._captured_identifier = None
-        self.setText("Press a key…")
-        self.setAccessibleName("Waiting for a push-to-talk key")
+        self.setText(tr("Press a key…"))
+        self.setAccessibleName(tr("Waiting for a push-to-talk key"))
         self.grabKeyboard()
         self.setFocus(Qt.FocusReason.ShortcutFocusReason)
         self.capture_started.emit()
@@ -123,8 +130,8 @@ class HotkeyCaptureButton(QPushButton):
         self.releaseKeyboard()
         self._capturing = False
         self._captured_identifier = None
-        self.setText("&Change…")
-        self.setAccessibleName("Change push-to-talk key")
+        self.setText(f"&{tr('Change…')}")
+        self.setAccessibleName(tr("Change push-to-talk key"))
         self.capture_finished.emit()
 
     def keyPressEvent(self, event: QKeyEvent) -> None:  # noqa: N802
@@ -143,15 +150,17 @@ class HotkeyCaptureButton(QPushButton):
         )
         if identifier is None:
             self.capture_rejected.emit(
-                "Use Right Ctrl or F6 through F12. Letters, Windows "
-                "keys, and common editing keys are not safe choices."
+                tr(
+                    "Use Right Ctrl or F6 through F12. Letters, Windows "
+                    "keys, and common editing keys are not safe choices."
+                )
             )
             event.accept()
             return
         self._captured_identifier = identifier
         self.hotkey_captured.emit(identifier)
-        self.setText("Release key…")
-        self.setAccessibleName("Release the selected push-to-talk key")
+        self.setText(tr("Release key…"))
+        self.setAccessibleName(tr("Release the selected push-to-talk key"))
         event.accept()
 
     def keyReleaseEvent(self, event: QKeyEvent) -> None:  # noqa: N802
@@ -200,20 +209,20 @@ class SettingsWindow(QDialog):
         self._model_runtime = model_runtime
         self._settings = UserSettings()
         self._selected_hotkey = DEFAULT_HOTKEY
-        self.setWindowTitle(f"{title} Settings")
+        self.setWindowTitle(tr("{title} Settings", title=title))
         self.setWindowModality(Qt.WindowModality.NonModal)
         self.setMinimumSize(600, 560)
-        self.setAccessibleName("Bragi settings")
+        self.setAccessibleName(tr("Bragi settings"))
         self.setAccessibleDescription(
-            "Configure Bragi and review its local privacy behaviour."
+            tr("Configure Bragi and review its local privacy behaviour.")
         )
 
         root = QVBoxLayout(self)
         root.setContentsMargins(20, 20, 20, 16)
         root.setSpacing(14)
 
-        heading = QLabel("Bragi settings", self)
-        heading.setAccessibleName("Bragi settings heading")
+        heading = QLabel(tr("Bragi settings"), self)
+        heading.setAccessibleName(tr("Bragi settings heading"))
         heading_font = heading.font()
         heading_font.setBold(True)
         heading_font.setPointSize(max(heading_font.pointSize() + 5, 16))
@@ -222,20 +231,20 @@ class SettingsWindow(QDialog):
 
         self._warning = QLabel(self)
         self._warning.setWordWrap(True)
-        self._warning.setAccessibleName("Settings warning")
+        self._warning.setAccessibleName(tr("Settings warning"))
         self._warning.setTextInteractionFlags(
             Qt.TextInteractionFlag.TextSelectableByKeyboard
         )
         root.addWidget(self._warning)
 
         self.tabs = QTabWidget(self)
-        self.tabs.setAccessibleName("Settings sections")
-        self.tabs.addTab(self._general_page(), "&General")
+        self.tabs.setAccessibleName(tr("Settings sections"))
+        self.tabs.addTab(self._general_page(), f"&{tr('General')}")
         self.model_panel = ModelManagerPanel(model_manager, model_runtime, self)
         self.model_panel.model_activated.connect(self._model_activated)
-        self.tabs.addTab(self.model_panel, "&Models")
-        self.tabs.addTab(self._privacy_page(), "&Privacy")
-        self.tabs.addTab(self._about_page(), "&About")
+        self.tabs.addTab(self.model_panel, f"&{tr('Models')}")
+        self.tabs.addTab(self._privacy_page(), f"&{tr('Privacy')}")
+        self.tabs.addTab(self._about_page(), f"&{tr('About')}")
         root.addWidget(self.tabs, 1)
 
         self.buttons = QDialogButtonBox(
@@ -243,19 +252,19 @@ class SettingsWindow(QDialog):
             | QDialogButtonBox.StandardButton.Cancel,
             parent=self,
         )
-        self.buttons.setAccessibleName("Settings actions")
+        self.buttons.setAccessibleName(tr("Settings actions"))
         self.buttons.accepted.connect(self._save)
         self.buttons.rejected.connect(self.reject)
         root.addWidget(self.buttons)
 
         save_button = self.buttons.button(QDialogButtonBox.StandardButton.Save)
         if save_button is not None:
-            save_button.setText("&Save")
-            save_button.setAccessibleName("Save settings")
+            save_button.setText(f"&{tr('Save')}")
+            save_button.setAccessibleName(tr("Save settings"))
         cancel_button = self.buttons.button(QDialogButtonBox.StandardButton.Cancel)
         if cancel_button is not None:
-            cancel_button.setText("&Cancel")
-            cancel_button.setAccessibleName("Cancel changes")
+            cancel_button.setText(f"&{tr('Cancel')}")
+            cancel_button.setAccessibleName(tr("Cancel changes"))
 
         self.save_shortcut = QShortcut(QKeySequence.StandardKey.Save, self)
         self.save_shortcut.setContext(Qt.ShortcutContext.WindowShortcut)
@@ -266,7 +275,7 @@ class SettingsWindow(QDialog):
     def _default_microphones() -> list[MicrophoneDevice]:
         return [
             MicrophoneDevice(
-                WINDOWS_DEFAULT_MICROPHONE, "Windows Default", "Windows", None
+                WINDOWS_DEFAULT_MICROPHONE, tr("Windows Default"), "Windows", None
             )
         ]
 
@@ -276,70 +285,93 @@ class SettingsWindow(QDialog):
         layout.setContentsMargins(12, 14, 12, 12)
         layout.setSpacing(16)
 
-        status_group = QGroupBox("Current status", page)
+        status_group = QGroupBox(tr("Current status"), page)
         status_layout = QVBoxLayout(status_group)
-        self._status = QLabel("Starting", status_group)
+        self._status = QLabel(tr("Starting"), status_group)
         self._status.setWordWrap(True)
-        self._status.setAccessibleName("Current dictation status")
+        self._status.setAccessibleName(tr("Current dictation status"))
         status_layout.addWidget(self._status)
         layout.addWidget(status_group)
 
-        setup_group = QGroupBox("Dictation setup", page)
+        setup_group = QGroupBox(tr("Dictation setup"), page)
         setup_layout = QFormLayout(setup_group)
 
         self.language_combo = QComboBox(setup_group)
-        self.language_combo.setAccessibleName("Dictation language")
+        self.language_combo.setAccessibleName(tr("Dictation language"))
         for label, mode in LANGUAGE_CHOICES:
-            self.language_combo.addItem(label, mode.value)
-        setup_layout.addRow("&Language:", self.language_combo)
+            self.language_combo.addItem(tr(label), mode.value)
+        setup_layout.addRow(f"&{tr('Language')}:", self.language_combo)
         language_help = QLabel(
-            "Automatic detects one language per recording and works best with a "
-            "complete phrase. Multilingual can detect language again within a "
-            "recording.",
+            tr(
+                "Automatic detects one language per recording and works best with a "
+                "complete phrase. Multilingual can detect language again within a "
+                "recording."
+            ),
             setup_group,
         )
         language_help.setWordWrap(True)
         setup_layout.addRow(language_help)
 
-        self._model = self._value_label("Speech model value")
-        setup_layout.addRow("Speech model:", self._model)
+        self._model = self._value_label(tr("Speech model value"))
+        setup_layout.addRow(f"{tr('Speech model')}:", self._model)
+
+        self.interface_language_combo = QComboBox(setup_group)
+        self.interface_language_combo.setAccessibleName(tr("Interface language"))
+        for label, language in INTERFACE_LANGUAGE_CHOICES:
+            self.interface_language_combo.addItem(tr(label), language.value)
+        setup_layout.addRow(
+            f"{tr('Interface language')}:", self.interface_language_combo
+        )
+        interface_help = QLabel(
+            tr("Interface language changes after Bragi restarts."), setup_group
+        )
+        interface_help.setWordWrap(True)
+        setup_layout.addRow(interface_help)
 
         microphone_row = QWidget(setup_group)
         microphone_layout = QHBoxLayout(microphone_row)
         microphone_layout.setContentsMargins(0, 0, 0, 0)
         self.microphone_combo = QComboBox(microphone_row)
-        self.microphone_combo.setAccessibleName("Microphone")
-        self.refresh_microphones_button = QPushButton("&Refresh", microphone_row)
-        self.refresh_microphones_button.setAccessibleName("Refresh microphones")
+        self.microphone_combo.setAccessibleName(tr("Microphone"))
+        self.refresh_microphones_button = QPushButton(
+            f"&{tr('Refresh')}", microphone_row
+        )
+        self.refresh_microphones_button.setAccessibleName(tr("Refresh microphones"))
         self.refresh_microphones_button.clicked.connect(self._refresh_microphones)
         microphone_layout.addWidget(self.microphone_combo, 1)
         microphone_layout.addWidget(self.refresh_microphones_button)
-        setup_layout.addRow("&Microphone:", microphone_row)
+        setup_layout.addRow(f"&{tr('Microphone')}:", microphone_row)
         self._microphone_help = QLabel(setup_group)
         self._microphone_help.setWordWrap(True)
-        self._microphone_help.setAccessibleName("Microphone availability")
+        self._microphone_help.setAccessibleName(tr("Microphone availability"))
         setup_layout.addRow(self._microphone_help)
 
         hotkey_row = QWidget(setup_group)
         hotkey_layout = QHBoxLayout(hotkey_row)
         hotkey_layout.setContentsMargins(0, 0, 0, 0)
-        self._hotkey = self._value_label("Push-to-talk key value")
+        self._hotkey = self._value_label(tr("Push-to-talk key value"))
         self.hotkey_capture_button = HotkeyCaptureButton(
             hotkey_row, can_capture=self._can_change_input
         )
-        self.restore_hotkey_button = QPushButton("Restore &Default", hotkey_row)
-        self.restore_hotkey_button.setAccessibleName("Restore default push-to-talk key")
+        self.restore_hotkey_button = QPushButton(
+            f"&{tr('Restore Default')}", hotkey_row
+        )
+        self.restore_hotkey_button.setAccessibleName(
+            tr("Restore default push-to-talk key")
+        )
         hotkey_layout.addWidget(self._hotkey, 1)
         hotkey_layout.addWidget(self.hotkey_capture_button)
         hotkey_layout.addWidget(self.restore_hotkey_button)
-        setup_layout.addRow("Push-to-talk key:", hotkey_row)
+        setup_layout.addRow(f"{tr('Push-to-talk key')}:", hotkey_row)
         self._hotkey_help = QLabel(
-            "Safe choices are Right Ctrl and F6 through F12. "
-            "Press Escape to cancel key capture.",
+            tr(
+                "Safe choices are Right Ctrl and F6 through F12. "
+                "Press Escape to cancel key capture."
+            ),
             setup_group,
         )
         self._hotkey_help.setWordWrap(True)
-        self._hotkey_help.setAccessibleName("Push-to-talk key guidance")
+        self._hotkey_help.setAccessibleName(tr("Push-to-talk key guidance"))
         setup_layout.addRow(self._hotkey_help)
         self.hotkey_capture_button.hotkey_captured.connect(self._set_hotkey)
         self.hotkey_capture_button.capture_rejected.connect(self._hotkey_help.setText)
@@ -352,14 +384,18 @@ class SettingsWindow(QDialog):
         )
         layout.addWidget(setup_group)
 
-        appearance_group = QGroupBox("Appearance", page)
+        appearance_group = QGroupBox(tr("Appearance"), page)
         appearance_layout = QVBoxLayout(appearance_group)
         self.overlay_checkbox = QCheckBox(
-            "Show the compact status &overlay while dictating", appearance_group
+            f"&{tr('Show the compact status overlay while dictating')}",
+            appearance_group,
         )
-        self.overlay_checkbox.setAccessibleName("Show dictation status overlay")
+        self.overlay_checkbox.setAccessibleName(tr("Show dictation status overlay"))
         self.overlay_checkbox.setAccessibleDescription(
-            "Show a non-activating message while Bragi loads, listens and transcribes."
+            tr(
+                "Show a non-activating message while Bragi loads, listens and "
+                "transcribes."
+            )
         )
         appearance_layout.addWidget(self.overlay_checkbox)
         layout.addWidget(appearance_group)
@@ -383,16 +419,18 @@ class SettingsWindow(QDialog):
         layout = QVBoxLayout(page)
         layout.setContentsMargins(12, 14, 12, 12)
         privacy = QLabel(
-            "Speech is processed locally on this PC. Bragi does not save your "
-            "recordings or transcripts, does not use the clipboard for dictated "
-            "text, and needs no account. After the selected speech model has been "
-            "downloaded, normal dictation does not require internet access.",
+            tr(
+                "Speech is processed locally on this PC. Bragi does not save your "
+                "recordings or transcripts, does not use the clipboard for dictated "
+                "text, and needs no account. After the selected speech model has been "
+                "downloaded, normal dictation does not require internet access."
+            ),
             page,
         )
         privacy.setWordWrap(True)
         privacy.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
         privacy.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByKeyboard)
-        privacy.setAccessibleName("Bragi privacy summary")
+        privacy.setAccessibleName(tr("Bragi privacy summary"))
         layout.addWidget(privacy)
         layout.addStretch(1)
         return page
@@ -402,15 +440,17 @@ class SettingsWindow(QDialog):
         layout = QVBoxLayout(page)
         layout.setContentsMargins(12, 14, 12, 12)
         about = QLabel(
-            "Bragi is free and open-source local speech-to-text software.\n\n"
-            "The interface uses PySide6 and Qt under their open-source licences. "
-            "See THIRD_PARTY_NOTICES.md included with Bragi for copyright and "
-            "licence information.",
+            tr(
+                "Bragi is free and open-source local speech-to-text software.\n\n"
+                "The interface uses PySide6 and Qt under their open-source licences. "
+                "See THIRD_PARTY_NOTICES.md included with Bragi for copyright and "
+                "licence information."
+            ),
             page,
         )
         about.setWordWrap(True)
         about.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByKeyboard)
-        about.setAccessibleName("About Bragi")
+        about.setAccessibleName(tr("About Bragi"))
         layout.addWidget(about)
         layout.addStretch(1)
         return page
@@ -421,10 +461,12 @@ class SettingsWindow(QDialog):
         except HotkeyValidationError as error:
             self._hotkey_help.setText(str(error))
             return
-        self._hotkey.setText(hotkey_display_name(self._selected_hotkey))
+        self._hotkey.setText(tr(hotkey_display_name(self._selected_hotkey)))
         self._hotkey_help.setText(
-            "Safe choices are Right Ctrl and F6 through F12. "
-            "Press Escape to cancel key capture."
+            tr(
+                "Safe choices are Right Ctrl and F6 through F12. "
+                "Press Escape to cancel key capture."
+            )
         )
 
     def _select_language(self, language: LanguageMode) -> None:
@@ -439,9 +481,9 @@ class SettingsWindow(QDialog):
             warning = ""
         except Exception:
             devices = self._default_microphones()
-            warning = (
-                "Microphones could not be listed. Check Windows Sound settings or "
-                "use Windows Default."
+            warning = tr(
+                "Microphones could not be listed. Check Windows Sound settings "
+                "or use Windows Default."
             )
         if not any(
             device.identifier == WINDOWS_DEFAULT_MICROPHONE for device in devices
@@ -454,9 +496,11 @@ class SettingsWindow(QDialog):
         selected_index = self.microphone_combo.findData(selected)
         if selected_index < 0 and selected != WINDOWS_DEFAULT_MICROPHONE:
             name = microphone_name_from_identifier(str(selected))
-            self.microphone_combo.addItem(f"Unavailable: {name}", selected)
+            self.microphone_combo.addItem(
+                tr("Unavailable: {name}", name=name), selected
+            )
             selected_index = self.microphone_combo.count() - 1
-            warning = (
+            warning = tr(
                 "The saved microphone is disconnected. Choose another microphone "
                 "or Windows Default before saving."
             )
@@ -467,10 +511,14 @@ class SettingsWindow(QDialog):
     def reload(self) -> SettingsLoadResult:
         result = self._store.load()
         self._settings = result.settings
-        self._warning.setText(result.warning or "")
+        self._warning.setText(tr(result.warning) if result.warning else "")
         self._warning.setVisible(result.warning is not None)
         self.overlay_checkbox.setChecked(self._settings.overlay_enabled)
         self._select_language(self._settings.language)
+        interface_index = self.interface_language_combo.findData(
+            self._settings.interface_language.value
+        )
+        self.interface_language_combo.setCurrentIndex(max(interface_index, 0))
         active_model = (
             self._model_runtime.active_model
             if self._model_runtime is not None
@@ -518,16 +566,21 @@ class SettingsWindow(QDialog):
             hotkey=self._selected_hotkey,
             microphone=microphone,
             overlay_enabled=self.overlay_checkbox.isChecked(),
+            interface_language=InterfaceLanguage(
+                self.interface_language_combo.currentData()
+            ),
         )
         try:
             self._save_settings(updated)
         except (SettingsWriteError, RuntimeSettingsError) as error:
             QMessageBox.critical(
                 self,
-                "Settings could not be applied",
-                str(error)
-                or "Bragi could not apply settings safely. Previous settings "
-                "remain active.",
+                tr("Settings could not be applied"),
+                tr(str(error))
+                or tr(
+                    "Bragi could not apply settings safely. Previous settings "
+                    "remain active."
+                ),
             )
             return
         self._settings = updated

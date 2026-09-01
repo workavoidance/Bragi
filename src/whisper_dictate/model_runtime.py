@@ -3,6 +3,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import replace
 
+from whisper_dictate.i18n import tr
 from whisper_dictate.models import LocalModelManager, ModelState, ModelStatus
 from whisper_dictate.settings import SettingsStore, UserSettings
 
@@ -52,7 +53,7 @@ class ModelRuntime:
             return
         if not self._can_activate():
             raise ModelActivationError(
-                "Wait until Bragi is ready before changing the speech model."
+                tr("Wait until Bragi is ready before changing the speech model.")
             )
         path = self.manager.verify_installed(identifier, thorough=True)
         self._report(
@@ -61,14 +62,17 @@ class ModelRuntime:
                 identifier,
                 ModelState.LOADING,
                 None,
-                f"Loading {spec.name} locally…",
+                tr("Loading {name} locally…", name=spec.name),
             ),
         )
         try:
             previous = self.transcriber.switch_model(identifier, path)
         except Exception as error:
             raise ModelActivationError(
-                f"{spec.name} could not be loaded. The previous model is still active."
+                tr(
+                    "{name} could not be loaded. The previous model is still active.",
+                    name=spec.name,
+                )
             ) from error
 
         current = self.store.load().settings
@@ -86,6 +90,6 @@ class ModelRuntime:
                 identifier,
                 ModelState.INSTALLED,
                 1.0,
-                f"{spec.name} is active.",
+                tr("{name} is active.", name=spec.name),
             ),
         )
