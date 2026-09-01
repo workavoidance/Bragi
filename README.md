@@ -30,6 +30,8 @@ hardware testing are being developed.
 - Types Unicode directly through Windows, without putting text on the clipboard.
 - Does not write recordings, transcripts, or content logs to disk.
 - Provides a keyboard-operable Qt tray menu with status, Settings, and Exit.
+- Provides complete English and Norwegian Bokmål interfaces, following the
+  Windows display language by default with an explicit choice in Settings.
 - Uses the native Windows palette and scaling, including high-DPI displays and
   high-contrast themes.
 

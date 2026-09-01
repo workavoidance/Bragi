@@ -12,6 +12,7 @@ from PySide6.QtGui import QKeyEvent, QKeySequence
 from PySide6.QtWidgets import QApplication
 
 from whisper_dictate.application import create_application
+from whisper_dictate.i18n import InterfaceLanguage, set_interface_language
 from whisper_dictate.indicator import FloatingIndicator, overlay_position
 from whisper_dictate.model_ui import ModelManagerPanel
 from whisper_dictate.models import LocalModelManager, ModelState, ModelStatus
@@ -87,6 +88,23 @@ def test_settings_window_saves_live_language_and_hotkey_choices(tmp_path: Path) 
     window._save()
 
     assert applied == [UserSettings(language=LanguageMode.NORWEGIAN, hotkey="f8")]
+
+
+def test_settings_window_saves_interface_language_choice(tmp_path: Path) -> None:
+    application()
+    store = SettingsStore(tmp_path / "settings.json")
+    window = SettingsWindow(store)
+
+    window.interface_language_combo.setCurrentIndex(
+        window.interface_language_combo.findData(
+            InterfaceLanguage.NORWEGIAN_BOKMAL.value
+        )
+    )
+    window._save()
+
+    assert (
+        store.load().settings.interface_language is InterfaceLanguage.NORWEGIAN_BOKMAL
+    )
 
 
 def test_hotkey_capture_translation_accepts_only_safe_keys() -> None:
@@ -225,3 +243,36 @@ def test_tray_offers_model_retry_only_after_model_load_failure() -> None:
 
     tray.set_status("ready", "Ready")
     assert tray.retry_model_action.isVisible() is False
+
+
+def test_norwegian_interface_covers_settings_models_tray_and_overlay(
+    tmp_path: Path,
+) -> None:
+    application()
+    set_interface_language(InterfaceLanguage.NORWEGIAN_BOKMAL)
+    try:
+        window = SettingsWindow(SettingsStore(tmp_path / "settings.json"))
+        tray = TrayIcon(lambda: None, on_settings=lambda: None)
+        indicator = FloatingIndicator(enabled=False)
+        statuses: list[str] = []
+        indicator.status_changed.connect(lambda _state, text: statuses.append(text))
+
+        indicator.post("transcribing")
+        process_events_until(lambda: bool(statuses))
+
+        assert window.windowTitle() == "Innstillinger for Bragi"
+        assert window.accessibleName() == "Bragi-innstillinger"
+        assert [window.tabs.tabText(index).replace("&", "") for index in range(4)] == [
+            "Generelt",
+            "Modeller",
+            "Personvern",
+            "Om Bragi",
+        ]
+        assert window.model_panel.download_button.text().replace("&", "") == (
+            "Last ned"
+        )
+        assert tray.settings_action.text().replace("&", "") == "Innstillinger…"
+        assert tray.exit_action.text().replace("&", "") == "Avslutt"
+        assert statuses == ["Transkriberer lokalt …"]
+    finally:
+        set_interface_language(InterfaceLanguage.ENGLISH)

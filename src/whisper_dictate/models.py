@@ -12,6 +12,8 @@ from dataclasses import dataclass
 from enum import StrEnum
 from pathlib import Path
 
+from whisper_dictate.i18n import tr
+
 MODEL_MANIFEST = "bragi-model.json"
 MODEL_SCHEMA_VERSION = 1
 MEMORY_ERRORS = (AttributeError, OSError, ValueError)
@@ -268,15 +270,18 @@ def total_physical_memory_gb() -> float | None:
 def hardware_warning(model: ModelSpec, memory_gb: float | None) -> str | None:
     # Windows can report slightly less than the marketed RAM capacity.
     if memory_gb is not None and memory_gb + 0.5 < model.minimum_ram_gb:
-        return (
-            f"{model.name} is intended for PCs with at least "
-            f"{model.minimum_ram_gb} GB of RAM. This PC reports "
-            f"{memory_gb:.1f} GB."
+        return tr(
+            "{name} is intended for PCs with at least {minimum} GB of RAM. "
+            "This PC reports {actual:.1f} GB.",
+            name=model.name,
+            minimum=model.minimum_ram_gb,
+            actual=memory_gb,
         )
     if model.cpu_suitability is CpuSuitability.SLOW:
-        return (
-            f"{model.name} is likely to transcribe slowly on a CPU. "
-            "Small is the recommended model for typical PCs."
+        return tr(
+            "{name} is likely to transcribe slowly on a CPU. Small is the "
+            "recommended model for typical PCs.",
+            name=model.name,
         )
     return None
 
@@ -311,7 +316,7 @@ def _default_downloader(
     class DownloadProgress(tqdm):
         def __init__(self, *args, **kwargs) -> None:
             if cancel_event.is_set():
-                raise ModelOperationCancelled("Model download cancelled.")
+                raise ModelOperationCancelled(tr("Model download cancelled."))
             self._reports_bytes = kwargs.get("unit") == "B"
             initial = int(kwargs.get("initial") or 0)
             kwargs["disable"] = True
@@ -321,14 +326,14 @@ def _default_downloader(
 
         def update(self, increment=1):
             if cancel_event.is_set():
-                raise ModelOperationCancelled("Model download cancelled.")
+                raise ModelOperationCancelled(tr("Model download cancelled."))
             result = super().update(increment)
             if self._reports_bytes:
                 report(int(increment))
             return result
 
     if cancel_event.is_set():
-        raise ModelOperationCancelled("Model download cancelled.")
+        raise ModelOperationCancelled(tr("Model download cancelled."))
     result = snapshot_download(
         repository,
         local_dir=str(output_dir),
@@ -339,7 +344,7 @@ def _default_downloader(
         tqdm_class=DownloadProgress,
     )
     if cancel_event.is_set():
-        raise ModelOperationCancelled("Model download cancelled.")
+        raise ModelOperationCancelled(tr("Model download cancelled."))
     progress_callback(expected_size, expected_size)
     return result
 
@@ -363,7 +368,7 @@ def _file_checksum(
     with path.open("rb") as file:
         while block := file.read(1024 * 1024):
             if cancel_event is not None and cancel_event.is_set():
-                raise ModelOperationCancelled("Model download cancelled.")
+                raise ModelOperationCancelled(tr("Model download cancelled."))
             digest.update(block)
             if progress_callback is not None:
                 progress_callback(len(block))
@@ -411,7 +416,9 @@ class LocalModelManager:
         try:
             return self._by_id[identifier]
         except KeyError:
-            raise ModelManagerError("That model is not in Bragi's catalogue.") from None
+            raise ModelManagerError(
+                tr("That model is not in Bragi's catalogue.")
+            ) from None
 
     def model_path(self, identifier: str) -> Path:
         return self.installed_root / self.spec(identifier).identifier
@@ -480,18 +487,24 @@ class LocalModelManager:
 
         for expected in spec.files:
             if cancel_event is not None and cancel_event.is_set():
-                raise ModelOperationCancelled("Model download cancelled.")
+                raise ModelOperationCancelled(tr("Model download cancelled."))
             path = directory / expected.path
             try:
                 size = path.stat().st_size
             except OSError as error:
                 raise ModelIntegrityError(
-                    f"{spec.name} is incomplete. Download or import it again."
+                    tr(
+                        "{name} is incomplete. Download or import it again.",
+                        name=spec.name,
+                    )
                 ) from error
             if expected.size and size != expected.size:
                 raise ModelIntegrityError(
-                    f"{spec.name} did not pass integrity verification. "
-                    "Download or import it again."
+                    tr(
+                        "{name} did not pass integrity verification. Download or "
+                        "import it again.",
+                        name=spec.name,
+                    )
                 )
             if (
                 thorough
@@ -504,8 +517,11 @@ class LocalModelManager:
                 != expected.checksum
             ):
                 raise ModelIntegrityError(
-                    f"{spec.name} did not pass integrity verification. "
-                    "Download or import it again."
+                    tr(
+                        "{name} did not pass integrity verification. Download or "
+                        "import it again.",
+                        name=spec.name,
+                    )
                 )
 
     def is_installed(self, identifier: str) -> bool:
@@ -524,7 +540,10 @@ class LocalModelManager:
         path = self.model_path(identifier)
         if not self._manifest_matches(path, spec):
             raise ModelNotInstalledError(
-                f"{spec.name} is not completely installed on this PC."
+                tr(
+                    "{name} is not completely installed on this PC.",
+                    name=spec.name,
+                )
             )
         self.verify_directory(path, spec, thorough=thorough)
         return path
@@ -607,11 +626,11 @@ class LocalModelManager:
         with self._idle:
             if self._shutting_down:
                 raise ModelBusyError(
-                    "Bragi is shutting down. No new model operation can start."
+                    tr("Bragi is shutting down. No new model operation can start.")
                 )
             if self._active_operation is not None:
                 raise ModelBusyError(
-                    "Finish the current model operation before starting another."
+                    tr("Finish the current model operation before starting another.")
                 )
             self._active_operation = identifier
             self._operation_cancel = threading.Event()
@@ -656,7 +675,7 @@ class LocalModelManager:
             progress_callback=progress_callback,
         )
         if cancel_event is not None and cancel_event.is_set():
-            raise ModelOperationCancelled("Model download cancelled.")
+            raise ModelOperationCancelled(tr("Model download cancelled."))
         cache_metadata = staging / ".cache"
         if cache_metadata.is_dir():
             shutil.rmtree(cache_metadata, ignore_errors=True)
@@ -696,7 +715,7 @@ class LocalModelManager:
             self._set_status(
                 identifier,
                 ModelState.DOWNLOADING,
-                f"Downloading {spec.name} from the internet…",
+                tr("Downloading {name} from the internet…", name=spec.name),
                 callback,
                 0.0,
                 0,
@@ -707,7 +726,7 @@ class LocalModelManager:
                 self._set_status(
                     identifier,
                     ModelState.DOWNLOADING,
-                    f"Downloading {spec.name}…",
+                    tr("Downloading {name}…", name=spec.name),
                     callback,
                     min(1.0, completed / total) if total else None,
                     completed,
@@ -731,7 +750,7 @@ class LocalModelManager:
             except Exception as error:
                 if cancel_event.is_set():
                     raise ModelOperationCancelled(
-                        "Model download cancelled."
+                        tr("Model download cancelled.")
                     ) from error
                 shutil.rmtree(staging, ignore_errors=True)
                 staging.mkdir(parents=True)
@@ -749,7 +768,7 @@ class LocalModelManager:
             self._set_status(
                 identifier,
                 ModelState.VERIFYING,
-                f"Verifying {spec.name}…",
+                tr("Verifying {name}…", name=spec.name),
                 callback,
                 0.0,
                 0,
@@ -760,7 +779,7 @@ class LocalModelManager:
                 self._set_status(
                     identifier,
                     ModelState.VERIFYING,
-                    f"Verifying {spec.name}…",
+                    tr("Verifying {name}…", name=spec.name),
                     callback,
                     min(1.0, completed / total) if total else None,
                     completed,
@@ -776,7 +795,7 @@ class LocalModelManager:
             self._set_status(
                 identifier,
                 ModelState.INSTALLED,
-                f"{spec.name} is installed.",
+                tr("{name} is installed.", name=spec.name),
                 callback,
                 1.0,
             )
@@ -787,7 +806,10 @@ class LocalModelManager:
             self._set_status(
                 identifier,
                 ModelState.NOT_INSTALLED,
-                f"{spec.name} download cancelled. No model files were installed.",
+                tr(
+                    "{name} download cancelled. No model files were installed.",
+                    name=spec.name,
+                ),
                 callback,
             )
             raise
@@ -796,14 +818,17 @@ class LocalModelManager:
             self._set_status(
                 identifier,
                 ModelState.ERROR,
-                f"{spec.name} could not be installed safely.",
+                tr("{name} could not be installed safely.", name=spec.name),
                 callback,
             )
             if isinstance(error, ModelManagerError):
                 raise
             raise ModelManagerError(
-                f"{spec.name} could not be downloaded. Check the internet "
-                "connection and try again."
+                tr(
+                    "{name} could not be downloaded. Check the internet connection "
+                    "and try again.",
+                    name=spec.name,
+                )
             ) from error
         finally:
             self._finish()
@@ -818,12 +843,12 @@ class LocalModelManager:
             identifier = manifest["model"]
         except (OSError, ValueError, KeyError, TypeError) as error:
             raise ModelIntegrityError(
-                "That folder is not a complete Bragi model export."
+                tr("That folder is not a complete Bragi model export.")
             ) from error
         spec = self.spec(identifier)
         if manifest != self._manifest_document(spec):
             raise ModelIntegrityError(
-                "That model does not match Bragi's trusted catalogue."
+                tr("That model does not match Bragi's trusted catalogue.")
             )
         cancel_event = self._begin(identifier)
         self.staging_root.mkdir(parents=True, exist_ok=True)
@@ -834,12 +859,12 @@ class LocalModelManager:
             self._set_status(
                 identifier,
                 ModelState.VERIFYING,
-                f"Checking imported {spec.name} files…",
+                tr("Checking imported {name} files…", name=spec.name),
                 callback,
             )
             for expected in spec.files:
                 if cancel_event.is_set():
-                    raise ModelOperationCancelled("Model import cancelled.")
+                    raise ModelOperationCancelled(tr("Model import cancelled."))
                 shutil.copy2(source / expected.path, staging / expected.path)
             destination = self._install_staging(
                 staging,
@@ -849,7 +874,7 @@ class LocalModelManager:
             self._set_status(
                 identifier,
                 ModelState.INSTALLED,
-                f"{spec.name} was imported.",
+                tr("{name} was imported.", name=spec.name),
                 callback,
                 1.0,
             )
@@ -859,7 +884,10 @@ class LocalModelManager:
             self._set_status(
                 identifier,
                 ModelState.NOT_INSTALLED,
-                f"{spec.name} import cancelled. No model files were installed.",
+                tr(
+                    "{name} import cancelled. No model files were installed.",
+                    name=spec.name,
+                ),
                 callback,
             )
             raise
@@ -868,13 +896,13 @@ class LocalModelManager:
             self._set_status(
                 identifier,
                 ModelState.ERROR,
-                f"{spec.name} could not be imported safely.",
+                tr("{name} could not be imported safely.", name=spec.name),
                 callback,
             )
             if isinstance(error, ModelManagerError):
                 raise
             raise ModelIntegrityError(
-                "The imported model is incomplete or damaged."
+                tr("The imported model is incomplete or damaged.")
             ) from error
         finally:
             self._finish()
@@ -883,7 +911,10 @@ class LocalModelManager:
         spec = self.spec(identifier)
         if identifier == active_model:
             raise ModelInUseError(
-                f"{spec.name} is currently active. Select another model first."
+                tr(
+                    "{name} is currently active. Select another model first.",
+                    name=spec.name,
+                )
             )
         self._begin(identifier)
         try:
@@ -893,7 +924,7 @@ class LocalModelManager:
             self._set_status(
                 identifier,
                 ModelState.NOT_INSTALLED,
-                f"{spec.name} was removed.",
+                tr("{name} was removed.", name=spec.name),
                 None,
             )
         finally:

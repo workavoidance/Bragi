@@ -69,6 +69,14 @@ schema. It validates a strict field allowlist, migrates old schemas in memory,
 returns privacy-safe recovery warnings, and replaces settings files atomically.
 Invalid and newer-version files are preserved for diagnosis or recovery.
 
+Interface text is routed through the UI-independent `i18n` module. English
+source text is the stable key and Norwegian Bokmål is the first complete
+translation catalogue. At startup, Bragi resolves the stored Automatic,
+English, or Norwegian choice before creating Qt widgets. Automatic follows the
+Windows display language for Norwegian Windows installations and otherwise
+falls back to English. Translation does not affect transcription language or
+introduce network access.
+
 Live settings are coordinated as a recoverable operation. A microphone choice
 is validated before activation. A replacement global key listener invalidates
 and stops the previous generation before starting the next, so callbacks from a

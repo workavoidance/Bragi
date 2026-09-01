@@ -27,9 +27,9 @@ Last reviewed: 2026-09-01
 
 **Current target:** v0.2, a configurable and accessible desktop application.
 
-**Current engineering task:** reliability and privacy hardening in issue
-[#4](https://github.com/workavoidance/Bragi/issues/4). The first bounded change
-adds user cancellation and a safe maximum recording duration.
+**Current engineering task:** Phase 7, the complete Norwegian Bokmål interface.
+The remaining Phase 6 reliability checks are intentionally deferred and remain
+unchecked below.
 
 The manual high-DPI, high-contrast, multi-display, and screen-reader checks for
 issue [#8](https://github.com/workavoidance/Bragi/issues/8) are intentionally
@@ -160,12 +160,12 @@ Tracked by [#4](https://github.com/workavoidance/Bragi/issues/4).
 
 ## Phase 7: Norwegian interface
 
-- [ ] Translate the complete Bragi interface into Norwegian Bokmål, including
+- [x] Translate the complete Bragi interface into Norwegian Bokmål, including
   tray actions, settings, status messages, errors, model guidance, and
   accessibility labels.
-- [ ] Follow the Windows display language on first run and allow English or
+- [x] Follow the Windows display language on first run and allow English or
   Norwegian to be selected explicitly in Settings.
-- [ ] Keep translations structured so additional interface languages can be
+- [x] Keep translations structured so additional interface languages can be
   added without changing application logic.
 - [ ] Test both languages at high DPI, with keyboard navigation, and with a
   screen reader before the release candidate.

@@ -22,16 +22,17 @@ Downloaded models remain separately stored under
 `%LOCALAPPDATA%\Bragi\models`. Settings contain model identifiers, never model
 data.
 
-## Version 3 schema
+## Version 4 schema
 
 ```json
 {
-  "schema_version": 3,
+  "schema_version": 4,
   "language": "auto",
   "model": "small",
   "hotkey": "right_ctrl",
   "microphone": "windows_default",
-  "overlay_enabled": true
+  "overlay_enabled": true,
+  "interface_language": "auto"
 }
 ```
 
@@ -40,6 +41,11 @@ The defaults preserve Bragi's existing behaviour. Supported language values are
 recording. Multilingual allows faster-whisper to detect the language again for
 individual segments. Very short automatic-language recordings may not contain
 enough speech for reliable detection.
+
+Supported interface-language values are `auto`, `en`, and `nb`. Automatic uses
+the Windows display language when it is Norwegian and otherwise uses English.
+Users can explicitly select English or Norwegian Bokmål in Settings. An
+interface-language change takes effect after Bragi restarts.
 
 Supported push-to-talk identifiers are `right_ctrl` and `f6` through `f12`.
 Letters, Windows keys, modifier keys such as Alt, and common editing keys are
@@ -72,7 +78,8 @@ memory before validation. Version 0 is the reserved unversioned prototype shape
 and maps `language_mode`, `model_name`, and `show_overlay` to their version 1
 equivalents. Version 1 documents migrate to version 2 without changing their
 existing choices. Version 2 documents migrate to version 3, which restricts the
-model field to Bragi's trusted local catalogue.
+model field to Bragi's trusted local catalogue. Version 3 documents migrate to
+version 4 with automatic Windows interface-language selection.
 
 A migrated document is written in the current format the next time settings are
 explicitly saved. A schema newer than this Bragi version is never downgraded or
@@ -90,10 +97,11 @@ writes are not supported or required.
 
 ## Current interface support
 
-The v0.2 settings window can change language, microphone, push-to-talk key,
-speech model, and overlay visibility. Language changes affect the next
-recording. Microphones are enumerated locally and validated before a selection
-becomes active. Hotkey
+The v0.2 settings window can change dictation language, interface language,
+microphone, push-to-talk key, speech model, and overlay visibility. Dictation
+language changes affect the next recording. Interface language changes after
+Bragi restarts. Microphones are enumerated locally and validated before a
+selection becomes active. Hotkey
 capture accepts a deliberately small safe set and replaces the active global
 listener before saving, with rollback if activation fails. These changes do not
 require an application restart. The Models tab shows local installation state,

@@ -4,6 +4,7 @@ from collections.abc import Callable
 
 from whisper_dictate.audio import MicrophoneUnavailableError
 from whisper_dictate.hotkeys import HotkeyActivationError
+from whisper_dictate.i18n import tr
 from whisper_dictate.settings import SettingsStore, UserSettings
 
 
@@ -46,8 +47,10 @@ class RuntimeSettingsApplier:
         hotkey_changed = updated.hotkey != previous.hotkey
         if (microphone_changed or hotkey_changed) and not self._can_change_input():
             raise RuntimeSettingsError(
-                "Finish the current recording before changing the microphone or "
-                "push-to-talk key."
+                tr(
+                    "Finish the current recording before changing the microphone or "
+                    "push-to-talk key."
+                )
             )
         if microphone_changed:
             try:

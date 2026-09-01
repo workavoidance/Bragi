@@ -17,6 +17,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from whisper_dictate.i18n import tr
 from whisper_dictate.model_runtime import ModelActivationError, ModelRuntime
 from whisper_dictate.models import (
     VALIDATED_CATALOGUE,
@@ -61,57 +62,63 @@ class ModelManagerPanel(QWidget):
         self._manager_signals.status.connect(self._status_changed)
         if manager is not None:
             manager.add_status_listener(self._manager_signals.status.emit)
-        self.setAccessibleName("Local speech models")
+        self.setAccessibleName(tr("Local speech models"))
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(12, 14, 12, 12)
         layout.setSpacing(12)
 
         introduction = QLabel(
-            "Speech models are installed on this PC. Downloading a new model "
-            "uses the internet only when you request it. Installed models work "
-            "without an internet connection.",
+            tr(
+                "Speech models are installed on this PC. Downloading a new model "
+                "uses the internet only when you request it. Installed models work "
+                "without an internet connection."
+            ),
             self,
         )
         introduction.setWordWrap(True)
-        introduction.setAccessibleName("Model privacy and download explanation")
+        introduction.setAccessibleName(tr("Model privacy and download explanation"))
         layout.addWidget(introduction)
 
         self.model_combo = QComboBox(self)
-        self.model_combo.setAccessibleName("Speech model")
+        self.model_combo.setAccessibleName(tr("Speech model"))
         for spec in self._catalogue:
-            label = f"{spec.name} (recommended)" if spec.recommended else spec.name
+            label = (
+                tr("{name} (recommended)", name=spec.name)
+                if spec.recommended
+                else spec.name
+            )
             self.model_combo.addItem(label, spec.identifier)
         self.model_combo.currentIndexChanged.connect(self.refresh)
         layout.addWidget(self.model_combo)
 
         self.details = QLabel(self)
         self.details.setWordWrap(True)
-        self.details.setAccessibleName("Selected model details")
+        self.details.setAccessibleName(tr("Selected model details"))
         layout.addWidget(self.details)
 
         self.state = QLabel(self)
         self.state.setWordWrap(True)
-        self.state.setAccessibleName("Selected model status")
+        self.state.setAccessibleName(tr("Selected model status"))
         layout.addWidget(self.state)
 
         self.progress = QProgressBar(self)
-        self.progress.setAccessibleName("Model operation progress")
+        self.progress.setAccessibleName(tr("Model operation progress"))
         self.progress.setTextVisible(True)
         self.progress.hide()
         layout.addWidget(self.progress)
 
         button_row = QHBoxLayout()
-        self.download_button = QPushButton("&Download", self)
-        self.download_button.setAccessibleName("Download selected model")
-        self.activate_button = QPushButton("&Use model", self)
-        self.activate_button.setAccessibleName("Use selected speech model")
-        self.remove_button = QPushButton("&Remove", self)
-        self.remove_button.setAccessibleName("Remove selected model")
-        self.import_button = QPushButton("&Import folder…", self)
-        self.import_button.setAccessibleName("Import a Bragi model folder")
-        self.cancel_button = QPushButton("&Cancel download", self)
-        self.cancel_button.setAccessibleName("Cancel model download")
+        self.download_button = QPushButton(f"&{tr('Download')}", self)
+        self.download_button.setAccessibleName(tr("Download selected model"))
+        self.activate_button = QPushButton(f"&{tr('Use model')}", self)
+        self.activate_button.setAccessibleName(tr("Use selected speech model"))
+        self.remove_button = QPushButton(f"&{tr('Remove')}", self)
+        self.remove_button.setAccessibleName(tr("Remove selected model"))
+        self.import_button = QPushButton(f"&{tr('Import folder…')}", self)
+        self.import_button.setAccessibleName(tr("Import a Bragi model folder"))
+        self.cancel_button = QPushButton(f"&{tr('Cancel download')}", self)
+        self.cancel_button.setAccessibleName(tr("Cancel model download"))
         self.cancel_button.hide()
         button_row.addWidget(self.download_button)
         button_row.addWidget(self.activate_button)
@@ -127,7 +134,9 @@ class ModelManagerPanel(QWidget):
         self.cancel_button.clicked.connect(self.cancel_active_operation)
 
         if manager is None or runtime is None:
-            self.state.setText("Model actions are disabled in interface preview mode.")
+            self.state.setText(
+                tr("Model actions are disabled in interface preview mode.")
+            )
             for button in (
                 self.download_button,
                 self.activate_button,
@@ -153,14 +162,22 @@ class ModelManagerPanel(QWidget):
         identifier = self.selected_identifier()
         spec = next(spec for spec in self._catalogue if spec.identifier == identifier)
         ram = (
-            f" Detected RAM: {self._memory_gb:.1f} GB."
+            tr(" Detected RAM: {memory:.1f} GB.", memory=self._memory_gb)
             if self._memory_gb is not None
             else ""
         )
         self.details.setText(
-            f"{spec.description}\nDownload: {spec.download_size_label}. "
-            f"RAM guidance: {spec.minimum_ram_gb} GB or more. "
-            f"CPU suitability: {spec.cpu_suitability.value}.{ram}"
+            tr(spec.description)
+            + "\n"
+            + tr("Download: {size}.", size=spec.download_size_label)
+            + " "
+            + tr("RAM guidance: {memory} GB or more.", memory=spec.minimum_ram_gb)
+            + " "
+            + tr(
+                "CPU suitability: {suitability}.{ram}",
+                suitability=tr(spec.cpu_suitability.value),
+                ram=ram,
+            )
         )
         if self._manager is None or self._runtime is None:
             return
@@ -175,11 +192,11 @@ class ModelManagerPanel(QWidget):
             return
         active = identifier == self.active_identifier()
         if active:
-            state = "Installed and active"
+            state = tr("Installed and active")
         elif installed:
-            state = "Installed"
+            state = tr("Installed")
         else:
-            state = "Not installed. Download requires an internet connection."
+            state = tr("Not installed. Download requires an internet connection.")
         self.state.setText(state)
         self.download_button.setEnabled(not installed)
         self.activate_button.setEnabled(installed and not active)
@@ -191,14 +208,27 @@ class ModelManagerPanel(QWidget):
         warning = hardware_warning(spec, self._memory_gb)
         if warning is None:
             return True
-        answer = QMessageBox.warning(
-            self,
-            "This model may be slow",
-            warning + "\n\nDo you want to continue?",
-            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-            QMessageBox.StandardButton.No,
+        return self._ask_yes_no(
+            tr("This model may be slow"),
+            warning + "\n\n" + tr("Do you want to continue?"),
         )
-        return answer == QMessageBox.StandardButton.Yes
+
+    def _ask_yes_no(self, title: str, text: str) -> bool:
+        message = QMessageBox(
+            QMessageBox.Icon.Warning,
+            title,
+            text,
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            self,
+        )
+        yes_button = message.button(QMessageBox.StandardButton.Yes)
+        no_button = message.button(QMessageBox.StandardButton.No)
+        if yes_button is not None:
+            yes_button.setText(tr("Yes"))
+        if no_button is not None:
+            no_button.setText(tr("No"))
+            message.setDefaultButton(no_button)
+        return message.exec() == QMessageBox.StandardButton.Yes
 
     def _set_busy(self, busy: bool, *, cancellable: bool = False) -> None:
         self.model_combo.setEnabled(not busy)
@@ -214,7 +244,7 @@ class ModelManagerPanel(QWidget):
         self.cancel_button.setEnabled(busy and cancellable)
         if busy:
             self.progress.setRange(0, 0)
-            self.progress.setFormat("Working locally…")
+            self.progress.setFormat(tr("Working locally…"))
 
     def _run(
         self,
@@ -244,8 +274,10 @@ class ModelManagerPanel(QWidget):
                 signals.failed.emit(str(error))
             except Exception:
                 signals.failed.emit(
-                    "The model operation failed safely. The previous model remains "
-                    "active."
+                    tr(
+                        "The model operation failed safely. The previous model remains "
+                        "active."
+                    )
                 )
             else:
                 signals.succeeded.emit(completed_identifier)
@@ -271,12 +303,12 @@ class ModelManagerPanel(QWidget):
             self.select_model(status.identifier)
             self.refresh()
             if status.detail:
-                self.state.setText(status.detail)
+                self.state.setText(tr(status.detail))
             return
         self._render_progress(status)
 
     def _render_progress(self, status: ModelStatus) -> None:
-        self.state.setText(status.detail)
+        self.state.setText(tr(status.detail))
         if status.progress is None:
             self.progress.setRange(0, 0)
         else:
@@ -285,19 +317,29 @@ class ModelManagerPanel(QWidget):
         spec = next(
             spec for spec in self._catalogue if spec.identifier == status.identifier
         )
-        stage = "Verifying" if status.state is ModelState.VERIFYING else "Downloading"
+        stage = (
+            tr("Verifying")
+            if status.state is ModelState.VERIFYING
+            else tr("Downloading")
+        )
         if status.state is ModelState.LOADING:
-            self.progress.setFormat(f"Loading {spec.name} locally…")
+            self.progress.setFormat(tr("Loading {name} locally…", name=spec.name))
         elif status.bytes_completed is not None and status.bytes_total:
             completed = status.bytes_completed / 1_000_000
             total = status.bytes_total / 1_000_000
             percent = round((status.bytes_completed / status.bytes_total) * 100)
             self.progress.setFormat(
-                f"{stage} {spec.name}: {completed:.0f} MB of {total:.0f} MB "
-                f"({percent}%)"
+                tr(
+                    "{stage} {name}: {completed:.0f} MB of {total:.0f} MB ({percent}%)",
+                    stage=stage,
+                    name=spec.name,
+                    completed=completed,
+                    total=total,
+                    percent=percent,
+                )
             )
         else:
-            self.progress.setFormat(f"{stage} {spec.name}…")
+            self.progress.setFormat(tr("{stage} {name}…", stage=stage, name=spec.name))
 
     @Slot(str)
     def _operation_succeeded(self, identifier: str) -> None:
@@ -312,14 +354,14 @@ class ModelManagerPanel(QWidget):
     def _operation_failed(self, message: str) -> None:
         self._set_busy(False)
         self.refresh()
-        QMessageBox.critical(self, "Model operation failed", message)
+        QMessageBox.critical(self, tr("Model operation failed"), tr(message))
         self._task_signals = None
 
     @Slot(str)
     def _operation_cancelled(self, message: str) -> None:
         self._set_busy(False)
         self.refresh()
-        self.state.setText(message or "Model download cancelled.")
+        self.state.setText(tr(message or "Model download cancelled."))
         self._task_signals = None
 
     @Slot()
@@ -328,8 +370,8 @@ class ModelManagerPanel(QWidget):
             return
         if self._manager.cancel_active():
             self.cancel_button.setEnabled(False)
-            self.state.setText("Cancelling model download…")
-            self.progress.setFormat("Cancelling…")
+            self.state.setText(tr("Cancelling model download…"))
+            self.progress.setFormat(tr("Cancelling…"))
 
     @Slot()
     def _download(self) -> None:
@@ -364,14 +406,13 @@ class ModelManagerPanel(QWidget):
             return
         identifier = self.selected_identifier()
         spec = self._manager.spec(identifier)
-        answer = QMessageBox.question(
-            self,
-            "Remove local speech model",
-            f"Remove {spec.name} from this PC? It can be downloaded again later.",
-            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-            QMessageBox.StandardButton.No,
-        )
-        if answer != QMessageBox.StandardButton.Yes:
+        if not self._ask_yes_no(
+            tr("Remove local speech model"),
+            tr(
+                "Remove {name} from this PC? It can be downloaded again later.",
+                name=spec.name,
+            ),
+        ):
             return
 
         def remove(callback) -> str:
@@ -387,7 +428,7 @@ class ModelManagerPanel(QWidget):
             return
         selected = QFileDialog.getExistingDirectory(
             self,
-            "Choose a Bragi model folder",
+            tr("Choose a Bragi model folder"),
             str(Path.home()),
         )
         if not selected:

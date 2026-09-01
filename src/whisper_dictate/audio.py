@@ -6,6 +6,8 @@ from urllib.parse import quote, unquote
 
 import numpy as np
 
+from whisper_dictate.i18n import tr
+
 WINDOWS_DEFAULT_MICROPHONE = "windows_default"
 MICROPHONE_ID_PREFIX = "portaudio:"
 
@@ -24,7 +26,7 @@ class MicrophoneDevice:
     @property
     def label(self) -> str:
         if self.identifier == WINDOWS_DEFAULT_MICROPHONE:
-            return "Windows Default"
+            return tr("Windows Default")
         return f"{self.name} ({self.host_api})"
 
 
@@ -40,12 +42,12 @@ def microphone_identifier(host_api: str, name: str) -> str:
 
 def microphone_name_from_identifier(identifier: str) -> str:
     if identifier == WINDOWS_DEFAULT_MICROPHONE:
-        return "Windows Default"
+        return tr("Windows Default")
     if not identifier.startswith(MICROPHONE_ID_PREFIX):
-        return "Unknown microphone"
+        return tr("Unknown microphone")
     encoded = identifier.removeprefix(MICROPHONE_ID_PREFIX)
     _separator, _colon, encoded_name = encoded.partition(":")
-    return unquote(encoded_name) if encoded_name else "Unknown microphone"
+    return unquote(encoded_name) if encoded_name else tr("Unknown microphone")
 
 
 def _sounddevice():
@@ -99,8 +101,10 @@ def resolve_input_device(identifier: str, backend=None) -> MicrophoneDevice:
             sd.query_devices(kind="input")
         except Exception as error:
             raise MicrophoneUnavailableError(
-                "Windows Default microphone is unavailable. Check Windows Sound "
-                "settings."
+                tr(
+                    "Windows Default microphone is unavailable. Check Windows Sound "
+                    "settings."
+                )
             ) from error
         return MicrophoneDevice(identifier, "Windows Default", "Windows", None)
 
@@ -108,15 +112,19 @@ def resolve_input_device(identifier: str, backend=None) -> MicrophoneDevice:
         devices = list_input_devices(sd)
     except Exception as error:
         raise MicrophoneUnavailableError(
-            "Microphones could not be checked. Try Windows Default or reconnect "
-            "the device."
+            tr(
+                "Microphones could not be checked. Try Windows Default or reconnect "
+                "the device."
+            )
         ) from error
     for device in devices:
         if device.identifier == identifier:
             return device
     raise MicrophoneUnavailableError(
-        "The selected microphone is unavailable. Open Settings and choose another "
-        "microphone or Windows Default."
+        tr(
+            "The selected microphone is unavailable. Open Settings and choose another "
+            "microphone or Windows Default."
+        )
     )
 
 
@@ -180,14 +188,18 @@ class AudioRecorder:
                 device_info = sd.query_devices(device=device.device_index, kind="input")
         except Exception as error:
             raise MicrophoneUnavailableError(
-                "The selected microphone is unavailable. Open Settings and choose "
-                "another microphone or Windows Default."
+                tr(
+                    "The selected microphone is unavailable. Open Settings and choose "
+                    "another microphone or Windows Default."
+                )
             ) from error
         sample_rate = int(round(float(device_info["default_samplerate"])))
         if sample_rate <= 0:
             raise MicrophoneUnavailableError(
-                "The selected microphone reported an invalid sample rate. Choose "
-                "another microphone in Settings."
+                tr(
+                    "The selected microphone reported an invalid sample rate. Choose "
+                    "another microphone in Settings."
+                )
             )
 
         with self._lock:
@@ -220,7 +232,7 @@ class AudioRecorder:
                 except Exception:
                     pass
             raise MicrophoneUnavailableError(
-                "The microphone could not start. Check Windows Sound settings."
+                tr("The microphone could not start. Check Windows Sound settings.")
             ) from error
         self._stream = stream
         with self._configuration_lock:
@@ -249,8 +261,10 @@ class AudioRecorder:
             for block in blocks:
                 block.fill(0)
             raise MicrophoneUnavailableError(
-                "The microphone was disconnected. This recording was discarded; "
-                "try dictating again."
+                tr(
+                    "The microphone was disconnected. This recording was discarded; "
+                    "try dictating again."
+                )
             ) from stream_error
         if not blocks:
             samples = np.empty(0, dtype=np.float32)

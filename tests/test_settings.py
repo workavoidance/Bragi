@@ -5,6 +5,7 @@ import json
 import pytest
 
 from whisper_dictate.audio import microphone_identifier
+from whisper_dictate.i18n import InterfaceLanguage
 from whisper_dictate.settings import (
     CURRENT_SCHEMA_VERSION,
     INVALID_WARNING,
@@ -31,6 +32,7 @@ def test_defaults_match_the_existing_product_behaviour() -> None:
     assert settings.hotkey == "right_ctrl"
     assert settings.microphone == "windows_default"
     assert settings.overlay_enabled is True
+    assert settings.interface_language is InterfaceLanguage.AUTOMATIC
 
 
 def test_missing_file_returns_defaults_without_warning(tmp_path) -> None:
@@ -49,6 +51,7 @@ def test_settings_survive_save_and_reload(tmp_path) -> None:
         hotkey="f8",
         microphone=microphone_identifier("Windows WASAPI", "USB microphone æøå"),
         overlay_enabled=False,
+        interface_language=InterfaceLanguage.NORWEGIAN_BOKMAL,
     )
 
     store.save(expected)
@@ -83,6 +86,7 @@ def test_removed_right_alt_choice_returns_to_default_without_losing_settings(
         ("hotkey", " right_ctrl"),
         ("microphone", "bad\x00device"),
         ("overlay_enabled", "yes"),
+        ("interface_language", "sv"),
     ],
 )
 def test_invalid_values_fall_back_with_a_generic_warning(
@@ -159,6 +163,7 @@ def test_unversioned_v0_document_is_migrated_in_memory(tmp_path) -> None:
         hotkey="f9",
         microphone="windows_default",
         overlay_enabled=False,
+        interface_language=InterfaceLanguage.AUTOMATIC,
     )
     assert result.migrated_from == 0
     assert result.warning is None
@@ -189,11 +194,35 @@ def test_version_2_document_migrates_to_curated_model_schema(tmp_path) -> None:
     assert result.migrated_from == 2
 
 
+def test_version_3_document_adds_automatic_interface_language(tmp_path) -> None:
+    legacy = defaults_document()
+    legacy["schema_version"] = 3
+    legacy.pop("interface_language")
+    path = tmp_path / "settings.json"
+    path.write_text(json.dumps(legacy), encoding="utf-8")
+
+    result = SettingsStore(path).load()
+
+    assert result.settings.interface_language is InterfaceLanguage.AUTOMATIC
+    assert result.migrated_from == 3
+
+
 def test_save_rejects_an_invalid_directly_constructed_model(tmp_path) -> None:
     store = SettingsStore(tmp_path / "settings.json")
 
     with pytest.raises(SettingsValidationError):
         store.save(UserSettings(model=""))
+
+    assert not store.path.exists()
+
+
+def test_save_rejects_an_invalid_directly_constructed_interface_language(
+    tmp_path,
+) -> None:
+    store = SettingsStore(tmp_path / "settings.json")
+
+    with pytest.raises(SettingsValidationError):
+        store.save(UserSettings(interface_language="sv"))
 
     assert not store.path.exists()
 

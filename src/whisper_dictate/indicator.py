@@ -6,6 +6,8 @@ from PySide6.QtCore import Qt, QTimer, Signal, Slot
 from PySide6.QtGui import QCursor, QGuiApplication
 from PySide6.QtWidgets import QApplication, QFrame, QHBoxLayout, QLabel, QWidget
 
+from whisper_dictate.i18n import tr
+
 
 def overlay_position(
     screen: tuple[int, int, int, int],
@@ -62,9 +64,9 @@ class FloatingIndicator(QWidget):
         self.setWindowTitle(title)
         self.setAttribute(Qt.WidgetAttribute.WA_ShowWithoutActivating)
         self.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
-        self.setAccessibleName("Bragi dictation status")
+        self.setAccessibleName(tr("Bragi dictation status"))
         self.setAccessibleDescription(
-            "Shows whether Bragi is loading, listening, or transcribing."
+            tr("Shows whether Bragi is loading, listening, or transcribing.")
         )
         self.setMinimumWidth(300)
         self.setMaximumWidth(480)
@@ -102,7 +104,7 @@ class FloatingIndicator(QWidget):
         state_font.setPointSize(max(state_font.pointSize() + 4, 14))
         self._state_mark.setFont(state_font)
         self._state_mark.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self._state_mark.setAccessibleName("Status symbol")
+        self._state_mark.setAccessibleName(tr("Status symbol"))
         layout.addWidget(self._state_mark)
 
         self._message = QLabel("", frame)
@@ -110,7 +112,7 @@ class FloatingIndicator(QWidget):
         message_font.setBold(True)
         self._message.setFont(message_font)
         self._message.setWordWrap(True)
-        self._message.setAccessibleName("Dictation status message")
+        self._message.setAccessibleName(tr("Dictation status message"))
         layout.addWidget(self._message, 1)
 
         outer = QHBoxLayout(self)
@@ -142,7 +144,7 @@ class FloatingIndicator(QWidget):
     @Slot(str, object)
     def _render(self, state: str, detail: object) -> None:
         symbol, default_text = self.STATES.get(state, self.STATES["error"])
-        text = detail if isinstance(detail, str) and detail else default_text
+        text = tr(detail if isinstance(detail, str) and detail else default_text)
         self._state_mark.setText(symbol)
         self._state_mark.setAccessibleDescription(text)
         self._message.setText(text)
