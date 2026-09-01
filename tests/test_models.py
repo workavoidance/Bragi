@@ -12,6 +12,7 @@ from whisper_dictate.models import (
     MODEL_MANIFEST,
     CpuSuitability,
     LocalModelManager,
+    ModelBusyError,
     ModelFile,
     ModelIntegrityError,
     ModelInUseError,
@@ -295,6 +296,66 @@ def test_cancelling_verification_never_commits_staging(tmp_path: Path) -> None:
     assert manager.is_installed("small") is False
     assert list(manager.staging_root.iterdir()) == []
     assert events[-1].state is ModelState.NOT_INSTALLED
+
+
+def test_shutdown_cancels_download_and_waits_for_staging_cleanup(
+    tmp_path: Path,
+) -> None:
+    started = threading.Event()
+    outcome: list[str] = []
+
+    def blocking_downloader(
+        repository,
+        output_dir,
+        cache_dir,
+        revision,
+        *,
+        local_files_only,
+        allowed_files,
+        expected_size,
+        cancel_event,
+        progress_callback,
+    ) -> None:
+        del (
+            repository,
+            output_dir,
+            cache_dir,
+            revision,
+            allowed_files,
+            expected_size,
+            progress_callback,
+        )
+        if local_files_only:
+            raise FileNotFoundError("not cached")
+        started.set()
+        assert cancel_event.wait(timeout=0.5)
+        raise ModelOperationCancelled("Model download cancelled.")
+
+    manager = LocalModelManager(
+        tmp_path / "models",
+        catalogue=[small_test_spec()],
+        downloader=blocking_downloader,
+    )
+
+    def install() -> None:
+        try:
+            manager.install("small")
+        except ModelOperationCancelled:
+            outcome.append("cancelled")
+
+    worker = threading.Thread(target=install)
+    worker.start()
+    assert started.wait(timeout=0.5)
+
+    assert manager.shutdown(timeout=0.5) is True
+    worker.join(timeout=0.5)
+
+    assert outcome == ["cancelled"]
+    assert worker.is_alive() is False
+    assert manager.is_installed("small") is False
+    assert list(manager.staging_root.iterdir()) == []
+    with pytest.raises(ModelBusyError, match="shutting down"):
+        manager.install("small")
 
 
 def test_verified_model_folder_can_be_imported_without_internet(tmp_path: Path) -> None:

@@ -34,7 +34,10 @@ download is never shown as installed.
 The Models panel shows the model name, bytes downloaded, total size, percentage,
 and a separate verification stage. **Cancel download** interrupts either stage,
 removes incomplete staging and cache files, and does not alter any installed or
-active model. Closing Bragi also requests cancellation before shutdown.
+active model. When Bragi closes, it requests cancellation and waits briefly for
+the download worker to remove incomplete staging files. Any remnants from a
+non-cooperative network operation are removed at the next startup and are never
+treated as installed.
 
 The prototype's existing Hugging Face cache is checked locally before Bragi
 uses the internet. This allows an existing Small download to be reused when

@@ -35,6 +35,8 @@ here before a release.
   safe cancellation that preserves installed and active models.
 - Retry failed startup model loading from the tray, the dictation key, or after
   activating a model in Settings without restarting Bragi.
+- Coordinated shutdown that stops input, cancels model operations, prevents late
+  text insertion, and waits briefly for in-memory cleanup.
 
 ### Fixed
 

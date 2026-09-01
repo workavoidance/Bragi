@@ -20,6 +20,10 @@ issue #8.
 - Confirm recording and transcription continue while the Settings window is
   open.
 - Exit from the tray during idle, then repeat during recording.
+- Exit while Bragi is transcribing and confirm no text is inserted afterward.
+- Start a non-default model download, exit Bragi, and confirm the process closes
+  without hanging. Restart and confirm the cancelled model is not installed and
+  can be downloaded normally.
 - In Settings, change the language between Automatic, English, Norwegian, and
   Multilingual. Confirm the next recording uses the new choice without a restart.
 - Select an available microphone, save, and dictate without restarting. Then

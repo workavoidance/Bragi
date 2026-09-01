@@ -8,6 +8,8 @@ and push-to-talk key can be changed from the tray's Settings window.
 Press **Escape** while Bragi is recording or transcribing to cancel the current
 dictation. Recordings are automatically cancelled after five minutes so an
 accidentally held key cannot leave the microphone recording indefinitely.
+Exiting Bragi stops keyboard and microphone input, cancels active model work,
+and prevents an in-progress transcription from inserting text after exit.
 
 The project is open source under the MIT licence. It is currently alpha
 software: the core dictation workflow works, while configuration and broader

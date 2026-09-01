@@ -3,6 +3,7 @@ from __future__ import annotations
 import enum
 import threading
 import time
+from collections.abc import Callable
 
 from whisper_dictate.audio import (
     AudioRecorder,
@@ -12,6 +13,10 @@ from whisper_dictate.audio import (
 from whisper_dictate.config import AppConfig
 from whisper_dictate.core import audio_rms, resample_audio
 from whisper_dictate.settings import LanguageMode
+
+TRANSCRIPTION_FAILED_MESSAGE = (
+    "Transcription failed. Audio was discarded; hold the key to try again."
+)
 
 
 class AppState(enum.Enum):
@@ -44,6 +49,9 @@ class DictationController:
         self._hotkey_listener = hotkey_listener
         self._state = AppState.LOADING
         self._lock = threading.Lock()
+        self._workers_idle = threading.Condition(self._lock)
+        self._workers: set[threading.Thread] = set()
+        self._insertion_lock = threading.Lock()
         self._stopping = threading.Event()
         self._cancel_requested = threading.Event()
         self._recording_timer = None
@@ -58,10 +66,46 @@ class DictationController:
         with self._lock:
             self._state = state
 
+    def _return_to_ready_with_error(self, message: str) -> None:
+        with self._lock:
+            if self._stopping.is_set() or self._state is AppState.STOPPED:
+                return
+            self._state = AppState.READY
+            self._indicator.post("error", message)
+
     def start(self) -> None:
         self._indicator.post("loading")
         self._hotkey_listener.start()
-        threading.Thread(target=self._load_model, daemon=True).start()
+        self._start_worker(self._load_model)
+
+    def _start_worker(
+        self,
+        target: Callable[..., None],
+        *args,
+        before_start: Callable[[], None] | None = None,
+    ) -> bool:
+        def run() -> None:
+            try:
+                target(*args)
+            finally:
+                with self._workers_idle:
+                    self._workers.discard(threading.current_thread())
+                    self._workers_idle.notify_all()
+
+        worker = threading.Thread(target=run, daemon=True)
+        with self._workers_idle:
+            if self._stopping.is_set() or self._state is AppState.STOPPED:
+                return False
+            self._workers.add(worker)
+            if before_start is not None:
+                before_start()
+            try:
+                worker.start()
+            except Exception:
+                self._workers.discard(worker)
+                self._workers_idle.notify_all()
+                raise
+        return True
 
     def _load_model(self) -> None:
         try:
@@ -89,12 +133,17 @@ class DictationController:
             if self._stopping.is_set() or self._state is not AppState.ERROR:
                 return False
             self._state = AppState.LOADING
-        self._indicator.post("loading", "Retrying local speech model…")
-        threading.Thread(target=self._load_model, daemon=True).start()
-        return True
+        return self._start_worker(
+            self._load_model,
+            before_start=lambda: self._indicator.post(
+                "loading", "Retrying local speech model…"
+            ),
+        )
 
     def on_hotkey_press(self) -> None:
         with self._lock:
+            if self._stopping.is_set():
+                return
             if self._state is AppState.ERROR:
                 retry_model = True
             elif self._state is AppState.READY:
@@ -109,14 +158,18 @@ class DictationController:
         try:
             self._recorder.start()
         except MicrophoneUnavailableError as error:
-            self._set_state(AppState.READY)
-            self._indicator.post("error", str(error))
+            self._return_to_ready_with_error(str(error))
             return
         except Exception:
-            self._set_state(AppState.READY)
-            self._indicator.post(
-                "error", "The microphone could not start. Check Bragi Settings."
+            self._return_to_ready_with_error(
+                "The microphone could not start. Check Bragi Settings."
             )
+            return
+        if self._stopping.is_set():
+            try:
+                self._recorder.cancel()
+            except Exception:
+                pass
             return
         self._start_recording_timer()
         if getattr(self._recorder, "using_default_fallback", False):
@@ -197,17 +250,18 @@ class DictationController:
         try:
             captured = self._recorder.stop()
         except MicrophoneUnavailableError as error:
-            self._set_state(AppState.READY)
-            self._indicator.post("error", str(error))
+            self._return_to_ready_with_error(str(error))
             return
         except Exception:
-            self._set_state(AppState.READY)
-            self._indicator.post("error", "Could not finish microphone recording")
+            self._return_to_ready_with_error("Could not finish microphone recording")
             return
-        self._indicator.post("transcribing")
-        threading.Thread(
-            target=self._process_recording, args=(captured,), daemon=True
-        ).start()
+        started = self._start_worker(
+            self._process_recording,
+            captured,
+            before_start=lambda: self._indicator.post("transcribing"),
+        )
+        if not started and captured.samples.size:
+            captured.samples.fill(0)
 
     def _process_recording(self, captured: CapturedAudio) -> None:
         prepared = None
@@ -252,15 +306,18 @@ class DictationController:
                 self._indicator.post("empty")
                 return
             time.sleep(self._config.injection_delay_seconds)
-            if self._cancel_requested.is_set():
-                return
-            self._injector.type_text(text)
-            self._indicator.post("ready")
+            with self._insertion_lock:
+                if self._cancel_requested.is_set() or self._stopping.is_set():
+                    return
+                self._injector.type_text(text)
+                if not self._stopping.is_set():
+                    self._indicator.post("ready")
         except Exception:
-            self._indicator.post(
-                "error",
-                "Transcription failed. Audio was discarded; hold the key to try again.",
-            )
+            if not self._stopping.is_set():
+                self._indicator.post(
+                    "error",
+                    TRANSCRIPTION_FAILED_MESSAGE,
+                )
         finally:
             # Best-effort removal from process memory. Python strings are
             # immutable, so no forensic zeroisation guarantee is possible.
@@ -272,11 +329,37 @@ class DictationController:
             if not self._stopping.is_set():
                 self._set_state(AppState.READY)
 
-    def stop(self) -> None:
+    def begin_shutdown(self) -> None:
+        """Prevent new work and release active input resources."""
         self._stopping.set()
         self._cancel_requested.set()
-        self._cancel_recording_timer()
-        self._set_state(AppState.STOPPED)
-        self._hotkey_listener.stop()
-        if self._recorder.is_recording:
-            self._recorder.cancel()
+        with self._lock:
+            self._state = AppState.STOPPED
+            timer = self._recording_timer
+            self._recording_timer = None
+        if timer is not None:
+            timer.cancel()
+        try:
+            self._hotkey_listener.stop()
+        except Exception:
+            pass
+        try:
+            if self._recorder.is_recording:
+                self._recorder.cancel()
+        except Exception:
+            pass
+        # Once this returns, no text insertion can still be in progress or start.
+        with self._insertion_lock:
+            pass
+
+    def wait_for_shutdown(self, timeout: float = 5.0) -> bool:
+        """Wait briefly for cooperative model and transcription cleanup."""
+        with self._workers_idle:
+            return self._workers_idle.wait_for(
+                lambda: not self._workers,
+                timeout=max(0.0, timeout),
+            )
+
+    def stop(self, timeout: float = 5.0) -> bool:
+        self.begin_shutdown()
+        return self.wait_for_shutdown(timeout)
