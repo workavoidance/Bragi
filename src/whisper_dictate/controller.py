@@ -95,7 +95,14 @@ class DictationController:
             )
             return
         self._start_recording_timer()
-        self._indicator.post("recording")
+        if getattr(self._recorder, "using_default_fallback", False):
+            self._indicator.post(
+                "recording",
+                "Selected microphone unavailable. Using Windows Default "
+                "temporarily. Release your dictation key, or press Esc to cancel.",
+            )
+        else:
+            self._indicator.post("recording")
 
     def _start_recording_timer(self) -> None:
         if self._config.max_recording_seconds <= 0:
@@ -165,6 +172,10 @@ class DictationController:
             timer.cancel()
         try:
             captured = self._recorder.stop()
+        except MicrophoneUnavailableError as error:
+            self._set_state(AppState.READY)
+            self._indicator.post("error", str(error))
+            return
         except Exception:
             self._set_state(AppState.READY)
             self._indicator.post("error", "Could not finish microphone recording")

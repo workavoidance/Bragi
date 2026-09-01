@@ -84,8 +84,10 @@ forensic guarantees that an immutable string has vanished instantly from RAM.
 
 - **Model unavailable:** connect to the internet for the first launch, ensure the
   executable's folder is writable, then restart it.
-- **Microphone unavailable:** open Bragi Settings and choose another microphone
-  or Windows Default. Use Refresh after reconnecting a device.
+- **Microphone unavailable:** if a specifically selected microphone is
+  disconnected, Bragi temporarily uses Windows Default and automatically returns
+  to the selected microphone when it reconnects. If no Windows input is
+  available, check Windows Sound settings.
 - **Nothing is typed:** test in Notepad first. Confirm the target app is not
   running as administrator while Bragi is running normally.
 - **Too slow:** the first candidate change is the model from `small` to `base` in

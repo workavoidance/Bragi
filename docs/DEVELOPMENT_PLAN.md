@@ -144,7 +144,7 @@ Tracked by [#7](https://github.com/workavoidance/Bragi/issues/7).
 
 Tracked by [#4](https://github.com/workavoidance/Bragi/issues/4).
 
-- [ ] Handle microphone removal and default-device changes.
+- [x] Handle microphone removal and default-device changes.
 - [x] Add cancellation and an accidental long-recording limit.
 - [ ] Recover from model-load and transcription failures.
 - [ ] Shut down cleanly during recording, download, and transcription.
@@ -156,7 +156,19 @@ Tracked by [#4](https://github.com/workavoidance/Bragi/issues/4).
 - [ ] Add an automated or controlled test that detects accidental required
   runtime network access.
 
-## Phase 7: v0.2 release candidate
+## Phase 7: Norwegian interface
+
+- [ ] Translate the complete Bragi interface into Norwegian Bokmål, including
+  tray actions, settings, status messages, errors, model guidance, and
+  accessibility labels.
+- [ ] Follow the Windows display language on first run and allow English or
+  Norwegian to be selected explicitly in Settings.
+- [ ] Keep translations structured so additional interface languages can be
+  added without changing application logic.
+- [ ] Test both languages at high DPI, with keyboard navigation, and with a
+  screen reader before the release candidate.
+
+## Phase 8: v0.2 release candidate
 
 - [ ] Complete every acceptance criterion in tracking issue
   [#10](https://github.com/workavoidance/Bragi/issues/10).
