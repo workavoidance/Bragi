@@ -1,6 +1,6 @@
 # Bragi Brand Guidelines
 
-> **Status:** Working brand direction, August 2026. Bragi is currently a working product name and may change. The principles in this document should survive a future rename.
+> **Status:** Working brand direction, September 2026. Bragi is currently a working product name and may change. The principles in this document should survive a future rename.
 
 ## 1. Brand idea
 
@@ -228,46 +228,53 @@ Example imagery could show a student speaking while text appears on a laptop. Av
 
 ### Working accent
 
-`#E86A33`
+`#F05A24`
 
-This is provisional and should be tuned visually. The orange should feel warm, human, confident, and energetic, with a subtle association to an active recording microphone rather than a warning or safety colour.
+The orange should feel warm, human, confident, and energetic, with a subtle association to an active recording microphone rather than a warning or safety colour.
 
 The accent can play a meaningful role in the site rather than being limited to small links and buttons.
 
-## 13. Logo direction
+## 13. Logo and brand mark
 
-### Mark
-
-The working logo concept is based on the **lowercase single-storey `g`** in Bragi.
-
-The `g` should subtly read as a **head wearing a boom-microphone headset**.
-
-Design characteristics:
-
-- clean
-- geometric
-- rounded
-- human rather than angular
-- monochrome-capable
-- transparent background
-- immediately legible at small sizes
-- usable on its own as a Windows/macOS tray or menu-bar icon
-
-The headset idea should be communicated with as little extra detail as possible. A slightly rounded microphone tip can suggest a foam microphone cover and help the `g` resolve into a headset.
-
-The mark must still read clearly at 16-24 px. Clarity is more important than cleverness.
+The identity should stay deliberately simple. Do not turn a letter into an illustration and do not use a headset symbol.
 
 ### Wordmark
 
-The remaining letters in **bragi** should use a type style that feels consistent with the icon:
+The name **bragi** is the logo. It should be set in a rounded, clean, modern, approachable sans-serif with strong readability at small sizes.
 
-- rounded
-- clean
-- modern
-- human
-- approachable
+The wordmark is primarily black. The dot of the final lowercase **i** is orange.
 
-Avoid an overly technical, luxury, or institutional typeface.
+Three short orange speaking/recording dashes sit directly beside the orange dot of the **i**, keeping all accent elements together at the top-right of the wordmark. The dashes should feel like a compact speaking indicator rather than sound-wave decoration.
+
+The rest of the lettering should remain simple. Avoid custom letter tricks, hidden symbols, or illustrative substitutions.
+
+### Standalone brand mark
+
+The standalone mark is only:
+
+- one orange dot
+- three short orange dashes radiating to its right
+
+The dot is conceptually the dot of the **i**. The three dashes represent speaking and recording.
+
+This mark should be used for small system surfaces such as:
+
+- Windows tray icon
+- macOS menu-bar or Dock icon where appropriate
+- favicon
+- compact status/recording indicator
+
+The standalone mark must remain readable at 16-24 px. It should use bold, simple geometry with rounded ends and no fine detail.
+
+### Relationship between name and mark
+
+The name and the brand mark are intentionally separable.
+
+- In the full wordmark, the orange dot and three dashes sit with the **i**.
+- In tiny icons, use only the orange dot and three dashes.
+- Do not add a headset, microphone body, `g` symbol, enclosing circle, or coloured square unless a platform specifically requires a background tile.
+
+The mark should feel like a natural piece of punctuation attached to the name rather than a separate illustrative logo.
 
 ## 14. Homepage structure
 
