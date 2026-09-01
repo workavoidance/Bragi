@@ -45,12 +45,62 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .footer-brand {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
   text-decoration: none;
-  font-size: 1.45rem;
-  font-weight: 760;
-  letter-spacing: -0.04em;
 }
+
+.wordmark {
+  display: inline-flex;
+  align-items: flex-end;
+  color: var(--ink);
+  font-size: 1.52rem;
+  font-weight: 760;
+  letter-spacing: -0.055em;
+  line-height: 1;
+}
+
+.wordmark-base { display: inline-block; }
+
+.wordmark-i {
+  position: relative;
+  display: inline-block;
+  width: 0.78em;
+  height: 1em;
+  margin-left: 0.015em;
+}
+
+.i-stem {
+  position: absolute;
+  left: 0.04em;
+  bottom: 0;
+  width: 0.25em;
+  height: 0.61em;
+  border-radius: 0.13em;
+  background: var(--ink);
+}
+
+.i-dot {
+  position: absolute;
+  left: 0.035em;
+  top: 0.01em;
+  width: 0.27em;
+  height: 0.27em;
+  border-radius: 50%;
+  background: var(--orange);
+}
+
+.i-dash {
+  position: absolute;
+  left: 0.43em;
+  width: 0.24em;
+  height: 0.075em;
+  border-radius: 999px;
+  background: var(--orange);
+  transform-origin: left center;
+}
+
+.i-dash-1 { top: 0.035em; transform: rotate(-24deg); }
+.i-dash-2 { top: 0.185em; left: 0.46em; }
+.i-dash-3 { top: 0.335em; transform: rotate(24deg); }
 
 .header-actions,
 .footer-links {
