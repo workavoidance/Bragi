@@ -26,6 +26,10 @@ or insert text. Use **Settings** in the Bragi tray menu to inspect the window,
 then use **Preview state** to display the loading, ready, recording,
 transcribing, no-speech, and error indicators.
 
+The Models tab displays the complete interface and catalogue in preview mode,
+but Download, Use, Remove, and Import are disabled so preview cannot access the
+network or model files.
+
 Changes to Python files under `src` cause the managed preview process to restart
 automatically. The launcher waits for the old child process to stop before it
 starts the replacement. Press Ctrl+C in the launcher window to finish.
@@ -54,8 +58,8 @@ Models are shared across normal, development, and pull-request preview builds:
 %LOCALAPPDATA%\Bragi\models
 ```
 
-Future normal settings will live under `%APPDATA%\Bragi`. Development settings
-have a separate location under `%APPDATA%\Bragi\development`, preventing a test
+Normal settings live under `%APPDATA%\Bragi`. Development settings have a
+separate location under `%APPDATA%\Bragi\development`, preventing a test
 schema or value from damaging a normal user's settings.
 
 The first real run may download the selected model. Once the dependencies and

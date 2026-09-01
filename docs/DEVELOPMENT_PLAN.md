@@ -27,8 +27,9 @@ Last reviewed: 2026-09-01
 
 **Current target:** v0.2, a configurable and accessible desktop application.
 
-**Current engineering task:** add live language, microphone, and push-to-talk
-configuration in issue [#6](https://github.com/workavoidance/Bragi/issues/6).
+**Current engineering task:** add the curated local model manager in issue
+[#7](https://github.com/workavoidance/Bragi/issues/7). This work is stacked on
+the still-unmerged issue #6 branch so deferred manual QA is not bypassed.
 
 The manual high-DPI, high-contrast, multi-display, and screen-reader checks for
 issue [#8](https://github.com/workavoidance/Bragi/issues/8) are intentionally

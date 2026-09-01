@@ -15,6 +15,8 @@ hardware testing are being developed.
   Norwegian, and per-segment Multilingual modes available in Settings.
 - Uses the Windows default microphone initially and can select another Windows
   input device.
+- Offers verified local Tiny, Base, Small, and Medium models. Small remains the
+  recommended default for CPU use.
 - Runs transcription locally on the CPU using `int8` inference.
 - Shows a small indicator while loading, recording, and transcribing.
 - Types Unicode directly through Windows, without putting text on the clipboard.
@@ -32,9 +34,9 @@ any additional rewriting or filler-word removal.
    <https://www.python.org/downloads/windows/>. Do not select the experimental
    free-threaded build. Enable **Add Python to PATH** during installation.
 2. Double-click `run_from_source.bat`.
-3. On the first run, wait while the multilingual `small` speech model downloads
-   into `%LOCALAPPDATA%\Bragi\models`. This is a one-time download of roughly
-   500 MB shared by later Bragi versions.
+3. On the first run, wait while the multilingual Small speech model downloads
+   and is verified under `%LOCALAPPDATA%\Bragi\models`. This is a one-time
+   download of roughly 486 MB shared by later Bragi versions.
 4. Put the cursor in Word, Outlook, Notepad, or a browser text field.
 5. Hold **Right Ctrl**, speak, then release it.
 
@@ -83,7 +85,7 @@ forensic guarantees that an immutable string has vanished instantly from RAM.
 - **Nothing is typed:** test in Notepad first. Confirm the target app is not
   running as administrator while Bragi is running normally.
 - **Too slow:** the first candidate change is the model from `small` to `base` in
-  `src\whisper_dictate\config.py`; rebuild afterward. Accuracy will decrease.
+  Bragi Settings → Models. Tiny is faster again. Accuracy will decrease.
 
 ## Development checks
 
@@ -100,6 +102,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the complete development workflow,
 checklist, [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) for the fast development
 and preview loop, [docs/SETTINGS.md](docs/SETTINGS.md) for the versioned settings
 schema, and [docs/ROADMAP.md](docs/ROADMAP.md) for planned releases. The
+[local model guide](docs/MODELS.md) documents downloads, integrity checks,
+offline operation, hardware guidance, and USB-folder import. The
 project's longer-term credibility requirements are recorded in
 [docs/QUALITY_BAR.md](docs/QUALITY_BAR.md) without presenting the current alpha
 as school-ready assistive software.

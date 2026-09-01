@@ -4,16 +4,19 @@ import argparse
 import ctypes
 import os
 import sys
+from dataclasses import replace
 
 from whisper_dictate.application import create_application
 from whisper_dictate.audio import AudioRecorder, list_input_devices
 from whisper_dictate.config import AppConfig
-from whisper_dictate.controller import DictationController
+from whisper_dictate.controller import AppState, DictationController
 from whisper_dictate.hotkeys import PushToTalkListener
 from whisper_dictate.indicator import FloatingIndicator
+from whisper_dictate.model_runtime import ModelRuntime
+from whisper_dictate.models import LocalModelManager
 from whisper_dictate.runtime import detect_build_identity, model_cache_directory
 from whisper_dictate.runtime_settings import RuntimeSettingsApplier
-from whisper_dictate.settings import SettingsStore
+from whisper_dictate.settings import SettingsStore, SettingsWriteError
 from whisper_dictate.settings_window import SettingsWindow
 from whisper_dictate.transcriber import LocalWhisperTranscriber
 from whisper_dictate.tray import TrayIcon
@@ -76,13 +79,34 @@ def main(argv: list[str] | None = None) -> None:
     settings_store = SettingsStore.for_user(development=identity.development)
     settings = settings_store.load().settings
 
-    config = AppConfig()
+    config = AppConfig(model_name=settings.model)
     indicator = FloatingIndicator(
         title=identity.title, enabled=settings.overlay_enabled
     )
     recorder = AudioRecorder(settings.microphone)
+    model_cache = model_cache_directory()
+    model_manager = LocalModelManager(model_cache)
+    settings_applier = None
+
+    def resolve_startup_model(requested: str):
+        actual, path = model_manager.resolve_startup_model(requested)
+        if actual != requested:
+            corrected = replace(settings_store.load().settings, model=actual)
+            try:
+                settings_store.save(corrected)
+            except SettingsWriteError:
+                pass
+            else:
+                if settings_applier is not None:
+                    settings_applier.sync_current(corrected)
+        return actual, path
+
     transcriber = LocalWhisperTranscriber(
-        config, model_cache_directory(), language=settings.language
+        config,
+        model_cache,
+        language=settings.language,
+        model_name=settings.model,
+        model_resolver=resolve_startup_model,
     )
     injector = WindowsTextInjector()
 
@@ -113,6 +137,13 @@ def main(argv: list[str] | None = None) -> None:
         listener,
         can_change_input=lambda: not recorder.is_recording,
     )
+    model_runtime = ModelRuntime(
+        model_manager,
+        transcriber,
+        settings_store,
+        can_activate=lambda: controller.state is AppState.READY,
+        settings_sync=settings_applier.sync_current,
+    )
     settings_window = SettingsWindow(
         settings_store,
         title=identity.title,
@@ -120,6 +151,8 @@ def main(argv: list[str] | None = None) -> None:
         microphone_provider=list_input_devices,
         can_change_input=lambda: not recorder.is_recording,
         active_model=config.model_name,
+        model_manager=model_manager,
+        model_runtime=model_runtime,
     )
     tray = TrayIcon(
         indicator.request_exit,

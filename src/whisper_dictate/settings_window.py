@@ -33,6 +33,9 @@ from whisper_dictate.hotkeys import (
     hotkey_display_name,
     validate_hotkey,
 )
+from whisper_dictate.model_runtime import ModelRuntime
+from whisper_dictate.model_ui import ModelManagerPanel
+from whisper_dictate.models import LocalModelManager
 from whisper_dictate.runtime_settings import RuntimeSettingsError
 from whisper_dictate.settings import (
     LanguageMode,
@@ -185,6 +188,8 @@ class SettingsWindow(QDialog):
         microphone_provider: Callable[[], list[MicrophoneDevice]] | None = None,
         can_change_input: Callable[[], bool] | None = None,
         active_model: str = "small",
+        model_manager: LocalModelManager | None = None,
+        model_runtime: ModelRuntime | None = None,
     ) -> None:
         super().__init__()
         self._store = store
@@ -192,6 +197,7 @@ class SettingsWindow(QDialog):
         self._microphone_provider = microphone_provider or self._default_microphones
         self._can_change_input = can_change_input or (lambda: True)
         self._active_model = active_model
+        self._model_runtime = model_runtime
         self._settings = UserSettings()
         self._selected_hotkey = DEFAULT_HOTKEY
         self.setWindowTitle(f"{title} Settings")
@@ -225,6 +231,9 @@ class SettingsWindow(QDialog):
         self.tabs = QTabWidget(self)
         self.tabs.setAccessibleName("Settings sections")
         self.tabs.addTab(self._general_page(), "&General")
+        self.model_panel = ModelManagerPanel(model_manager, model_runtime, self)
+        self.model_panel.model_activated.connect(self._model_activated)
+        self.tabs.addTab(self.model_panel, "&Models")
         self.tabs.addTab(self._privacy_page(), "&Privacy")
         self.tabs.addTab(self._about_page(), "&About")
         root.addWidget(self.tabs, 1)
@@ -462,10 +471,23 @@ class SettingsWindow(QDialog):
         self._warning.setVisible(result.warning is not None)
         self.overlay_checkbox.setChecked(self._settings.overlay_enabled)
         self._select_language(self._settings.language)
-        self._model.setText(self._active_model)
+        active_model = (
+            self._model_runtime.active_model
+            if self._model_runtime is not None
+            else self._active_model
+        )
+        self._model.setText(active_model)
+        self.model_panel.select_model(active_model)
+        self.model_panel.refresh()
         self._set_hotkey(self._settings.hotkey)
         self._refresh_microphones()
         return result
+
+    @Slot(str)
+    def _model_activated(self, identifier: str) -> None:
+        self._active_model = identifier
+        self._model.setText(identifier)
+        self._settings = self._store.load().settings
 
     @Slot()
     def show_settings(self) -> None:

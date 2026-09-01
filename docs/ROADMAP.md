@@ -11,6 +11,7 @@ current priority is a trustworthy personal desktop application.
 - Add a validated, versioned settings file.
 - Add a curated model selector with download sizes and CPU guidance.
 - Show model download and loading progress.
+- Verify pinned model files before atomic installation.
 - Allow microphone and hotkey selection.
 - Support automatic, English, Norwegian and multilingual language modes.
 - Add start-with-Windows and overlay appearance settings.
@@ -27,7 +28,7 @@ current priority is a trustworthy personal desktop application.
 
 ## v0.3: reliability and distribution
 
-- Resumable model downloads and integrity checks.
+- Resumable downloads and reclaiming unused model-cache files.
 - Microphone reconnection and clearer error recovery.
 - Portable ZIP and conventional Windows installer.
 - Optional non-content diagnostic logs with redaction tests.

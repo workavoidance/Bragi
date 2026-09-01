@@ -26,6 +26,11 @@ here before a release.
 - Live Windows microphone selection with disconnected-device recovery.
 - Validated push-to-talk capture for Right Ctrl and F6 through F12,
   including safe listener replacement and Restore Default.
+- Curated multilingual Tiny, Base, Small, and Medium model manager with pinned
+  revisions, checksums, hardware guidance, atomic installation, removal, and
+  verified folder import.
+- Background local model switching with persistence rollback and no executable
+  rebuild requirement.
 
 ### Fixed
 

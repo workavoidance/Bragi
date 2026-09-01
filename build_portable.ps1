@@ -43,4 +43,4 @@ if ($LASTEXITCODE -ne 0) { throw "The portable build failed." }
 Write-Host ""
 Write-Host "Build complete:" -ForegroundColor Green
 Write-Host (Join-Path $PSScriptRoot "dist\WhisperDictate.exe")
-Write-Host "The first launch downloads the local multilingual small model once."
+Write-Host "The first launch installs and verifies the local multilingual Small model once."

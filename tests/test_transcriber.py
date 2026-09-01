@@ -43,3 +43,22 @@ def test_language_change_applies_to_the_next_recording(tmp_path) -> None:
     assert result.text == "Hei æøå"
     assert calls[0]["language"] == "no"
     assert calls[0]["multilingual"] is False
+
+
+def test_model_switch_loads_candidate_before_replacing_working_model(tmp_path) -> None:
+    transcriber = LocalWhisperTranscriber(AppConfig(), tmp_path)
+    original = object()
+    replacement = object()
+    transcriber._model = original
+    transcriber._create_model = lambda source: replacement
+
+    snapshot = transcriber.switch_model("base", tmp_path / "installed" / "base")
+
+    assert snapshot.identifier == "small"
+    assert snapshot.model is original
+    assert transcriber.active_model == "base"
+    assert transcriber._model is replacement
+
+    transcriber.restore_model(snapshot)
+    assert transcriber.active_model == "small"
+    assert transcriber._model is original
