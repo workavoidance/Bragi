@@ -31,6 +31,11 @@ directory, verifies the complete set, writes a local manifest, and only then
 makes the model available. A failed, interrupted, incomplete, or corrupt
 download is never shown as installed.
 
+The Models panel shows the model name, bytes downloaded, total size, percentage,
+and a separate verification stage. **Cancel download** interrupts either stage,
+removes incomplete staging and cache files, and does not alter any installed or
+active model. Closing Bragi also requests cancellation before shutdown.
+
 The prototype's existing Hugging Face cache is checked locally before Bragi
 uses the internet. This allows an existing Small download to be reused when
 upgrading. Stale temporary downloads are removed safely at the next start.

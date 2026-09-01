@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import threading
 from dataclasses import replace
 from pathlib import Path
 
@@ -15,8 +16,10 @@ from whisper_dictate.models import (
     ModelIntegrityError,
     ModelInUseError,
     ModelManagerError,
+    ModelOperationCancelled,
     ModelSpec,
     ModelState,
+    _default_downloader,
     hardware_warning,
     validate_catalogue,
 )
@@ -74,15 +77,24 @@ class FakeDownloader:
         revision,
         *,
         local_files_only,
+        allowed_files,
+        expected_size,
+        cancel_event,
+        progress_callback,
     ) -> None:
-        del repository, cache_dir, revision
+        del repository, cache_dir, revision, allowed_files
         self.calls.append(local_files_only)
         if local_files_only or self.fail:
             raise FileNotFoundError("not cached")
+        completed = 0
         for name, content in FILE_CONTENTS.items():
+            if cancel_event.is_set():
+                raise ModelOperationCancelled("Model download cancelled.")
             if self.corrupt and name == "model.bin":
                 content = b"damaged model weights"
             (output_dir / name).write_bytes(content)
+            completed += len(content)
+            progress_callback(min(completed, expected_size), expected_size)
 
 
 class CachedDownloader(FakeDownloader):
@@ -91,8 +103,13 @@ class CachedDownloader(FakeDownloader):
         assert local_files_only is True
         self.calls.append(local_files_only)
         output_dir = kwargs["output_dir"]
+        completed = 0
         for name, content in FILE_CONTENTS.items():
             (output_dir / name).write_bytes(content)
+            completed += len(content)
+            kwargs["progress_callback"](
+                min(completed, kwargs["expected_size"]), kwargs["expected_size"]
+            )
 
 
 def test_catalogue_requires_small_as_the_single_recommended_model() -> None:
@@ -109,19 +126,67 @@ def test_download_is_verified_then_installed_atomically(tmp_path: Path) -> None:
         tmp_path / "models", catalogue=[small_test_spec()], downloader=downloader
     )
     events = []
+    manager.add_status_listener(events.append)
 
-    installed = manager.install("small", events.append)
+    installed = manager.install("small")
 
     assert downloader.calls == [True, False]
     assert installed == tmp_path / "models" / "installed" / "small"
     assert manager.is_installed("small") is True
     assert json.loads((installed / MODEL_MANIFEST).read_text())["model"] == "small"
-    assert [event.state for event in events] == [
+    states = [event.state for event in events]
+    assert states[0] is ModelState.DOWNLOADING
+    assert ModelState.VERIFYING in states
+    assert states[-1] is ModelState.INSTALLED
+    transitions = [
+        state
+        for index, state in enumerate(states)
+        if index == 0 or state != states[index - 1]
+    ]
+    assert transitions == [
         ModelState.DOWNLOADING,
         ModelState.VERIFYING,
         ModelState.INSTALLED,
     ]
+    byte_events = [event for event in events if event.bytes_completed is not None]
+    assert byte_events
+    assert all(
+        event.bytes_total == small_test_spec().download_size for event in byte_events
+    )
     assert list(manager.staging_root.iterdir()) == []
+
+
+def test_default_downloader_reports_bytes_and_interrupts_transfer(
+    tmp_path: Path, monkeypatch
+) -> None:
+    cancel_event = threading.Event()
+    progress = []
+
+    def fake_snapshot_download(repository, **kwargs):
+        del repository
+        progress_bar = kwargs["tqdm_class"](total=100, unit="B")
+        progress_bar.update(25)
+        cancel_event.set()
+        progress_bar.update(25)
+
+    monkeypatch.setattr("huggingface_hub.snapshot_download", fake_snapshot_download)
+
+    with pytest.raises(ModelOperationCancelled, match="cancelled"):
+        _default_downloader(
+            "Test/small",
+            tmp_path / "output",
+            tmp_path / "cache",
+            "a" * 40,
+            local_files_only=False,
+            allowed_files=("model.bin",),
+            expected_size=100,
+            cancel_event=cancel_event,
+            progress_callback=lambda completed, total: progress.append(
+                (completed, total)
+            ),
+        )
+
+    assert progress == [(25, 100)]
 
 
 def test_existing_download_cache_is_reused_without_network(tmp_path: Path) -> None:
@@ -169,6 +234,67 @@ def test_stale_partial_downloads_are_removed_on_startup(tmp_path: Path) -> None:
     LocalModelManager(tmp_path / "models", catalogue=[small_test_spec()])
 
     assert partial.exists() is False
+
+
+def test_cancelling_download_preserves_an_existing_model(tmp_path: Path) -> None:
+    small = small_test_spec()
+    base = replace(
+        small,
+        identifier="base",
+        name="Base",
+        repository="Test/base",
+        revision="b" * 40,
+        recommended=False,
+    )
+    manager = LocalModelManager(
+        tmp_path / "models", catalogue=[small, base], downloader=FakeDownloader()
+    )
+    manager.install("small")
+    partial_cache = (
+        manager.download_cache / "models--Test--base" / "blobs" / "weights.incomplete"
+    )
+    partial_cache.parent.mkdir(parents=True)
+    partial_cache.write_bytes(b"partial model bytes")
+    complete_cache = partial_cache.with_suffix(".complete")
+    complete_cache.write_bytes(b"reusable complete bytes")
+    events = []
+
+    def cancel_after_progress(status) -> None:
+        events.append(status)
+        if status.state is ModelState.DOWNLOADING and status.bytes_completed:
+            manager.cancel_active("base")
+
+    with pytest.raises(ModelOperationCancelled, match="cancelled"):
+        manager.install("base", cancel_after_progress)
+
+    assert manager.is_installed("small") is True
+    assert manager.is_installed("base") is False
+    assert list(manager.staging_root.iterdir()) == []
+    assert partial_cache.exists() is False
+    assert complete_cache.read_bytes() == b"reusable complete bytes"
+    assert events[-1].state is ModelState.NOT_INSTALLED
+    assert "No model files were installed" in events[-1].detail
+
+
+def test_cancelling_verification_never_commits_staging(tmp_path: Path) -> None:
+    manager = LocalModelManager(
+        tmp_path / "models",
+        catalogue=[small_test_spec()],
+        downloader=FakeDownloader(),
+    )
+    events = []
+
+    def cancel_during_verification(status) -> None:
+        events.append(status)
+        if status.state is ModelState.VERIFYING and status.bytes_completed:
+            manager.cancel_active("small")
+
+    with pytest.raises(ModelOperationCancelled, match="cancelled"):
+        manager.install("small", cancel_during_verification)
+
+    assert manager.is_installed("small") is False
+    assert list(manager.staging_root.iterdir()) == []
+    assert events[-1].state is ModelState.NOT_INSTALLED
 
 
 def test_verified_model_folder_can_be_imported_without_internet(tmp_path: Path) -> None:

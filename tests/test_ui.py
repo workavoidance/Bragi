@@ -13,6 +13,8 @@ from PySide6.QtWidgets import QApplication
 
 from whisper_dictate.application import create_application
 from whisper_dictate.indicator import FloatingIndicator, overlay_position
+from whisper_dictate.model_ui import ModelManagerPanel
+from whisper_dictate.models import LocalModelManager, ModelState, ModelStatus
 from whisper_dictate.settings import LanguageMode, SettingsStore, UserSettings
 from whisper_dictate.settings_window import (
     HotkeyCaptureButton,
@@ -158,6 +160,31 @@ def test_settings_actions_are_named_and_keyboard_operable(tmp_path: Path) -> Non
     assert window.save_shortcut.key().matches(QKeySequence.StandardKey.Save) == (
         QKeySequence.SequenceMatch.ExactMatch
     )
+
+
+def test_model_download_progress_is_specific_and_cancellable(tmp_path: Path) -> None:
+    application()
+    manager = LocalModelManager(tmp_path / "models")
+    runtime = type("Runtime", (), {"active_model": "small"})()
+    panel = ModelManagerPanel(manager, runtime, memory_gb=8.0)
+
+    panel._status_changed(
+        ModelStatus(
+            "base",
+            ModelState.DOWNLOADING,
+            0.25,
+            "Downloading Base…",
+            37_000_000,
+            148_000_000,
+        )
+    )
+
+    assert panel.selected_identifier() == "base"
+    assert panel.progress.value() == 25
+    assert panel.progress.format() == "Downloading Base: 37 MB of 148 MB (25%)"
+    assert panel.cancel_button.isHidden() is False
+    assert panel.cancel_button.isEnabled() is True
+    assert panel.cancel_button.accessibleName() == "Cancel model download"
 
 
 def test_tray_exposes_status_settings_and_exit() -> None:

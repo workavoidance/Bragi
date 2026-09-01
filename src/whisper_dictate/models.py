@@ -68,6 +68,8 @@ class ModelStatus:
     state: ModelState
     progress: float | None = None
     detail: str = ""
+    bytes_completed: int | None = None
+    bytes_total: int | None = None
 
 
 class ModelManagerError(RuntimeError):
@@ -92,6 +94,10 @@ class ModelIntegrityError(ModelManagerError):
 
 class ModelInUseError(ModelManagerError):
     """Raised when removal would break the active transcription model."""
+
+
+class ModelOperationCancelled(ModelManagerError):
+    """Raised when a user safely cancels a model operation."""
 
 
 def _files(
@@ -282,19 +288,69 @@ def _default_downloader(
     revision: str,
     *,
     local_files_only: bool,
+    allowed_files: tuple[str, ...],
+    expected_size: int,
+    cancel_event: threading.Event,
+    progress_callback: Callable[[int, int], None],
 ):
-    from faster_whisper.utils import download_model
+    from huggingface_hub import snapshot_download
+    from tqdm.auto import tqdm
 
-    return download_model(
+    progress_lock = threading.Lock()
+    completed = 0
+
+    def report(increment: int) -> None:
+        nonlocal completed
+        if increment <= 0:
+            return
+        with progress_lock:
+            completed = min(expected_size, completed + increment)
+            current = completed
+        progress_callback(current, expected_size)
+
+    class DownloadProgress(tqdm):
+        def __init__(self, *args, **kwargs) -> None:
+            if cancel_event.is_set():
+                raise ModelOperationCancelled("Model download cancelled.")
+            self._reports_bytes = kwargs.get("unit") == "B"
+            initial = int(kwargs.get("initial") or 0)
+            kwargs["disable"] = True
+            super().__init__(*args, **kwargs)
+            if self._reports_bytes:
+                report(initial)
+
+        def update(self, increment=1):
+            if cancel_event.is_set():
+                raise ModelOperationCancelled("Model download cancelled.")
+            result = super().update(increment)
+            if self._reports_bytes:
+                report(int(increment))
+            return result
+
+    if cancel_event.is_set():
+        raise ModelOperationCancelled("Model download cancelled.")
+    result = snapshot_download(
         repository,
-        output_dir=str(output_dir),
+        local_dir=str(output_dir),
         cache_dir=str(cache_dir),
         revision=revision,
         local_files_only=local_files_only,
+        allow_patterns=list(allowed_files),
+        tqdm_class=DownloadProgress,
     )
+    if cancel_event.is_set():
+        raise ModelOperationCancelled("Model download cancelled.")
+    progress_callback(expected_size, expected_size)
+    return result
 
 
-def _file_checksum(path: Path, algorithm: str) -> str:
+def _file_checksum(
+    path: Path,
+    algorithm: str,
+    *,
+    cancel_event: threading.Event | None = None,
+    progress_callback: Callable[[int], None] | None = None,
+) -> str:
     if algorithm == "sha256":
         digest = hashlib.sha256()
         prefix = b""
@@ -306,7 +362,11 @@ def _file_checksum(path: Path, algorithm: str) -> str:
     digest.update(prefix)
     with path.open("rb") as file:
         while block := file.read(1024 * 1024):
+            if cancel_event is not None and cancel_event.is_set():
+                raise ModelOperationCancelled("Model download cancelled.")
             digest.update(block)
+            if progress_callback is not None:
+                progress_callback(len(block))
     return digest.hexdigest()
 
 
@@ -326,7 +386,9 @@ class LocalModelManager:
         self._downloader = downloader or _default_downloader
         self._lock = threading.Lock()
         self._active_operation: str | None = None
+        self._operation_cancel: threading.Event | None = None
         self._live_status: dict[str, ModelStatus] = {}
+        self._status_listeners: list[Callable[[ModelStatus], None]] = []
         self._clean_stale_downloads()
 
     @property
@@ -359,6 +421,18 @@ class LocalModelManager:
             if child.is_dir():
                 shutil.rmtree(child, ignore_errors=True)
 
+    def _clean_cancelled_cache(self, spec: ModelSpec) -> None:
+        repository_cache = self.download_cache / (
+            "models--" + spec.repository.replace("/", "--")
+        )
+        if not repository_cache.is_dir():
+            return
+        for partial in repository_cache.rglob("*.incomplete"):
+            try:
+                partial.unlink()
+            except OSError:
+                pass
+
     def _manifest_document(self, spec: ModelSpec) -> dict[str, object]:
         return {
             "schema_version": MODEL_SCHEMA_VERSION,
@@ -386,9 +460,25 @@ class LocalModelManager:
         return document == self._manifest_document(spec)
 
     def verify_directory(
-        self, directory: Path, spec: ModelSpec, *, thorough: bool
+        self,
+        directory: Path,
+        spec: ModelSpec,
+        *,
+        thorough: bool,
+        cancel_event: threading.Event | None = None,
+        progress_callback: Callable[[int, int], None] | None = None,
     ) -> None:
+        completed = 0
+
+        def advanced(increment: int) -> None:
+            nonlocal completed
+            completed += increment
+            if progress_callback is not None:
+                progress_callback(completed, spec.download_size)
+
         for expected in spec.files:
+            if cancel_event is not None and cancel_event.is_set():
+                raise ModelOperationCancelled("Model download cancelled.")
             path = directory / expected.path
             try:
                 size = path.stat().st_size
@@ -403,7 +493,13 @@ class LocalModelManager:
                 )
             if (
                 thorough
-                and _file_checksum(path, expected.algorithm) != expected.checksum
+                and _file_checksum(
+                    path,
+                    expected.algorithm,
+                    cancel_event=cancel_event,
+                    progress_callback=advanced,
+                )
+                != expected.checksum
             ):
                 raise ModelIntegrityError(
                     f"{spec.name} did not pass integrity verification. "
@@ -459,6 +555,20 @@ class LocalModelManager:
     def statuses(self) -> tuple[ModelStatus, ...]:
         return tuple(self.status(spec.identifier) for spec in self.catalogue)
 
+    def add_status_listener(self, listener: Callable[[ModelStatus], None]) -> None:
+        with self._lock:
+            if listener not in self._status_listeners:
+                self._status_listeners.append(listener)
+
+    def cancel_active(self, identifier: str | None = None) -> bool:
+        with self._lock:
+            if self._active_operation is None or self._operation_cancel is None:
+                return False
+            if identifier is not None and identifier != self._active_operation:
+                return False
+            self._operation_cancel.set()
+            return True
+
     def _set_status(
         self,
         identifier: str,
@@ -466,31 +576,45 @@ class LocalModelManager:
         detail: str,
         callback: Callable[[ModelStatus], None] | None,
         progress: float | None = None,
+        bytes_completed: int | None = None,
+        bytes_total: int | None = None,
     ) -> None:
-        status = ModelStatus(identifier, state, progress, detail)
+        status = ModelStatus(
+            identifier,
+            state,
+            progress,
+            detail,
+            bytes_completed,
+            bytes_total,
+        )
         with self._lock:
             if state in {ModelState.INSTALLED, ModelState.NOT_INSTALLED}:
                 self._live_status.pop(identifier, None)
             else:
                 self._live_status[identifier] = status
-        if callback is not None:
+            listeners = tuple(self._status_listeners)
+        observers = listeners + ((callback,) if callback is not None else ())
+        for observer in observers:
             try:
-                callback(status)
+                observer(status)
             except Exception:
                 # An observer cannot be allowed to corrupt an install transaction.
                 pass
 
-    def _begin(self, identifier: str) -> None:
+    def _begin(self, identifier: str) -> threading.Event:
         with self._lock:
             if self._active_operation is not None:
                 raise ModelBusyError(
                     "Finish the current model operation before starting another."
                 )
             self._active_operation = identifier
+            self._operation_cancel = threading.Event()
+            return self._operation_cancel
 
     def _finish(self) -> None:
         with self._lock:
             self._active_operation = None
+            self._operation_cancel = None
 
     def _write_manifest(self, directory: Path, spec: ModelSpec) -> None:
         payload = json.dumps(
@@ -498,8 +622,23 @@ class LocalModelManager:
         )
         (directory / MODEL_MANIFEST).write_text(payload + "\n", encoding="utf-8")
 
-    def _install_staging(self, staging: Path, spec: ModelSpec) -> Path:
-        self.verify_directory(staging, spec, thorough=True)
+    def _install_staging(
+        self,
+        staging: Path,
+        spec: ModelSpec,
+        *,
+        cancel_event: threading.Event | None = None,
+        progress_callback: Callable[[int, int], None] | None = None,
+    ) -> Path:
+        self.verify_directory(
+            staging,
+            spec,
+            thorough=True,
+            cancel_event=cancel_event,
+            progress_callback=progress_callback,
+        )
+        if cancel_event is not None and cancel_event.is_set():
+            raise ModelOperationCancelled("Model download cancelled.")
         cache_metadata = staging / ".cache"
         if cache_metadata.is_dir():
             shutil.rmtree(cache_metadata, ignore_errors=True)
@@ -532,7 +671,7 @@ class LocalModelManager:
         spec = self.spec(identifier)
         if self.is_installed(identifier):
             return self.model_path(identifier)
-        self._begin(identifier)
+        cancel_event = self._begin(identifier)
         self.staging_root.mkdir(parents=True, exist_ok=True)
         staging = Path(tempfile.mkdtemp(prefix=f"{identifier}-", dir=self.staging_root))
         try:
@@ -541,7 +680,22 @@ class LocalModelManager:
                 ModelState.DOWNLOADING,
                 f"Downloading {spec.name} from the internet…",
                 callback,
+                0.0,
+                0,
+                spec.download_size,
             )
+
+            def download_progress(completed: int, total: int) -> None:
+                self._set_status(
+                    identifier,
+                    ModelState.DOWNLOADING,
+                    f"Downloading {spec.name}…",
+                    callback,
+                    min(1.0, completed / total) if total else None,
+                    completed,
+                    total,
+                )
+
             try:
                 self._downloader(
                     spec.repository,
@@ -549,8 +703,18 @@ class LocalModelManager:
                     cache_dir=self.download_cache,
                     revision=spec.revision,
                     local_files_only=True,
+                    allowed_files=tuple(file.path for file in spec.files),
+                    expected_size=spec.download_size,
+                    cancel_event=cancel_event,
+                    progress_callback=download_progress,
                 )
-            except Exception:
+            except ModelOperationCancelled:
+                raise
+            except Exception as error:
+                if cancel_event.is_set():
+                    raise ModelOperationCancelled(
+                        "Model download cancelled."
+                    ) from error
                 shutil.rmtree(staging, ignore_errors=True)
                 staging.mkdir(parents=True)
                 self._downloader(
@@ -559,15 +723,38 @@ class LocalModelManager:
                     cache_dir=self.download_cache,
                     revision=spec.revision,
                     local_files_only=False,
+                    allowed_files=tuple(file.path for file in spec.files),
+                    expected_size=spec.download_size,
+                    cancel_event=cancel_event,
+                    progress_callback=download_progress,
                 )
             self._set_status(
                 identifier,
                 ModelState.VERIFYING,
                 f"Verifying {spec.name}…",
                 callback,
-                0.95,
+                0.0,
+                0,
+                spec.download_size,
             )
-            destination = self._install_staging(staging, spec)
+
+            def verification_progress(completed: int, total: int) -> None:
+                self._set_status(
+                    identifier,
+                    ModelState.VERIFYING,
+                    f"Verifying {spec.name}…",
+                    callback,
+                    min(1.0, completed / total) if total else None,
+                    completed,
+                    total,
+                )
+
+            destination = self._install_staging(
+                staging,
+                spec,
+                cancel_event=cancel_event,
+                progress_callback=verification_progress,
+            )
             self._set_status(
                 identifier,
                 ModelState.INSTALLED,
@@ -576,6 +763,16 @@ class LocalModelManager:
                 1.0,
             )
             return destination
+        except ModelOperationCancelled:
+            shutil.rmtree(staging, ignore_errors=True)
+            self._clean_cancelled_cache(spec)
+            self._set_status(
+                identifier,
+                ModelState.NOT_INSTALLED,
+                f"{spec.name} download cancelled. No model files were installed.",
+                callback,
+            )
+            raise
         except Exception as error:
             shutil.rmtree(staging, ignore_errors=True)
             self._set_status(
@@ -610,7 +807,7 @@ class LocalModelManager:
             raise ModelIntegrityError(
                 "That model does not match Bragi's trusted catalogue."
             )
-        self._begin(identifier)
+        cancel_event = self._begin(identifier)
         self.staging_root.mkdir(parents=True, exist_ok=True)
         staging = Path(
             tempfile.mkdtemp(prefix=f"{identifier}-import-", dir=self.staging_root)
@@ -623,8 +820,14 @@ class LocalModelManager:
                 callback,
             )
             for expected in spec.files:
+                if cancel_event.is_set():
+                    raise ModelOperationCancelled("Model import cancelled.")
                 shutil.copy2(source / expected.path, staging / expected.path)
-            destination = self._install_staging(staging, spec)
+            destination = self._install_staging(
+                staging,
+                spec,
+                cancel_event=cancel_event,
+            )
             self._set_status(
                 identifier,
                 ModelState.INSTALLED,
@@ -633,6 +836,15 @@ class LocalModelManager:
                 1.0,
             )
             return destination
+        except ModelOperationCancelled:
+            shutil.rmtree(staging, ignore_errors=True)
+            self._set_status(
+                identifier,
+                ModelState.NOT_INSTALLED,
+                f"{spec.name} import cancelled. No model files were installed.",
+                callback,
+            )
+            raise
         except Exception as error:
             shutil.rmtree(staging, ignore_errors=True)
             self._set_status(
