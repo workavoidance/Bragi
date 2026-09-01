@@ -2,48 +2,104 @@ from __future__ import annotations
 
 import sys
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import QLineF, QRectF, Qt
 from PySide6.QtGui import QColor, QIcon, QPainter, QPen, QPixmap
 from PySide6.QtWidgets import QApplication
 
-BRAGI_ORANGE = QColor("#E86A33")
+BRAGI_ORANGE = QColor("#F05A24")
+
+APP_STYLESHEET = """
+QDialog {
+    background: #FAF7F2;
+    color: #181817;
+}
+QLabel, QCheckBox, QGroupBox, QTabWidget {
+    color: #181817;
+}
+QGroupBox {
+    background: #FFFDF9;
+    border: 1px solid #DED7CF;
+    border-radius: 10px;
+    margin-top: 14px;
+    padding-top: 10px;
+    font-weight: 600;
+}
+QGroupBox::title {
+    subcontrol-origin: margin;
+    left: 12px;
+    padding: 0 4px;
+}
+QTabWidget::pane {
+    background: #FFFDF9;
+    border: 1px solid #DED7CF;
+    border-radius: 10px;
+    top: -1px;
+}
+QTabBar::tab {
+    color: #6F6A63;
+    padding: 9px 14px;
+}
+QTabBar::tab:selected {
+    color: #181817;
+    border-bottom: 3px solid #F05A24;
+}
+QPushButton {
+    background: #FFFDF9;
+    color: #181817;
+    border: 1px solid #DED7CF;
+    border-radius: 8px;
+    padding: 7px 14px;
+}
+QPushButton:hover {
+    border-color: #F05A24;
+}
+QPushButton:default {
+    background: #F05A24;
+    border-color: #F05A24;
+    color: #181817;
+    font-weight: 600;
+}
+QMenu {
+    background: #FFFDF9;
+    color: #181817;
+    border: 1px solid #DED7CF;
+}
+QMenu::item:selected {
+    background: #FFE2D5;
+}
+"""
 
 
 def bragi_icon(size: int = 64) -> QIcon:
-    """Create the tray icon in memory so source and packaged runs match."""
+    """Create Bragi's dot-and-speaking-marks icon in memory."""
     pixmap = QPixmap(size, size)
     pixmap.fill(Qt.GlobalColor.transparent)
 
     painter = QPainter(pixmap)
     painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+
+    dot_radius = size * 0.115
+    dot_x = size * 0.27
+    dot_y = size * 0.50
     painter.setPen(Qt.PenStyle.NoPen)
     painter.setBrush(BRAGI_ORANGE)
-    painter.drawEllipse(2, 2, size - 4, size - 4)
+    painter.drawEllipse(
+        QRectF(
+            dot_x - dot_radius,
+            dot_y - dot_radius,
+            dot_radius * 2,
+            dot_radius * 2,
+        )
+    )
 
-    white = QPen(Qt.GlobalColor.white)
-    white.setWidth(max(3, size // 16))
-    white.setCapStyle(Qt.PenCapStyle.RoundCap)
-    painter.setPen(white)
-    painter.setBrush(Qt.GlobalColor.white)
-    painter.drawRoundedRect(
-        size * 3 // 8,
-        size // 5,
-        size // 4,
-        size * 2 // 5,
-        size // 8,
-        size // 8,
-    )
+    mark_pen = QPen(BRAGI_ORANGE)
+    mark_pen.setWidthF(max(2.0, size * 0.105))
+    mark_pen.setCapStyle(Qt.PenCapStyle.RoundCap)
+    painter.setPen(mark_pen)
     painter.setBrush(Qt.BrushStyle.NoBrush)
-    painter.drawArc(
-        size * 9 // 32,
-        size * 5 // 16,
-        size * 7 // 16,
-        size * 7 // 16,
-        0,
-        -180 * 16,
-    )
-    painter.drawLine(size // 2, size * 3 // 4, size // 2, size * 13 // 16)
-    painter.drawLine(size * 3 // 8, size * 13 // 16, size * 5 // 8, size * 13 // 16)
+    painter.drawLine(QLineF(size * 0.54, size * 0.39, size * 0.72, size * 0.29))
+    painter.drawLine(QLineF(size * 0.56, size * 0.50, size * 0.80, size * 0.50))
+    painter.drawLine(QLineF(size * 0.54, size * 0.61, size * 0.72, size * 0.71))
     painter.end()
     return QIcon(pixmap)
 
@@ -60,4 +116,5 @@ def create_application(title: str) -> QApplication:
     app.setOrganizationName("Bragi")
     app.setQuitOnLastWindowClosed(False)
     app.setWindowIcon(bragi_icon())
+    app.setStyleSheet(APP_STYLESHEET)
     return app
