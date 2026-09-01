@@ -17,7 +17,8 @@ class InterfaceLanguage(StrEnum):
 
 NORWEGIAN_BOKMAL = {
     "Automatic (Windows display language)": "Automatisk (Windows-språk)",
-    "English": "Engelsk",
+    # Language choices identify themselves in every interface language.
+    "English": "English",
     "Norwegian Bokmål": "Norsk bokmål",
     "Interface language": "Grensesnittspråk",
     "Interface language changes after Bragi restarts.": (

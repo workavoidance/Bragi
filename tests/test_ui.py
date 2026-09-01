@@ -271,6 +271,9 @@ def test_norwegian_interface_covers_settings_models_tray_and_overlay(
         assert window.model_panel.download_button.text().replace("&", "") == (
             "Last ned"
         )
+        assert window.language_combo.itemText(1) == "English"
+        assert window.interface_language_combo.itemText(1) == "English"
+        assert window.interface_language_combo.itemText(2) == "Norsk bokmål"
         assert tray.settings_action.text().replace("&", "") == "Innstillinger…"
         assert tray.exit_action.text().replace("&", "") == "Avslutt"
         assert statuses == ["Transkriberer lokalt …"]
