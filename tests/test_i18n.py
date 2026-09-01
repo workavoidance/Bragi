@@ -7,6 +7,7 @@ import pytest
 from whisper_dictate.i18n import (
     NORWEGIAN_BOKMAL,
     InterfaceLanguage,
+    add_interface_language_listener,
     interface_language_from_locale,
     set_interface_language,
     tr,
@@ -61,3 +62,19 @@ def test_bokmal_translations_preserve_format_fields() -> None:
             if field is not None
         }
         assert translated_fields == source_fields, source
+
+
+def test_language_change_notifies_live_interface_listeners() -> None:
+    events: list[str] = []
+
+    class Interface:
+        def retranslate(self) -> None:
+            events.append(tr("Settings"))
+
+    interface = Interface()
+    add_interface_language_listener(interface.retranslate)
+
+    set_interface_language(InterfaceLanguage.NORWEGIAN_BOKMAL)
+    set_interface_language(InterfaceLanguage.ENGLISH)
+
+    assert events == ["Innstillinger", "Settings"]

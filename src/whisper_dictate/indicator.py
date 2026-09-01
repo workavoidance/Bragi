@@ -6,7 +6,7 @@ from PySide6.QtCore import Qt, QTimer, Signal, Slot
 from PySide6.QtGui import QCursor, QGuiApplication
 from PySide6.QtWidgets import QApplication, QFrame, QHBoxLayout, QLabel, QWidget
 
-from whisper_dictate.i18n import tr
+from whisper_dictate.i18n import add_interface_language_listener, tr
 
 
 def overlay_position(
@@ -90,6 +90,8 @@ class FloatingIndicator(QWidget):
         self._enabled = enabled
         self._exit_handler: Callable[[], None] | None = None
         self._exiting = False
+        self._current_state: str | None = None
+        self._current_detail: str | None = None
 
         frame = QFrame(self)
         frame.setObjectName("bragiStatusFrame")
@@ -124,6 +126,7 @@ class FloatingIndicator(QWidget):
         self._hide_timer.timeout.connect(self.hide)
         self.state_requested.connect(self._render)
         self.exit_requested.connect(self._exit)
+        add_interface_language_listener(self.retranslate_ui)
 
     def set_exit_handler(self, handler: Callable[[], None]) -> None:
         self._exit_handler = handler
@@ -143,12 +146,9 @@ class FloatingIndicator(QWidget):
 
     @Slot(str, object)
     def _render(self, state: str, detail: object) -> None:
-        symbol, default_text = self.STATES.get(state, self.STATES["error"])
-        text = tr(detail if isinstance(detail, str) and detail else default_text)
-        self._state_mark.setText(symbol)
-        self._state_mark.setAccessibleDescription(text)
-        self._message.setText(text)
-        self.status_changed.emit(state, text)
+        self._current_state = state
+        self._current_detail = detail if isinstance(detail, str) and detail else None
+        self._update_text(state, self._current_detail)
 
         self._hide_timer.stop()
         delay = self.HIDE_DELAYS_MS.get(state)
@@ -170,6 +170,24 @@ class FloatingIndicator(QWidget):
             self.move(x, y)
         self.show()
         self.raise_()
+
+    def _update_text(self, state: str, detail: str | None) -> None:
+        symbol, default_text = self.STATES.get(state, self.STATES["error"])
+        text = tr(detail or default_text)
+        self._state_mark.setText(symbol)
+        self._state_mark.setAccessibleDescription(text)
+        self._message.setText(text)
+        self.status_changed.emit(state, text)
+
+    def retranslate_ui(self) -> None:
+        self.setAccessibleName(tr("Bragi dictation status"))
+        self.setAccessibleDescription(
+            tr("Shows whether Bragi is loading, listening, or transcribing.")
+        )
+        self._state_mark.setAccessibleName(tr("Status symbol"))
+        self._message.setAccessibleName(tr("Dictation status message"))
+        if self._current_state is not None:
+            self._update_text(self._current_state, self._current_detail)
 
     @Slot()
     def _exit(self) -> None:

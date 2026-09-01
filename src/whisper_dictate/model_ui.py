@@ -4,7 +4,7 @@ import threading
 from collections.abc import Callable
 from pathlib import Path
 
-from PySide6.QtCore import QObject, Signal, Slot
+from PySide6.QtCore import QObject, QSignalBlocker, Signal, Slot
 from PySide6.QtWidgets import (
     QComboBox,
     QFileDialog,
@@ -58,6 +58,7 @@ class ModelManagerPanel(QWidget):
         self._catalogue = manager.catalogue if manager else VALIDATED_CATALOGUE
         self._memory_gb = total_physical_memory_gb() if memory_gb is None else memory_gb
         self._task_signals: _TaskSignals | None = None
+        self._last_status: ModelStatus | None = None
         self._manager_signals = _TaskSignals(self)
         self._manager_signals.status.connect(self._status_changed)
         if manager is not None:
@@ -68,7 +69,7 @@ class ModelManagerPanel(QWidget):
         layout.setContentsMargins(12, 14, 12, 12)
         layout.setSpacing(12)
 
-        introduction = QLabel(
+        self.introduction = QLabel(
             tr(
                 "Speech models are installed on this PC. Downloading a new model "
                 "uses the internet only when you request it. Installed models work "
@@ -76,9 +77,11 @@ class ModelManagerPanel(QWidget):
             ),
             self,
         )
-        introduction.setWordWrap(True)
-        introduction.setAccessibleName(tr("Model privacy and download explanation"))
-        layout.addWidget(introduction)
+        self.introduction.setWordWrap(True)
+        self.introduction.setAccessibleName(
+            tr("Model privacy and download explanation")
+        )
+        layout.addWidget(self.introduction)
 
         self.model_combo = QComboBox(self)
         self.model_combo.setAccessibleName(tr("Speech model"))
@@ -156,6 +159,56 @@ class ModelManagerPanel(QWidget):
         index = self.model_combo.findData(identifier)
         if index >= 0:
             self.model_combo.setCurrentIndex(index)
+
+    def retranslate_ui(self) -> None:
+        self.setAccessibleName(tr("Local speech models"))
+        self.introduction.setText(
+            tr(
+                "Speech models are installed on this PC. Downloading a new model "
+                "uses the internet only when you request it. Installed models work "
+                "without an internet connection."
+            )
+        )
+        self.introduction.setAccessibleName(
+            tr("Model privacy and download explanation")
+        )
+        selected = self.selected_identifier()
+        blocker = QSignalBlocker(self.model_combo)
+        self.model_combo.clear()
+        for spec in self._catalogue:
+            label = (
+                tr("{name} (recommended)", name=spec.name)
+                if spec.recommended
+                else spec.name
+            )
+            self.model_combo.addItem(label, spec.identifier)
+        self.select_model(selected)
+        del blocker
+        self.model_combo.setAccessibleName(tr("Speech model"))
+        self.details.setAccessibleName(tr("Selected model details"))
+        self.state.setAccessibleName(tr("Selected model status"))
+        self.progress.setAccessibleName(tr("Model operation progress"))
+        self.download_button.setText(f"&{tr('Download')}")
+        self.download_button.setAccessibleName(tr("Download selected model"))
+        self.activate_button.setText(f"&{tr('Use model')}")
+        self.activate_button.setAccessibleName(tr("Use selected speech model"))
+        self.remove_button.setText(f"&{tr('Remove')}")
+        self.remove_button.setAccessibleName(tr("Remove selected model"))
+        self.import_button.setText(f"&{tr('Import folder…')}")
+        self.import_button.setAccessibleName(tr("Import a Bragi model folder"))
+        self.cancel_button.setText(f"&{tr('Cancel download')}")
+        self.cancel_button.setAccessibleName(tr("Cancel model download"))
+        self.refresh()
+        if self._manager is None or self._runtime is None:
+            self.state.setText(
+                tr("Model actions are disabled in interface preview mode.")
+            )
+        elif self._last_status is not None and self._last_status.state in {
+            ModelState.DOWNLOADING,
+            ModelState.VERIFYING,
+            ModelState.LOADING,
+        }:
+            self._render_progress(self._last_status)
 
     @Slot()
     def refresh(self) -> None:
@@ -286,6 +339,7 @@ class ModelManagerPanel(QWidget):
 
     @Slot(object)
     def _status_changed(self, status: ModelStatus) -> None:
+        self._last_status = status
         if status.state in {ModelState.DOWNLOADING, ModelState.VERIFYING}:
             self.select_model(status.identifier)
             cancellable = (
@@ -308,15 +362,23 @@ class ModelManagerPanel(QWidget):
         self._render_progress(status)
 
     def _render_progress(self, status: ModelStatus) -> None:
-        self.state.setText(tr(status.detail))
+        spec = next(
+            spec for spec in self._catalogue if spec.identifier == status.identifier
+        )
+        if status.state is ModelState.DOWNLOADING:
+            detail = tr("Downloading {name}…", name=spec.name)
+        elif status.state is ModelState.VERIFYING:
+            detail = tr("Verifying {name}…", name=spec.name)
+        elif status.state is ModelState.LOADING:
+            detail = tr("Loading {name} locally…", name=spec.name)
+        else:
+            detail = tr(status.detail)
+        self.state.setText(detail)
         if status.progress is None:
             self.progress.setRange(0, 0)
         else:
             self.progress.setRange(0, 100)
             self.progress.setValue(round(status.progress * 100))
-        spec = next(
-            spec for spec in self._catalogue if spec.identifier == status.identifier
-        )
         stage = (
             tr("Verifying")
             if status.state is ModelState.VERIFYING

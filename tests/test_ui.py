@@ -279,3 +279,72 @@ def test_norwegian_interface_covers_settings_models_tray_and_overlay(
         assert statuses == ["Transkriberer lokalt …"]
     finally:
         set_interface_language(InterfaceLanguage.ENGLISH)
+
+
+def test_interface_language_previews_live_cancel_restores_and_save_persists(
+    tmp_path: Path,
+) -> None:
+    application()
+    set_interface_language(InterfaceLanguage.ENGLISH)
+    store = SettingsStore(tmp_path / "settings.json")
+    store.save(UserSettings(interface_language=InterfaceLanguage.ENGLISH))
+    indicator = FloatingIndicator(enabled=False)
+    window = SettingsWindow(store)
+    tray = TrayIcon(lambda: None, on_settings=lambda: None)
+    indicator.status_changed.connect(tray.set_status)
+    indicator.status_changed.connect(window.set_status)
+    indicator.post("ready")
+    process_events_until(lambda: window._status.text().startswith("Ready"))
+
+    norwegian_index = window.interface_language_combo.findData(
+        InterfaceLanguage.NORWEGIAN_BOKMAL.value
+    )
+    window.interface_language_combo.setCurrentIndex(norwegian_index)
+
+    assert window.windowTitle() == "Innstillinger for Bragi"
+    assert window._status.text() == "Klar. Hold Høyre Ctrl for å diktere"
+    assert window.model_panel.download_button.text().replace("&", "") == "Last ned"
+    assert tray.settings_action.text().replace("&", "") == "Innstillinger…"
+    assert store.load().settings.interface_language is InterfaceLanguage.ENGLISH
+
+    window.reject()
+
+    assert window.windowTitle() == "Bragi Settings"
+    assert window._status.text() == "Ready. Hold Right Ctrl to dictate"
+    assert window.model_panel.download_button.text().replace("&", "") == "Download"
+    assert tray.settings_action.text().replace("&", "") == "Settings…"
+    assert store.load().settings.interface_language is InterfaceLanguage.ENGLISH
+
+    window.interface_language_combo.setCurrentIndex(norwegian_index)
+    window._save()
+
+    assert (
+        store.load().settings.interface_language is InterfaceLanguage.NORWEGIAN_BOKMAL
+    )
+    assert window.windowTitle() == "Innstillinger for Bragi"
+    set_interface_language(InterfaceLanguage.ENGLISH)
+
+
+def test_model_download_progress_retranslates_while_active(tmp_path: Path) -> None:
+    application()
+    set_interface_language(InterfaceLanguage.ENGLISH)
+    manager = LocalModelManager(tmp_path / "models")
+    runtime = type("Runtime", (), {"active_model": "small"})()
+    panel = ModelManagerPanel(manager, runtime, memory_gb=8.0)
+    status = ModelStatus(
+        "base",
+        ModelState.DOWNLOADING,
+        0.25,
+        "Downloading Base…",
+        37_000_000,
+        148_000_000,
+    )
+    panel._status_changed(status)
+
+    set_interface_language(InterfaceLanguage.NORWEGIAN_BOKMAL)
+    panel.retranslate_ui()
+
+    assert panel.state.text() == "Laster ned Base …"
+    assert panel.progress.format() == "Laster ned Base: 37 MB av 148 MB (25 %)"
+    assert panel.cancel_button.text().replace("&", "") == "Avbryt nedlasting"
+    set_interface_language(InterfaceLanguage.ENGLISH)

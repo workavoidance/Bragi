@@ -73,9 +73,18 @@ issue #8.
 - With the interface language set to Automatic, change the Windows display
   language between English and Norwegian where practical, restart Bragi, and
   confirm the matching interface is selected.
-- Explicitly select English and Norsk bokmål in Settings, restart after each
-  choice, and confirm the explicit choice overrides the Windows display
-  language.
+- Switch between English and Norsk bokmål in Settings. Confirm the open Settings
+  window, tray, overlay, model status, and accessibility labels update
+  immediately without restarting Bragi. Confirm each language remains
+  self-named in both pickers.
+- Change the interface language, choose Cancel, and confirm the previously saved
+  language returns everywhere. Repeat the change, choose Save, reopen Settings,
+  and confirm the new language remains selected.
+- Switch the interface language during an active model download and during
+  dictation. Confirm the visible progress or status updates without interrupting
+  either operation.
+- Restart after saving an explicit choice and confirm it still overrides the
+  Windows display language.
 - In Norwegian, review the tray, every Settings tab, model details, download and
   verification progress, cancellation, microphone recovery, model errors, and
   status overlay. Confirm no user-facing English remains except model names,

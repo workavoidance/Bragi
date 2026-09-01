@@ -40,6 +40,9 @@ here before a release.
 - Complete Norwegian Bokmål interface for the tray, settings, status messages,
   model manager, errors, guidance, and accessibility labels, with automatic
   Windows-language selection and an explicit language setting.
+- Live English and Norwegian interface previews that update existing controls,
+  tray actions, overlay messages, model progress, and accessibility labels,
+  with Cancel restoring the saved language.
 
 ### Fixed
 

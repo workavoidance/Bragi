@@ -6,6 +6,8 @@ from __future__ import annotations
 import ctypes
 import locale
 import os
+import weakref
+from collections.abc import Callable
 from enum import StrEnum
 
 
@@ -21,8 +23,8 @@ NORWEGIAN_BOKMAL = {
     "English": "English",
     "Norwegian Bokmål": "Norsk bokmål",
     "Interface language": "Grensesnittspråk",
-    "Interface language changes after Bragi restarts.": (
-        "Grensesnittspråket endres etter at Bragi er startet på nytt."
+    "Interface language updates immediately.": (
+        "Grensesnittspråket oppdateres umiddelbart."
     ),
     "Configure Bragi and review its local privacy behaviour.": (
         "Konfigurer Bragi og les om hvordan personvernet ivaretas lokalt."
@@ -386,6 +388,7 @@ NORWEGIAN_BOKMAL = {
 
 
 _active_language = InterfaceLanguage.ENGLISH
+_language_listeners: list[weakref.ReferenceType] = []
 
 
 def interface_language_from_locale(language_name: str) -> InterfaceLanguage:
@@ -421,8 +424,27 @@ def resolve_interface_language(
 
 def set_interface_language(choice: InterfaceLanguage) -> InterfaceLanguage:
     global _active_language
-    _active_language = resolve_interface_language(choice)
+    resolved = resolve_interface_language(choice)
+    if resolved is _active_language:
+        return _active_language
+    _active_language = resolved
+    live_listeners = []
+    for listener_reference in _language_listeners:
+        listener = listener_reference()
+        if listener is None:
+            continue
+        live_listeners.append(listener_reference)
+        listener()
+    _language_listeners[:] = live_listeners
     return _active_language
+
+
+def add_interface_language_listener(listener: Callable[[], None]) -> None:
+    try:
+        reference = weakref.WeakMethod(listener)
+    except TypeError:
+        reference = weakref.ref(listener)
+    _language_listeners.append(reference)
 
 
 def current_interface_language() -> InterfaceLanguage:
