@@ -31,6 +31,8 @@ here before a release.
   verified folder import.
 - Background local model switching with persistence rollback and no executable
   rebuild requirement.
+- Per-model byte and percentage progress for downloading and verification, with
+  safe cancellation that preserves installed and active models.
 
 ### Fixed
 

@@ -177,6 +177,7 @@ def main(argv: list[str] | None = None) -> None:
     settings_window.hotkey_capture_finished.connect(listener.start)
 
     def shutdown() -> None:
+        model_manager.cancel_active()
         controller.stop()
         tray.stop()
         ctypes.windll.kernel32.CloseHandle(mutex)

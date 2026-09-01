@@ -22,6 +22,7 @@ from whisper_dictate.models import (
     VALIDATED_CATALOGUE,
     LocalModelManager,
     ModelManagerError,
+    ModelOperationCancelled,
     ModelState,
     ModelStatus,
     hardware_warning,
@@ -34,6 +35,7 @@ class _TaskSignals(QObject):
     status = Signal(object)
     succeeded = Signal(str)
     failed = Signal(str)
+    cancelled = Signal(str)
 
 
 class ModelManagerPanel(QWidget):
@@ -55,6 +57,10 @@ class ModelManagerPanel(QWidget):
         self._catalogue = manager.catalogue if manager else VALIDATED_CATALOGUE
         self._memory_gb = total_physical_memory_gb() if memory_gb is None else memory_gb
         self._task_signals: _TaskSignals | None = None
+        self._manager_signals = _TaskSignals(self)
+        self._manager_signals.status.connect(self._status_changed)
+        if manager is not None:
+            manager.add_status_listener(self._manager_signals.status.emit)
         self.setAccessibleName("Local speech models")
 
         layout = QVBoxLayout(self)
@@ -104,16 +110,21 @@ class ModelManagerPanel(QWidget):
         self.remove_button.setAccessibleName("Remove selected model")
         self.import_button = QPushButton("&Import folder…", self)
         self.import_button.setAccessibleName("Import a Bragi model folder")
+        self.cancel_button = QPushButton("&Cancel download", self)
+        self.cancel_button.setAccessibleName("Cancel model download")
+        self.cancel_button.hide()
         button_row.addWidget(self.download_button)
         button_row.addWidget(self.activate_button)
         button_row.addWidget(self.remove_button)
         button_row.addWidget(self.import_button)
+        button_row.addWidget(self.cancel_button)
         layout.addLayout(button_row)
 
         self.download_button.clicked.connect(self._download)
         self.activate_button.clicked.connect(self._activate)
         self.remove_button.clicked.connect(self._remove)
         self.import_button.clicked.connect(self._import)
+        self.cancel_button.clicked.connect(self.cancel_active_operation)
 
         if manager is None or runtime is None:
             self.state.setText("Model actions are disabled in interface preview mode.")
@@ -154,6 +165,14 @@ class ModelManagerPanel(QWidget):
         if self._manager is None or self._runtime is None:
             return
         installed = self._manager.is_installed(identifier)
+        status = self._manager.status(identifier)
+        if status.state in {ModelState.DOWNLOADING, ModelState.VERIFYING}:
+            cancellable = (
+                status.state is ModelState.DOWNLOADING or status.bytes_total is not None
+            )
+            self._set_busy(True, cancellable=cancellable)
+            self._render_progress(status)
+            return
         active = identifier == self.active_identifier()
         if active:
             state = "Installed and active"
@@ -181,7 +200,7 @@ class ModelManagerPanel(QWidget):
         )
         return answer == QMessageBox.StandardButton.Yes
 
-    def _set_busy(self, busy: bool) -> None:
+    def _set_busy(self, busy: bool, *, cancellable: bool = False) -> None:
         self.model_combo.setEnabled(not busy)
         for button in (
             self.download_button,
@@ -191,6 +210,8 @@ class ModelManagerPanel(QWidget):
         ):
             button.setEnabled(not busy)
         self.progress.setVisible(busy)
+        self.cancel_button.setVisible(busy and cancellable)
+        self.cancel_button.setEnabled(busy and cancellable)
         if busy:
             self.progress.setRange(0, 0)
             self.progress.setFormat("Working locally…")
@@ -199,17 +220,22 @@ class ModelManagerPanel(QWidget):
         self,
         identifier: str,
         operation: Callable[[Callable[[ModelStatus], None]], str],
+        *,
+        cancellable: bool = False,
     ) -> None:
-        self._set_busy(True)
+        self._set_busy(True, cancellable=cancellable)
         signals = _TaskSignals(self)
         self._task_signals = signals
         signals.status.connect(self._status_changed)
         signals.succeeded.connect(self._operation_succeeded)
         signals.failed.connect(self._operation_failed)
+        signals.cancelled.connect(self._operation_cancelled)
 
         def worker() -> None:
             try:
                 completed_identifier = operation(signals.status.emit)
+            except ModelOperationCancelled as error:
+                signals.cancelled.emit(str(error))
             except (
                 ModelManagerError,
                 ModelActivationError,
@@ -228,18 +254,50 @@ class ModelManagerPanel(QWidget):
 
     @Slot(object)
     def _status_changed(self, status: ModelStatus) -> None:
+        if status.state in {ModelState.DOWNLOADING, ModelState.VERIFYING}:
+            self.select_model(status.identifier)
+            cancellable = (
+                status.state is ModelState.DOWNLOADING or status.bytes_total is not None
+            )
+            self._set_busy(True, cancellable=cancellable)
+            self._render_progress(status)
+            return
+        if status.state in {
+            ModelState.INSTALLED,
+            ModelState.NOT_INSTALLED,
+            ModelState.ERROR,
+        }:
+            self._set_busy(False)
+            self.select_model(status.identifier)
+            self.refresh()
+            if status.detail:
+                self.state.setText(status.detail)
+            return
+        self._render_progress(status)
+
+    def _render_progress(self, status: ModelStatus) -> None:
         self.state.setText(status.detail)
         if status.progress is None:
             self.progress.setRange(0, 0)
         else:
             self.progress.setRange(0, 100)
             self.progress.setValue(round(status.progress * 100))
+        spec = next(
+            spec for spec in self._catalogue if spec.identifier == status.identifier
+        )
+        stage = "Verifying" if status.state is ModelState.VERIFYING else "Downloading"
         if status.state is ModelState.LOADING:
-            self.progress.setFormat("Loading locally…")
-        elif status.state is ModelState.VERIFYING:
-            self.progress.setFormat("Verifying files…")
+            self.progress.setFormat(f"Loading {spec.name} locally…")
+        elif status.bytes_completed is not None and status.bytes_total:
+            completed = status.bytes_completed / 1_000_000
+            total = status.bytes_total / 1_000_000
+            percent = round((status.bytes_completed / status.bytes_total) * 100)
+            self.progress.setFormat(
+                f"{stage} {spec.name}: {completed:.0f} MB of {total:.0f} MB "
+                f"({percent}%)"
+            )
         else:
-            self.progress.setFormat("Downloading…")
+            self.progress.setFormat(f"{stage} {spec.name}…")
 
     @Slot(str)
     def _operation_succeeded(self, identifier: str) -> None:
@@ -257,6 +315,22 @@ class ModelManagerPanel(QWidget):
         QMessageBox.critical(self, "Model operation failed", message)
         self._task_signals = None
 
+    @Slot(str)
+    def _operation_cancelled(self, message: str) -> None:
+        self._set_busy(False)
+        self.refresh()
+        self.state.setText(message or "Model download cancelled.")
+        self._task_signals = None
+
+    @Slot()
+    def cancel_active_operation(self) -> None:
+        if self._manager is None:
+            return
+        if self._manager.cancel_active():
+            self.cancel_button.setEnabled(False)
+            self.state.setText("Cancelling model download…")
+            self.progress.setFormat("Cancelling…")
+
     @Slot()
     def _download(self) -> None:
         if self._manager is None:
@@ -266,7 +340,8 @@ class ModelManagerPanel(QWidget):
             return
         self._run(
             identifier,
-            lambda callback: self._manager.install(identifier, callback).name,
+            lambda _callback: self._manager.install(identifier).name,
+            cancellable=True,
         )
 
     @Slot()

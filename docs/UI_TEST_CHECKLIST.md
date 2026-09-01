@@ -35,8 +35,10 @@ issue #8.
   change and confirm direct insertion is still correct.
 - Open Models and confirm Tiny, Base, Small, and Medium show download size, RAM
   guidance, CPU suitability, and clear installed or not-installed state.
-- Download Base, watch download, verification, and loading feedback, activate
-  it, and dictate without restarting Bragi. Confirm Small can then be restored.
+- Download Base and confirm its name, downloaded size, total size, percentage,
+  and separate verification stage remain visible. Cancel once, confirm Base is
+  not offered as installed, then download it fully, activate it, and dictate
+  without restarting Bragi. Confirm Small can then be restored.
 - Interrupt a non-default model download by exiting Bragi. Restart and confirm
   the partial model is not offered as installed and can be downloaded again.
 - Copy an installed non-active model folder to another location, remove it in

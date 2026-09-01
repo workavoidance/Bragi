@@ -21,6 +21,8 @@ hardware testing are being developed.
   input device.
 - Offers verified local Tiny, Base, Small, and Medium models. Small remains the
   recommended default for CPU use.
+- Shows per-model download and verification progress and allows an incomplete
+  download to be cancelled without affecting installed models.
 - Runs transcription locally on the CPU using `int8` inference.
 - Shows a small indicator while loading, recording, and transcribing.
 - Types Unicode directly through Windows, without putting text on the clipboard.
