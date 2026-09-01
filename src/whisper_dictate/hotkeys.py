@@ -6,7 +6,6 @@ from collections.abc import Callable
 DEFAULT_HOTKEY = "right_ctrl"
 SUPPORTED_HOTKEYS = {
     "right_ctrl": "Right Ctrl",
-    "right_alt": "Right Alt",
     "f6": "F6",
     "f7": "F7",
     "f8": "F8",
@@ -28,7 +27,7 @@ class HotkeyActivationError(RuntimeError):
 def validate_hotkey(identifier: str) -> str:
     if identifier not in SUPPORTED_HOTKEYS:
         raise HotkeyValidationError(
-            "Use Right Ctrl, Right Alt, or F6 through F12. Letters, Windows "
+            "Use Right Ctrl or F6 through F12. Letters, Windows "
             "keys, and common editing keys are not safe push-to-talk choices."
         )
     return identifier
@@ -47,7 +46,6 @@ def _pynput_listener_factory(
 
     key_names = {
         "right_ctrl": "ctrl_r",
-        "right_alt": "alt_r",
         **{f"f{number}": f"f{number}" for number in range(6, 13)},
     }
     expected = getattr(keyboard.Key, key_names[identifier])

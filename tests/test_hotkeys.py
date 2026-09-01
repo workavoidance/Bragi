@@ -27,9 +27,10 @@ class FakeNativeListener:
         self.events.append(f"stop:{self.identifier}")
 
 
-def test_unsafe_push_to_talk_keys_are_rejected() -> None:
+@pytest.mark.parametrize("identifier", ["a", "right_alt"])
+def test_unsafe_push_to_talk_keys_are_rejected(identifier: str) -> None:
     with pytest.raises(HotkeyValidationError, match="not safe"):
-        validate_hotkey("a")
+        validate_hotkey(identifier)
 
 
 def test_hotkey_replacement_stops_old_listener_and_ignores_old_callbacks() -> None:

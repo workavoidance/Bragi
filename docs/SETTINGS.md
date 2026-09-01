@@ -41,8 +41,9 @@ recording. Multilingual allows faster-whisper to detect the language again for
 individual segments. Very short automatic-language recordings may not contain
 enough speech for reliable detection.
 
-Supported push-to-talk identifiers are `right_ctrl`, `right_alt`, and `f6`
-through `f12`. Microphones use `windows_default` or a stable `portaudio:`
+Supported push-to-talk identifiers are `right_ctrl` and `f6` through `f12`.
+Letters, Windows keys, modifier keys such as Alt, and common editing keys are
+rejected. Microphones use `windows_default` or a stable `portaudio:`
 identifier derived from the Windows audio host API and device name. A device is
 resolved to its current PortAudio index when recording begins, so stored indexes
 do not become stale.

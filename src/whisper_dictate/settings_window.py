@@ -65,10 +65,6 @@ def hotkey_from_qt_key(
         key == int(Qt.Key.Key_Control) and native_scan_code in {0xE01D, 0x11D}
     ):
         return "right_ctrl"
-    if native_virtual_key == 0xA5 or (
-        key == int(Qt.Key.Key_Alt) and native_scan_code in {0xE038, 0x138}
-    ):
-        return "right_alt"
     function_keys = {
         int(getattr(Qt.Key, f"Key_F{number}")): f"f{number}" for number in range(6, 13)
     }
@@ -93,7 +89,7 @@ class HotkeyCaptureButton(QPushButton):
         self._can_capture = can_capture or (lambda: True)
         self.setAccessibleName("Change push-to-talk key")
         self.setAccessibleDescription(
-            "Press this button, then press Right Ctrl, Right Alt, or F6 through F12."
+            "Press this button, then press Right Ctrl or F6 through F12."
         )
         self.clicked.connect(self.begin_capture)
 
@@ -147,7 +143,7 @@ class HotkeyCaptureButton(QPushButton):
         )
         if identifier is None:
             self.capture_rejected.emit(
-                "Use Right Ctrl, Right Alt, or F6 through F12. Letters, Windows "
+                "Use Right Ctrl or F6 through F12. Letters, Windows "
                 "keys, and common editing keys are not safe choices."
             )
             event.accept()
@@ -338,7 +334,7 @@ class SettingsWindow(QDialog):
         hotkey_layout.addWidget(self.restore_hotkey_button)
         setup_layout.addRow("Push-to-talk key:", hotkey_row)
         self._hotkey_help = QLabel(
-            "Safe choices are Right Ctrl, Right Alt, and F6 through F12. "
+            "Safe choices are Right Ctrl and F6 through F12. "
             "Press Escape to cancel key capture.",
             setup_group,
         )
@@ -427,7 +423,7 @@ class SettingsWindow(QDialog):
             return
         self._hotkey.setText(hotkey_display_name(self._selected_hotkey))
         self._hotkey_help.setText(
-            "Safe choices are Right Ctrl, Right Alt, and F6 through F12. "
+            "Safe choices are Right Ctrl and F6 through F12. "
             "Press Escape to cancel key capture."
         )
 
