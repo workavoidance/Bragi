@@ -1,6 +1,6 @@
 # Fast development and preview workflow
 
-Bragi has two local development modes and an automated Windows preview build.
+Skrivi has two local development modes and an automated Windows preview build.
 They are intended to shorten feedback cycles without weakening the privacy or
 offline requirements.
 
@@ -22,7 +22,7 @@ dev.bat preview
 ```
 
 This mode does not load Whisper, access a microphone, register a global hotkey,
-or insert text. Use **Settings** in the Bragi tray menu to inspect the window,
+or insert text. Use **Settings** in the Skrivi tray menu to inspect the window,
 then use **Preview state** to display the loading, ready, recording,
 transcribing, no-speech, and error indicators.
 
@@ -55,11 +55,11 @@ mode for rapid visual changes and real mode for end-to-end acceptance checks.
 Models are shared across normal, development, and pull-request preview builds:
 
 ```text
-%LOCALAPPDATA%\Bragi\models
+%LOCALAPPDATA%\Skrivi\models
 ```
 
-Normal settings live under `%APPDATA%\Bragi`. Development settings have a
-separate location under `%APPDATA%\Bragi\development`, preventing a test
+Normal settings live under `%APPDATA%\Skrivi`. Development settings have a
+separate location under `%APPDATA%\Skrivi\development`, preventing a test
 schema or value from damaging a normal user's settings.
 
 The first real run may download the selected model. Once the dependencies and
@@ -72,7 +72,7 @@ Every pull request starts the **Windows preview** GitHub Actions workflow. It
 produces a ZIP named in this form:
 
 ```text
-Bragi-PR-11-a1b2c3d-windows-x64.zip
+Skrivi-PR-11-a1b2c3d-windows-x64.zip
 ```
 
 Download the artifact from the pull request's Actions run, extract the complete

@@ -68,7 +68,7 @@ INTERFACE_LANGUAGE_CHOICES = (
 def hotkey_from_qt_key(
     key: int, native_virtual_key: int, native_scan_code: int = 0
 ) -> str | None:
-    """Translate a captured Windows key into a supported Bragi identifier."""
+    """Translate a captured Windows key into a supported Skrivi identifier."""
     # Qt normally receives the generic VK_CONTROL/VK_MENU values from Windows.
     # Right-side modifier keys are distinguished by their extended scan codes.
     # Accept the side-specific virtual keys too, because synthetic events and
@@ -201,7 +201,7 @@ class HotkeyCaptureButton(QPushButton):
 
 
 class SettingsWindow(QDialog):
-    """Keyboard-operable settings that can update a running Bragi instance."""
+    """Keyboard-operable settings that can update a running Skrivi instance."""
 
     settings_saved = Signal(object)
     hotkey_capture_started = Signal()
@@ -211,7 +211,7 @@ class SettingsWindow(QDialog):
         self,
         store: SettingsStore,
         *,
-        title: str = "Bragi",
+        title: str = "Skrivi",
         save_settings: Callable[[UserSettings], None] | None = None,
         microphone_provider: Callable[[], list[MicrophoneDevice]] | None = None,
         can_change_input: Callable[[], bool] | None = None,
@@ -234,17 +234,17 @@ class SettingsWindow(QDialog):
         self.setWindowTitle(tr("{title} Settings", title=title))
         self.setWindowModality(Qt.WindowModality.NonModal)
         self.setMinimumSize(600, 560)
-        self.setAccessibleName(tr("Bragi settings"))
+        self.setAccessibleName(tr("Skrivi settings"))
         self.setAccessibleDescription(
-            tr("Configure Bragi and review its local privacy behaviour.")
+            tr("Configure Skrivi and review its local privacy behaviour.")
         )
 
         root = QVBoxLayout(self)
         root.setContentsMargins(20, 20, 20, 16)
         root.setSpacing(14)
 
-        self._heading = QLabel(tr("Bragi settings"), self)
-        self._heading.setAccessibleName(tr("Bragi settings heading"))
+        self._heading = QLabel(tr("Skrivi settings"), self)
+        self._heading.setAccessibleName(tr("Skrivi settings heading"))
         heading_font = self._heading.font()
         heading_font.setBold(True)
         heading_font.setPointSize(max(heading_font.pointSize() + 5, 16))
@@ -429,7 +429,7 @@ class SettingsWindow(QDialog):
         self.overlay_checkbox.setAccessibleName(tr("Show dictation status overlay"))
         self.overlay_checkbox.setAccessibleDescription(
             tr(
-                "Show a non-activating message while Bragi loads, listens and "
+                "Show a non-activating message while Skrivi loads, listens and "
                 "transcribes."
             )
         )
@@ -456,7 +456,7 @@ class SettingsWindow(QDialog):
         layout.setContentsMargins(12, 14, 12, 12)
         self._privacy = QLabel(
             tr(
-                "Speech is processed locally on this PC. Bragi does not save your "
+                "Speech is processed locally on this PC. Skrivi does not save your "
                 "recordings or transcripts, does not use the clipboard for dictated "
                 "text, and needs no account. After the selected speech model has been "
                 "downloaded, normal dictation does not require internet access."
@@ -470,7 +470,7 @@ class SettingsWindow(QDialog):
         self._privacy.setTextInteractionFlags(
             Qt.TextInteractionFlag.TextSelectableByKeyboard
         )
-        self._privacy.setAccessibleName(tr("Bragi privacy summary"))
+        self._privacy.setAccessibleName(tr("Skrivi privacy summary"))
         layout.addWidget(self._privacy)
         layout.addStretch(1)
         return page
@@ -481,9 +481,9 @@ class SettingsWindow(QDialog):
         layout.setContentsMargins(12, 14, 12, 12)
         self._about = QLabel(
             tr(
-                "Bragi is free and open-source local speech-to-text software.\n\n"
+                "Skrivi is free and open-source local speech-to-text software.\n\n"
                 "The interface uses PySide6 and Qt under their open-source licences. "
-                "See THIRD_PARTY_NOTICES.md included with Bragi for copyright and "
+                "See THIRD_PARTY_NOTICES.md included with Skrivi for copyright and "
                 "licence information."
             ),
             page,
@@ -492,7 +492,7 @@ class SettingsWindow(QDialog):
         self._about.setTextInteractionFlags(
             Qt.TextInteractionFlag.TextSelectableByKeyboard
         )
-        self._about.setAccessibleName(tr("About Bragi"))
+        self._about.setAccessibleName(tr("About Skrivi"))
         layout.addWidget(self._about)
         layout.addStretch(1)
         return page
@@ -536,12 +536,12 @@ class SettingsWindow(QDialog):
 
     def retranslate_ui(self) -> None:
         self.setWindowTitle(tr("{title} Settings", title=self._title))
-        self.setAccessibleName(tr("Bragi settings"))
+        self.setAccessibleName(tr("Skrivi settings"))
         self.setAccessibleDescription(
-            tr("Configure Bragi and review its local privacy behaviour.")
+            tr("Configure Skrivi and review its local privacy behaviour.")
         )
-        self._heading.setText(tr("Bragi settings"))
-        self._heading.setAccessibleName(tr("Bragi settings heading"))
+        self._heading.setText(tr("Skrivi settings"))
+        self._heading.setAccessibleName(tr("Skrivi settings heading"))
         self._warning.setAccessibleName(tr("Settings warning"))
         self._warning.setText(
             tr(self._settings_warning) if self._settings_warning else ""
@@ -603,28 +603,28 @@ class SettingsWindow(QDialog):
         self.overlay_checkbox.setAccessibleName(tr("Show dictation status overlay"))
         self.overlay_checkbox.setAccessibleDescription(
             tr(
-                "Show a non-activating message while Bragi loads, listens and "
+                "Show a non-activating message while Skrivi loads, listens and "
                 "transcribes."
             )
         )
         self._privacy.setText(
             tr(
-                "Speech is processed locally on this PC. Bragi does not save your "
+                "Speech is processed locally on this PC. Skrivi does not save your "
                 "recordings or transcripts, does not use the clipboard for dictated "
                 "text, and needs no account. After the selected speech model has been "
                 "downloaded, normal dictation does not require internet access."
             )
         )
-        self._privacy.setAccessibleName(tr("Bragi privacy summary"))
+        self._privacy.setAccessibleName(tr("Skrivi privacy summary"))
         self._about.setText(
             tr(
-                "Bragi is free and open-source local speech-to-text software.\n\n"
+                "Skrivi is free and open-source local speech-to-text software.\n\n"
                 "The interface uses PySide6 and Qt under their open-source licences. "
-                "See THIRD_PARTY_NOTICES.md included with Bragi for copyright and "
+                "See THIRD_PARTY_NOTICES.md included with Skrivi for copyright and "
                 "licence information."
             )
         )
-        self._about.setAccessibleName(tr("About Bragi"))
+        self._about.setAccessibleName(tr("About Skrivi"))
         self._refresh_microphones()
         self.model_panel.retranslate_ui()
 
@@ -738,7 +738,7 @@ class SettingsWindow(QDialog):
                 tr("Settings could not be applied"),
                 tr(str(error))
                 or tr(
-                    "Bragi could not apply settings safely. Previous settings "
+                    "Skrivi could not apply settings safely. Previous settings "
                     "remain active."
                 ),
             )

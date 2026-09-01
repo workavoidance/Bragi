@@ -1,6 +1,6 @@
 # Architecture
 
-Bragi is a Windows tray application with a privacy-first local speech pipeline.
+Skrivi is a Windows tray application with a privacy-first local speech pipeline.
 
 ## Current flow
 
@@ -39,13 +39,19 @@ Models and configuration are persistent. Recordings and transcripts are not.
 Diagnostic logs may contain state transitions, durations, model names and error
 types, but never dictated content or raw audio.
 
-Downloaded models live in `%LOCALAPPDATA%\Bragi\models` and are shared across
+Downloaded models live in `%LOCALAPPDATA%\Skrivi\models` and are shared across
 normal, development, and preview builds. Future development settings use a
-separate `%APPDATA%\Bragi\development` location. Initial setup and explicit model
+separate `%APPDATA%\Skrivi\development` location. Initial setup and explicit model
 downloads may use the internet; installed transcription remains local and must
 continue working without it.
 
-The model catalogue is compiled into Bragi with immutable upstream revisions,
+The Skrivi rename migrates the previous Bragi application-data roots with an
+atomic same-volume directory rename. A failed rename falls back to the existing
+directory so settings and large model downloads are never abandoned merely
+because the branding changed. Legacy model manifests remain readable and are
+renamed after validation.
+
+The model catalogue is compiled into Skrivi with immutable upstream revisions,
 file sizes, and checksums. Downloads and imports are verified in a staging
 directory before an atomic install. The transcriber receives an installed local
 path rather than a remote model identifier, preventing an accidental network
@@ -71,7 +77,7 @@ Invalid and newer-version files are preserved for diagnosis or recovery.
 
 Interface text is routed through the UI-independent `i18n` module. English
 source text is the stable key and Norwegian Bokmål is the first complete
-translation catalogue. At startup, Bragi resolves the stored Automatic,
+translation catalogue. At startup, Skrivi resolves the stored Automatic,
 English, or Norwegian choice before creating Qt widgets. Automatic follows the
 Windows display language for Norwegian Windows installations and otherwise
 falls back to English. Translation does not affect transcription language or

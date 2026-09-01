@@ -1,6 +1,6 @@
-# Bragi website
+# Skrivi website
 
-This folder contains the first public-facing Bragi website.
+This folder contains the first public-facing Skrivi website.
 
 It is intentionally a simple static site: plain HTML, CSS and a small language-switching script. There is no framework, build step, database, analytics package, account system or external font dependency.
 

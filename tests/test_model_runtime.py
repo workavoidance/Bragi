@@ -99,7 +99,7 @@ def test_model_change_waits_until_dictation_is_ready(tmp_path) -> None:
         can_activate=lambda: False,
     )
 
-    with pytest.raises(ModelActivationError, match="Wait until Bragi is ready"):
+    with pytest.raises(ModelActivationError, match="Wait until Skrivi is ready"):
         runtime.activate("base")
 
     assert transcriber.active_model == "small"

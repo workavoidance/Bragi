@@ -53,7 +53,7 @@ class ModelRuntime:
             return
         if not self._can_activate():
             raise ModelActivationError(
-                tr("Wait until Bragi is ready before changing the speech model.")
+                tr("Wait until Skrivi is ready before changing the speech model.")
             )
         path = self.manager.verify_installed(identifier, thorough=True)
         self._report(

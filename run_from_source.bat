@@ -21,6 +21,7 @@ if not exist .venv\Scripts\python.exe (
 
 .venv\Scripts\python.exe -m pip install -r requirements.txt -c constraints-windows.txt
 if errorlevel 1 goto :failed
+.venv\Scripts\python.exe -m pip uninstall --yes whisper-dictate >nul 2>nul
 .venv\Scripts\python.exe -m pip install -e . -c constraints-windows.txt
 if errorlevel 1 goto :failed
 start "" .venv\Scripts\pythonw.exe -m whisper_dictate

@@ -7,6 +7,13 @@ here before a release.
 
 ### Added
 
+- Rename the product from Bragi to Skrivi across the Windows application,
+  executable, website, documentation, build artifacts, and package metadata.
+- Automatically move existing Bragi settings and downloaded models into
+  Skrivi's application-data directories without copying model weights or
+  requiring another download.
+- Continue recognising existing Bragi model exports while replacing their
+  manifest filename with the Skrivi name after local verification.
 - Open-source project governance and contribution documentation.
 - Automated Windows quality checks and tagged release builds.
 - Dependency update automation and reproducible direct-dependency constraints.
@@ -34,7 +41,7 @@ here before a release.
 - Per-model byte and percentage progress for downloading and verification, with
   safe cancellation that preserves installed and active models.
 - Retry failed startup model loading from the tray, the dictation key, or after
-  activating a model in Settings without restarting Bragi.
+  activating a model in Settings without restarting Skrivi.
 - Coordinated shutdown that stops input, cancels model operations, prevents late
   text insertion, and waits briefly for in-memory cleanup.
 - Complete Norwegian Bokmål interface for the tray, settings, status messages,

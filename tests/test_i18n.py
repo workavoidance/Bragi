@@ -38,7 +38,7 @@ def test_bokmal_translates_and_formats_interface_text() -> None:
     set_interface_language(InterfaceLanguage.NORWEGIAN_BOKMAL)
 
     assert tr("Settings") == "Innstillinger"
-    assert tr("{title} Settings", title="Bragi") == "Innstillinger for Bragi"
+    assert tr("{title} Settings", title="Skrivi") == "Innstillinger for Skrivi"
     assert tr("Downloading {name}…", name="Small") == "Laster ned Small …"
     assert tr("English") == "English"
 

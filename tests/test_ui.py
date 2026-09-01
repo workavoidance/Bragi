@@ -35,7 +35,7 @@ def reset_interface_language():
 
 
 def application() -> QApplication:
-    return create_application("Bragi tests")
+    return create_application("Skrivi tests")
 
 
 def process_events_until(predicate, timeout: float = 1.0) -> None:
@@ -66,7 +66,7 @@ def test_indicator_is_non_activating_and_worker_safe() -> None:
     assert received == [("transcribing", "Transcribing locally…")]
     assert indicator.windowFlags() & Qt.WindowType.WindowDoesNotAcceptFocus
     assert indicator.testAttribute(Qt.WidgetAttribute.WA_ShowWithoutActivating)
-    assert indicator.accessibleName() == "Bragi dictation status"
+    assert indicator.accessibleName() == "Skrivi dictation status"
 
 
 def test_settings_window_saves_overlay_choice(tmp_path: Path) -> None:
@@ -175,7 +175,7 @@ def test_settings_actions_are_named_and_keyboard_operable(tmp_path: Path) -> Non
     application()
     window = SettingsWindow(SettingsStore(tmp_path / "settings.json"))
 
-    assert window.accessibleName() == "Bragi settings"
+    assert window.accessibleName() == "Skrivi settings"
     assert window.tabs.accessibleName() == "Settings sections"
     assert window.overlay_checkbox.accessibleName() == ("Show dictation status overlay")
     assert window.language_combo.accessibleName() == "Dictation language"
@@ -270,13 +270,13 @@ def test_norwegian_interface_covers_settings_models_tray_and_overlay(
         indicator.post("transcribing")
         process_events_until(lambda: bool(statuses))
 
-        assert window.windowTitle() == "Innstillinger for Bragi"
-        assert window.accessibleName() == "Bragi-innstillinger"
+        assert window.windowTitle() == "Innstillinger for Skrivi"
+        assert window.accessibleName() == "Skrivi-innstillinger"
         assert [window.tabs.tabText(index).replace("&", "") for index in range(4)] == [
             "Generelt",
             "Modeller",
             "Personvern",
-            "Om Bragi",
+            "Om Skrivi",
         ]
         assert window.model_panel.download_button.text().replace("&", "") == (
             "Last ned"
@@ -311,7 +311,7 @@ def test_interface_language_previews_live_cancel_restores_and_save_persists(
     )
     window.interface_language_combo.setCurrentIndex(norwegian_index)
 
-    assert window.windowTitle() == "Innstillinger for Bragi"
+    assert window.windowTitle() == "Innstillinger for Skrivi"
     assert window._status.text() == "Klar. Hold Høyre Ctrl for å diktere"
     assert window.model_panel.download_button.text().replace("&", "") == "Last ned"
     assert tray.settings_action.text().replace("&", "") == "Innstillinger…"
@@ -319,7 +319,7 @@ def test_interface_language_previews_live_cancel_restores_and_save_persists(
 
     window.reject()
 
-    assert window.windowTitle() == "Bragi Settings"
+    assert window.windowTitle() == "Skrivi Settings"
     assert window._status.text() == "Ready. Hold Right Ctrl to dictate"
     assert window.model_panel.download_button.text().replace("&", "") == "Download"
     assert tray.settings_action.text().replace("&", "") == "Settings…"
@@ -332,7 +332,7 @@ def test_interface_language_previews_live_cancel_restores_and_save_persists(
     assert (
         store.load().settings.interface_language is InterfaceLanguage.NORWEGIAN_BOKMAL
     )
-    assert window.windowTitle() == "Innstillinger for Bragi"
+    assert window.windowTitle() == "Innstillinger for Skrivi"
     set_interface_language(InterfaceLanguage.ENGLISH)
 
 

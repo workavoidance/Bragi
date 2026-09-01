@@ -28,7 +28,7 @@ MALFORMED_WARNING = "Settings are damaged; safe defaults are in use."
 UNREADABLE_WARNING = "Settings could not be read; safe defaults are in use."
 INVALID_WARNING = "Settings contain unsupported values; safe defaults are in use."
 NEWER_VERSION_WARNING = (
-    "Settings were written by a newer Bragi version; safe defaults are in use."
+    "Settings were written by a newer Skrivi version; safe defaults are in use."
 )
 
 
@@ -44,7 +44,7 @@ class SettingsValidationError(ValueError):
 
 
 class UnsupportedSettingsVersion(SettingsValidationError):
-    """Raised when a settings document is newer than this Bragi version."""
+    """Raised when a settings document is newer than this Skrivi version."""
 
 
 class SettingsWriteError(OSError):
@@ -306,7 +306,7 @@ class SettingsStore:
             os.replace(temporary_path, self.path)
             temporary_path = None
         except WRITE_ERRORS as error:
-            raise SettingsWriteError("Bragi could not save settings safely") from error
+            raise SettingsWriteError("Skrivi could not save settings safely") from error
         finally:
             if descriptor >= 0:
                 try:

@@ -39,7 +39,7 @@ def application_command(mode: str, executable: str = sys.executable) -> list[str
 
 def start_child(mode: str) -> subprocess.Popen:
     environment = os.environ.copy()
-    environment["BRAGI_DEVELOPMENT"] = "1"
+    environment["SKRIVI_DEVELOPMENT"] = "1"
     return subprocess.Popen(
         application_command(mode),
         cwd=ROOT,
@@ -59,7 +59,7 @@ def stop_child(child: subprocess.Popen, timeout_seconds: float = 5.0) -> None:
 
 
 def run(mode: str, poll_seconds: float = 0.5) -> None:
-    print(f"Starting Bragi development mode: {mode}")
+    print(f"Starting Skrivi development mode: {mode}")
     print("Source changes restart the managed app. Press Ctrl+C to stop.")
     previous = source_snapshot()
     child = start_child(mode)
@@ -69,18 +69,18 @@ def run(mode: str, poll_seconds: float = 0.5) -> None:
             current = source_snapshot()
             if not source_changed(previous, current):
                 continue
-            print("Source changed. Restarting Bragi...")
+            print("Source changed. Restarting Skrivi...")
             stop_child(child)
             previous = current
             child = start_child(mode)
     except KeyboardInterrupt:
-        print("Stopping Bragi development mode...")
+        print("Stopping Skrivi development mode...")
     finally:
         stop_child(child)
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Run and restart Bragi from source")
+    parser = argparse.ArgumentParser(description="Run and restart Skrivi from source")
     parser.add_argument(
         "mode",
         nargs="?",

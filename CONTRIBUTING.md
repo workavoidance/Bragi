@@ -1,4 +1,4 @@
-# Contributing to Bragi
+# Contributing to Skrivi
 
 Thanks for helping improve private, local dictation on Windows.
 

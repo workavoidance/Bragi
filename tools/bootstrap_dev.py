@@ -12,7 +12,8 @@ INPUTS = (
     ROOT / "requirements-dev.txt",
     ROOT / "constraints-windows.txt",
 )
-MARKER = ROOT / ".venv" / ".bragi-development-dependencies"
+MARKER = ROOT / ".venv" / ".skrivi-development-dependencies"
+LEGACY_DISTRIBUTION = "whisper-dictate"
 
 
 def dependency_fingerprint(paths: tuple[Path, ...] = INPUTS) -> str:
@@ -42,6 +43,11 @@ def main() -> None:
         ],
         cwd=ROOT,
         check=True,
+    )
+    subprocess.run(
+        [sys.executable, "-m", "pip", "uninstall", "--yes", LEGACY_DISTRIBUTION],
+        cwd=ROOT,
+        check=False,
     )
     subprocess.run(
         [

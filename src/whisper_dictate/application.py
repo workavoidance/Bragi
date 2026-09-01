@@ -6,7 +6,7 @@ from PySide6.QtCore import QLineF, QRectF, Qt
 from PySide6.QtGui import QColor, QIcon, QPainter, QPen, QPixmap
 from PySide6.QtWidgets import QApplication
 
-BRAGI_ORANGE = QColor("#F05A24")
+SKRIVI_ORANGE = QColor("#F05A24")
 
 APP_STYLESHEET = """
 QDialog {
@@ -70,8 +70,8 @@ QMenu::item:selected {
 """
 
 
-def bragi_icon(size: int = 64) -> QIcon:
-    """Create Bragi's dot-and-speaking-marks icon in memory."""
+def skrivi_icon(size: int = 64) -> QIcon:
+    """Create Skrivi's dot-and-speaking-marks icon in memory."""
     pixmap = QPixmap(size, size)
     pixmap.fill(Qt.GlobalColor.transparent)
 
@@ -82,7 +82,7 @@ def bragi_icon(size: int = 64) -> QIcon:
     dot_x = size * 0.27
     dot_y = size * 0.50
     painter.setPen(Qt.PenStyle.NoPen)
-    painter.setBrush(BRAGI_ORANGE)
+    painter.setBrush(SKRIVI_ORANGE)
     painter.drawEllipse(
         QRectF(
             dot_x - dot_radius,
@@ -92,7 +92,7 @@ def bragi_icon(size: int = 64) -> QIcon:
         )
     )
 
-    mark_pen = QPen(BRAGI_ORANGE)
+    mark_pen = QPen(SKRIVI_ORANGE)
     mark_pen.setWidthF(max(2.0, size * 0.105))
     mark_pen.setCapStyle(Qt.PenCapStyle.RoundCap)
     painter.setPen(mark_pen)
@@ -105,16 +105,16 @@ def bragi_icon(size: int = 64) -> QIcon:
 
 
 def create_application(title: str) -> QApplication:
-    """Return Bragi's single Qt application instance."""
+    """Return Skrivi's single Qt application instance."""
     existing = QApplication.instance()
     if existing is not None:
         app = existing
     else:
         app = QApplication(sys.argv)
-    app.setApplicationName("Bragi")
+    app.setApplicationName("Skrivi")
     app.setApplicationDisplayName(title)
-    app.setOrganizationName("Bragi")
+    app.setOrganizationName("Skrivi")
     app.setQuitOnLastWindowClosed(False)
-    app.setWindowIcon(bragi_icon())
+    app.setWindowIcon(skrivi_icon())
     app.setStyleSheet(APP_STYLESHEET)
     return app
