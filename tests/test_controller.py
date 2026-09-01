@@ -13,7 +13,20 @@ from whisper_dictate.settings import LanguageMode
 
 
 class FakeRecorder:
-    is_recording = False
+    def __init__(self) -> None:
+        self.is_recording = False
+        self.cancel_count = 0
+
+    def start(self) -> None:
+        self.is_recording = True
+
+    def stop(self) -> CapturedAudio:
+        self.is_recording = False
+        return CapturedAudio(np.full(48_000, 0.1, dtype=np.float32), 48_000)
+
+    def cancel(self) -> None:
+        self.is_recording = False
+        self.cancel_count += 1
 
 
 class FakeHotkey:
@@ -49,11 +62,36 @@ class FakeTranscriber:
     def __init__(self, text: str) -> None:
         self.text = text
 
-    def transcribe(self, audio: np.ndarray) -> FakeResult:
+    def transcribe(
+        self,
+        audio: np.ndarray,
+        *,
+        cancel_event: threading.Event | None = None,
+    ) -> FakeResult:
         assert audio.dtype == np.float32
+        if cancel_event is not None and cancel_event.is_set():
+            return FakeResult("")
         return FakeResult(self.text)
 
     language_mode = LanguageMode.AUTOMATIC
+
+
+class FakeTimer:
+    def __init__(self, interval: float, callback) -> None:
+        self.interval = interval
+        self.callback = callback
+        self.started = False
+        self.cancelled = False
+        self.daemon = False
+
+    def start(self) -> None:
+        self.started = True
+
+    def cancel(self) -> None:
+        self.cancelled = True
+
+    def fire(self) -> None:
+        self.callback()
 
 
 def make_controller(text: str = "Hei, this is local."):
@@ -166,3 +204,84 @@ def test_model_loading_does_not_block_the_calling_thread() -> None:
     assert controller.state is AppState.LOADING
     release.set()
     controller.stop()
+
+
+def test_escape_cancels_recording_without_transcribing() -> None:
+    recorder = FakeRecorder()
+    indicator = FakeIndicator()
+    transcriber = FakeTranscriber("This must not be typed")
+    injector = FakeInjector()
+    controller = DictationController(
+        config=AppConfig(),
+        recorder=recorder,
+        transcriber=transcriber,
+        injector=injector,
+        indicator=indicator,
+        hotkey_listener=FakeHotkey(),
+    )
+    controller._set_state(AppState.READY)
+
+    controller.on_hotkey_press()
+    controller.cancel_current()
+    controller.on_hotkey_release()
+
+    assert recorder.cancel_count == 1
+    assert injector.typed == []
+    assert controller.state is AppState.READY
+    assert indicator.events[-1] == ("cancelled", "Dictation cancelled")
+
+
+def test_recording_limit_discards_audio_and_returns_to_ready() -> None:
+    timers: list[FakeTimer] = []
+
+    def timer_factory(interval, callback):
+        timer = FakeTimer(interval, callback)
+        timers.append(timer)
+        return timer
+
+    recorder = FakeRecorder()
+    indicator = FakeIndicator()
+    controller = DictationController(
+        config=AppConfig(max_recording_seconds=300.0),
+        recorder=recorder,
+        transcriber=FakeTranscriber("This must not be typed"),
+        injector=FakeInjector(),
+        indicator=indicator,
+        hotkey_listener=FakeHotkey(),
+        timer_factory=timer_factory,
+    )
+    controller._set_state(AppState.READY)
+
+    controller.on_hotkey_press()
+    timers[0].fire()
+
+    assert timers[0].interval == 300.0
+    assert recorder.cancel_count == 1
+    assert controller.state is AppState.READY
+    assert indicator.events[-1] == (
+        "cancelled",
+        "Recording cancelled after 5 minutes. Hold the key again to start over.",
+    )
+
+
+def test_expired_recording_timer_cannot_cancel_transcription() -> None:
+    controller, _indicator, injector = make_controller("Keep this text")
+    samples = np.full(48_000, 0.1, dtype=np.float32)
+
+    controller._recording_limit_reached()
+    controller._process_recording(CapturedAudio(samples=samples, sample_rate=48_000))
+
+    assert injector.typed == ["Keep this text"]
+
+
+def test_cancelling_transcription_prevents_text_insertion_and_clears_audio() -> None:
+    controller, indicator, injector = make_controller("This must not be typed")
+    samples = np.full(48_000, 0.1, dtype=np.float32)
+
+    controller.cancel_current()
+    controller._process_recording(CapturedAudio(samples=samples, sample_rate=48_000))
+
+    assert injector.typed == []
+    assert np.count_nonzero(samples) == 0
+    assert controller.state is AppState.READY
+    assert indicator.events[-1] == ("cancelled", "Dictation cancelled")

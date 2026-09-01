@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import threading
 from types import SimpleNamespace
 
 import numpy as np
@@ -62,3 +63,21 @@ def test_model_switch_loads_candidate_before_replacing_working_model(tmp_path) -
     transcriber.restore_model(snapshot)
     assert transcriber.active_model == "small"
     assert transcriber._model is original
+
+
+def test_cancelled_transcription_does_not_start_or_return_text(tmp_path) -> None:
+    class ModelThatMustNotRun:
+        def transcribe(self, audio, **options):
+            raise AssertionError("cancelled transcription reached the model")
+
+    transcriber = LocalWhisperTranscriber(AppConfig(), tmp_path)
+    transcriber._model = ModelThatMustNotRun()
+    cancelled = threading.Event()
+    cancelled.set()
+
+    result = transcriber.transcribe(
+        np.ones(16_000, dtype=np.float32),
+        cancel_event=cancelled,
+    )
+
+    assert result.text == ""

@@ -31,12 +31,21 @@ class FloatingIndicator(QWidget):
     STATES = {
         "loading": ("…", "Preparing local speech model…"),
         "ready": ("✓", "Ready. Hold Right Ctrl to dictate"),
-        "recording": ("●", "Listening. Release Right Ctrl"),
+        "recording": (
+            "●",
+            "Listening. Release your dictation key, or press Esc to cancel",
+        ),
         "transcribing": ("↻", "Transcribing locally…"),
+        "cancelled": ("×", "Dictation cancelled"),
         "empty": ("!", "No speech detected"),
         "error": ("!", "Something went wrong"),
     }
-    HIDE_DELAYS_MS = {"ready": 1400, "empty": 1800, "error": 6000}
+    HIDE_DELAYS_MS = {
+        "ready": 1400,
+        "cancelled": 1800,
+        "empty": 1800,
+        "error": 6000,
+    }
 
     def __init__(self, title: str = "Bragi", *, enabled: bool = True) -> None:
         if QApplication.instance() is None:

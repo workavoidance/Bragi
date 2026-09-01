@@ -41,6 +41,7 @@ def _pynput_listener_factory(
     identifier: str,
     on_press: Callable[[], None],
     on_release: Callable[[], None],
+    on_cancel: Callable[[], None],
 ):
     from pynput import keyboard
 
@@ -53,6 +54,8 @@ def _pynput_listener_factory(
     def pressed(key) -> None:
         if key == expected:
             on_press()
+        elif key == keyboard.Key.esc:
+            on_cancel()
 
     def released(key) -> None:
         if key == expected:
@@ -70,10 +73,12 @@ class PushToTalkListener:
         on_release: Callable[[], None],
         hotkey: str = DEFAULT_HOTKEY,
         *,
+        on_cancel: Callable[[], None] | None = None,
         listener_factory=None,
     ) -> None:
         self._on_press_callback = on_press
         self._on_release_callback = on_release
+        self._on_cancel_callback = on_cancel or (lambda: None)
         self._hotkey = validate_hotkey(hotkey)
         self._pressed = False
         self._lock = threading.Lock()
@@ -116,6 +121,7 @@ class PushToTalkListener:
                 hotkey,
                 lambda: self._pressed_event(generation),
                 lambda: self._released_event(generation),
+                self._on_cancel_callback,
             )
             self._listener = listener
         try:
