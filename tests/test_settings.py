@@ -63,7 +63,7 @@ def test_settings_survive_save_and_reload(tmp_path) -> None:
     ("field", "value"),
     [
         ("language", "fr"),
-        ("model", ""),
+        ("model", "untrusted-model"),
         ("hotkey", " right_ctrl"),
         ("microphone", "bad\x00device"),
         ("overlay_enabled", "yes"),
@@ -159,6 +159,18 @@ def test_version_1_document_migrates_to_multilingual_capable_schema(tmp_path) ->
 
     assert result.settings == UserSettings()
     assert result.migrated_from == 1
+
+
+def test_version_2_document_migrates_to_curated_model_schema(tmp_path) -> None:
+    legacy = defaults_document()
+    legacy["schema_version"] = 2
+    path = tmp_path / "settings.json"
+    path.write_text(json.dumps(legacy), encoding="utf-8")
+
+    result = SettingsStore(path).load()
+
+    assert result.settings == UserSettings()
+    assert result.migrated_from == 2
 
 
 def test_save_rejects_an_invalid_directly_constructed_model(tmp_path) -> None:

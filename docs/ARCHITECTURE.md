@@ -45,6 +45,13 @@ separate `%APPDATA%\Bragi\development` location. Initial setup and explicit mode
 downloads may use the internet; installed transcription remains local and must
 continue working without it.
 
+The model catalogue is compiled into Bragi with immutable upstream revisions,
+file sizes, and checksums. Downloads and imports are verified in a staging
+directory before an atomic install. The transcriber receives an installed local
+path rather than a remote model identifier, preventing an accidental network
+lookup during normal dictation. Candidate models load before the active model is
+swapped, and settings failures restore the previous in-memory model.
+
 The UI-independent settings module accepts and emits an explicit versioned
 schema. It validates a strict field allowlist, migrates old schemas in memory,
 returns privacy-safe recovery warnings, and replaces settings files atomically.

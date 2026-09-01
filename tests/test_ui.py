@@ -147,6 +147,9 @@ def test_settings_actions_are_named_and_keyboard_operable(tmp_path: Path) -> Non
     assert window.overlay_checkbox.accessibleName() == ("Show dictation status overlay")
     assert window.language_combo.accessibleName() == "Dictation language"
     assert window.microphone_combo.accessibleName() == "Microphone"
+    assert window.model_panel.accessibleName() == "Local speech models"
+    assert window.model_panel.model_combo.accessibleName() == "Speech model"
+    assert window.model_panel.download_button.isEnabled() is False
     assert window.overlay_checkbox.focusPolicy() & Qt.FocusPolicy.TabFocus
     assert window.save_shortcut.key().matches(QKeySequence.StandardKey.Save) == (
         QKeySequence.SequenceMatch.ExactMatch

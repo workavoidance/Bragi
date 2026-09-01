@@ -9,9 +9,10 @@ from enum import StrEnum
 from pathlib import Path
 
 from whisper_dictate.hotkeys import HotkeyValidationError, validate_hotkey
+from whisper_dictate.models import MODEL_BY_ID
 from whisper_dictate.runtime import settings_directory
 
-CURRENT_SCHEMA_VERSION = 2
+CURRENT_SCHEMA_VERSION = 3
 SETTINGS_FILENAME = "settings.json"
 READ_ERRORS = (OSError, UnicodeError)
 JSON_ERRORS = (json.JSONDecodeError, RecursionError)
@@ -91,6 +92,8 @@ class UserSettings:
             raise SettingsValidationError("language is unsupported") from None
 
         model = _validated_text(document["model"], "model", 128)
+        if model not in MODEL_BY_ID:
+            raise SettingsValidationError("model is unsupported")
         hotkey = _validated_text(document["hotkey"], "hotkey", 64)
         try:
             hotkey = validate_hotkey(hotkey)
@@ -159,7 +162,13 @@ def _migrate_v1_to_v2(document: dict[str, object]) -> dict[str, object]:
     return migrated
 
 
-MIGRATIONS = {0: _migrate_v0_to_v1, 1: _migrate_v1_to_v2}
+def _migrate_v2_to_v3(document: dict[str, object]) -> dict[str, object]:
+    migrated = dict(document)
+    migrated["schema_version"] = 3
+    return migrated
+
+
+MIGRATIONS = {0: _migrate_v0_to_v1, 1: _migrate_v1_to_v2, 2: _migrate_v2_to_v3}
 
 
 def migrate_document(

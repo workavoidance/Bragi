@@ -35,6 +35,10 @@ class RuntimeSettingsApplier:
     def current(self) -> UserSettings:
         return self._current
 
+    def sync_current(self, settings: UserSettings) -> None:
+        """Adopt settings persisted by another coordinated runtime feature."""
+        self._current = UserSettings.from_document(settings.to_document())
+
     def apply(self, settings: UserSettings) -> None:
         updated = UserSettings.from_document(settings.to_document())
         previous = self._current
