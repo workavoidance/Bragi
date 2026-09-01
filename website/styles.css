@@ -98,9 +98,9 @@ button, a { -webkit-tap-highlight-color: transparent; }
   transform-origin: left center;
 }
 
-.i-dash-1 { top: 0.035em; transform: rotate(-24deg); }
-.i-dash-2 { top: 0.185em; left: 0.46em; }
-.i-dash-3 { top: 0.335em; transform: rotate(24deg); }
+.i-dash-1 { top: 0.002em; transform: rotate(-24deg); }
+.i-dash-2 { top: 0.108em; left: 0.46em; }
+.i-dash-3 { top: 0.214em; transform: rotate(24deg); }
 
 .header-actions,
 .footer-links {
