@@ -1,4 +1,4 @@
-# Bragi development plan
+# Skrivi development plan
 
 This is the project's durable execution checklist and current source of truth
 for development progress. Update it in the same pull request that completes or
@@ -9,11 +9,11 @@ Last reviewed: 2026-09-01
 
 ## Product requirements that must remain true
 
-- Bragi is a local push-to-talk speech-to-text application for Windows 11.
+- Skrivi is a local push-to-talk speech-to-text application for Windows 11.
 - The default workflow is hold a key, speak, release, and insert the complete
   transcription wherever Windows accepts typing.
 - English and Norwegian are first-class language requirements.
-- Bragi does not retain recordings or transcripts and does not use the
+- Skrivi does not retain recordings or transcripts and does not use the
   clipboard for dictated text.
 - Initial installation and user-requested model downloads may use the internet.
   Once setup is complete, every installed feature must keep working after the
@@ -27,17 +27,20 @@ Last reviewed: 2026-09-01
 
 **Current target:** v0.2, a configurable and accessible desktop application.
 
-**Current engineering task:** Phase 7, the complete Norwegian Bokmål interface.
-The remaining Phase 6 reliability checks are intentionally deferred and remain
+**Current engineering task:** Phase 8, renaming the alpha product from Bragi to
+Skrivi without losing the existing installation's settings or downloaded
+models. Progress is tracked by
+[#25](https://github.com/workavoidance/Skrivi/issues/25). The remaining Phase 6
+reliability checks and Phase 7 manual accessibility checks remain deferred and
 unchecked below.
 
 The manual high-DPI, high-contrast, multi-display, and screen-reader checks for
-issue [#8](https://github.com/workavoidance/Bragi/issues/8) are intentionally
+issue [#8](https://github.com/workavoidance/Skrivi/issues/8) are intentionally
 deferred while issue #6 is built. They remain required in
 [`UI_TEST_CHECKLIST.md`](UI_TEST_CHECKLIST.md) and do not block development.
 
 The v0.2 tracking issue is
-[#10](https://github.com/workavoidance/Bragi/issues/10).
+[#10](https://github.com/workavoidance/Skrivi/issues/10).
 
 ## Completed foundation
 
@@ -50,22 +53,22 @@ The v0.2 tracking issue is
 - [x] Avoid writing audio, transcripts, or content logs to disk.
 - [x] Show compact loading, recording, and transcription feedback.
 - [x] Package a portable executable with Python 3.14 support.
-- [x] Publish the source in the public Bragi GitHub repository under MIT.
+- [x] Publish the source in the public Skrivi GitHub repository under MIT.
 - [x] Add automated Windows lint and test checks.
 - [x] Add tagged-release automation and dependency update configuration.
 - [x] Add contribution, security, privacy, architecture, roadmap, and quality
   documentation.
 - [x] Record the PySide6 user-interface decision.
 - [x] Create focused v0.2 issues and an overall tracking issue.
-- [x] Rename the public README to Bragi.
+- [x] Rename the public README to Skrivi.
 
 ## Phase 1: fast development and preview loop
 
-Tracked by [#11](https://github.com/workavoidance/Bragi/issues/11).
+Tracked by [#11](https://github.com/workavoidance/Skrivi/issues/11).
 
 - [x] Create a focused GitHub issue with acceptance criteria for the development
   workflow.
-- [x] Add a `dev.bat` launcher that runs Bragi directly from an editable source
+- [x] Add a `dev.bat` launcher that runs Skrivi directly from an editable source
   installation.
 - [x] Add automatic controlled restart when application source files change.
 - [x] Add a mock transcription mode that requires neither Whisper nor a
@@ -81,7 +84,7 @@ Tracked by [#11](https://github.com/workavoidance/Bragi/issues/11).
 
 ## Phase 2: versioned settings foundation
 
-Tracked by [#5](https://github.com/workavoidance/Bragi/issues/5).
+Tracked by [#5](https://github.com/workavoidance/Skrivi/issues/5).
 
 - [x] Define a UI-independent settings model with a schema version.
 - [x] Store settings in the appropriate per-user Windows application-data
@@ -97,8 +100,8 @@ Tracked by [#5](https://github.com/workavoidance/Bragi/issues/5).
 
 ## Phase 3: accessible settings interface
 
-Tracked by [#9](https://github.com/workavoidance/Bragi/issues/9) and
-[#8](https://github.com/workavoidance/Bragi/issues/8).
+Tracked by [#9](https://github.com/workavoidance/Skrivi/issues/9) and
+[#8](https://github.com/workavoidance/Skrivi/issues/8).
 
 - [x] Add the PySide6 system tray and settings window without changing the
   proven dictation pipeline.
@@ -111,10 +114,10 @@ Tracked by [#9](https://github.com/workavoidance/Bragi/issues/9) and
 
 ## Phase 4: live language, microphone, and hotkey configuration
 
-Tracked by [#6](https://github.com/workavoidance/Bragi/issues/6).
+Tracked by [#6](https://github.com/workavoidance/Skrivi/issues/6).
 
 - [x] Offer Automatic, English, Norwegian, and Multilingual language modes.
-- [x] Apply language changes to the next recording without restarting Bragi.
+- [x] Apply language changes to the next recording without restarting Skrivi.
 - [x] Enumerate microphones while keeping Windows Default as the default.
 - [x] Recover clearly when a selected microphone is disconnected.
 - [x] Add hotkey capture, validation, conflict guidance, and Restore Default.
@@ -124,7 +127,7 @@ Tracked by [#6](https://github.com/workavoidance/Bragi/issues/6).
 
 ## Phase 5: local model manager
 
-Tracked by [#7](https://github.com/workavoidance/Bragi/issues/7).
+Tracked by [#7](https://github.com/workavoidance/Skrivi/issues/7).
 
 - [x] Ship a local model catalogue containing identifiers, download sizes, CPU
   guidance, and checksums.
@@ -142,7 +145,7 @@ Tracked by [#7](https://github.com/workavoidance/Bragi/issues/7).
 
 ## Phase 6: reliability and privacy hardening
 
-Tracked by [#4](https://github.com/workavoidance/Bragi/issues/4).
+Tracked by [#4](https://github.com/workavoidance/Skrivi/issues/4).
 
 - [x] Handle microphone removal and default-device changes.
 - [x] Add cancellation and an accidental long-recording limit.
@@ -160,7 +163,7 @@ Tracked by [#4](https://github.com/workavoidance/Bragi/issues/4).
 
 ## Phase 7: Norwegian interface
 
-- [x] Translate the complete Bragi interface into Norwegian Bokmål, including
+- [x] Translate the complete Skrivi interface into Norwegian Bokmål, including
   tray actions, settings, status messages, errors, model guidance, and
   accessibility labels.
 - [x] Follow the Windows display language on first run and allow English or
@@ -173,9 +176,10 @@ Tracked by [#4](https://github.com/workavoidance/Bragi/issues/4).
 ## Phase 8: v0.2 release candidate
 
 - [ ] Complete every acceptance criterion in tracking issue
-  [#10](https://github.com/workavoidance/Bragi/issues/10).
-- [ ] Rename remaining application, executable, package, mutex, tray, and window
-  identifiers from the prototype name to Bragi.
+  [#10](https://github.com/workavoidance/Skrivi/issues/10).
+- [ ] Complete the Bragi-to-Skrivi application, executable, package, storage,
+  model-manifest, website, documentation, and repository rename tracked by
+  [#25](https://github.com/workavoidance/Skrivi/issues/25).
 - [ ] Perform clean source-install and portable-build tests on Windows 11.
 - [ ] Test English, Norwegian, mixed-language speech, and `æ`, `ø`, and `å` in
   Notepad, a browser, and Microsoft Office.

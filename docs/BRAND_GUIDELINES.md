@@ -1,14 +1,15 @@
-# Bragi Brand Guidelines
+# Skrivi Brand Guidelines
 
-> **Status:** Working brand direction, September 2026. Bragi is currently a working product name and may change. The principles in this document should survive a future rename.
+> **Status:** Active brand direction, September 2026. Skrivi is the current
+> product name. These principles should remain stable as the product develops.
 
 ## 1. Brand idea
 
-Bragi helps students get their thoughts onto the page.
+Skrivi helps students get their thoughts onto the page.
 
 It is a simple, highly accurate speech-to-text tool designed first for Norwegian schools. It should help students express what they know without typing, spelling, or the mechanics of writing becoming the main barrier.
 
-Dyslexia is an important and highly visible use case, but Bragi is not defined only as a dyslexia product. The broader purpose is to help students turn spoken thoughts into written text accurately and efficiently.
+Dyslexia is an important and highly visible use case, but Skrivi is not defined only as a dyslexia product. The broader purpose is to help students turn spoken thoughts into written text accurately and efficiently.
 
 ### Working tagline
 
@@ -20,7 +21,7 @@ Dyslexia is an important and highly visible use case, but Bragi is not defined o
 
 ## 2. Core promise
 
-Bragi should make two promises equally clearly.
+Skrivi should make two promises equally clearly.
 
 ### For students
 
@@ -32,9 +33,9 @@ Use a private, local, simple, free tool that is easy to understand, approve, dep
 
 The product should feel like dependable utility, not AI magic.
 
-## 3. What Bragi is
+## 3. What Skrivi is
 
-Bragi is:
+Skrivi is:
 
 - highly accurate speech-to-text
 - local and self-contained
@@ -46,7 +47,7 @@ Bragi is:
 - designed first for Norwegian education
 - intended to be low-risk and low-overhead for school IT teams
 
-Bragi transcribes what the student says. It does not generate ideas, rewrite answers, or create work on the student's behalf.
+Skrivi transcribes what the student says. It does not generate ideas, rewrite answers, or create work on the student's behalf.
 
 A useful internal sentiment is:
 
@@ -60,9 +61,9 @@ Another useful brand thought is:
 
 This should be treated as creative territory rather than approved public copy.
 
-## 4. What Bragi is not
+## 4. What Skrivi is not
 
-Bragi should not present itself as:
+Skrivi should not present itself as:
 
 - a generative AI product
 - an AI assistant or chatbot
@@ -100,7 +101,7 @@ Students with dyslexia. Dyslexia should be clearly represented in use-case conte
 
 ### Decision makers and influencers
 
-The people using Bragi are not necessarily the people approving it. The brand must also reassure:
+The people using Skrivi are not necessarily the people approving it. The brand must also reassure:
 
 - teachers
 - school leaders
@@ -111,7 +112,7 @@ The product should be easy enough for an individual teacher to discover and use,
 
 ## 6. Brand personality
 
-Bragi should feel:
+Skrivi should feel:
 
 - warm
 - clear
@@ -127,7 +128,7 @@ The personality is closer to a trusted, capable companion than a teacher, chatbo
 
 It should feel **personally motivated but professionally made**.
 
-The project may acknowledge that it began because a parent wanted a better tool for a dyslexic child, but the founder should not be the centre of the brand. Do not draw attention to Bragi being a one-person project, and do not pretend there is a larger organisation behind it.
+The project may acknowledge that it began because a parent wanted a better tool for a dyslexic child, but the founder should not be the centre of the brand. Do not draw attention to Skrivi being a one-person project, and do not pretend there is a larger organisation behind it.
 
 ## 7. Tone of voice
 
@@ -155,7 +156,7 @@ A useful tone principle is:
 
 **This doesn't need to be complicated.**
 
-Bragi should calmly communicate that privacy, deployment, and assistive technology do not need to be expensive, cloud-based, or wrapped in a large commercial platform.
+Skrivi should calmly communicate that privacy, deployment, and assistive technology do not need to be expensive, cloud-based, or wrapped in a large commercial platform.
 
 ## 8. Trust story
 
@@ -185,7 +186,7 @@ See also:
 
 ## 9. Accuracy
 
-Bragi may describe itself as **highly accurate speech-to-text**.
+Skrivi may describe itself as **highly accurate speech-to-text**.
 
 Accuracy should eventually be demonstrated with real examples, school feedback, or a simple demo rather than supported only by marketing copy.
 
@@ -193,11 +194,11 @@ A future website demo could show imperfect natural speech being transcribed accu
 
 ## 10. Language support
 
-The brand should be careful to distinguish what the underlying speech-recognition technology can support from what Bragi itself has verified.
+The brand should be careful to distinguish what the underlying speech-recognition technology can support from what Skrivi itself has verified.
 
 The intended positioning is Norwegian first, English second.
 
-Bokmål and Nynorsk should be named explicitly only when both have been tested sufficiently in Bragi to support the claim confidently. Until then, avoid implying verified Nynorsk accuracy simply because the underlying model exposes Nynorsk language support.
+Bokmål and Nynorsk should be named explicitly only when both have been tested sufficiently in Skrivi to support the claim confidently. Until then, avoid implying verified Nynorsk accuracy simply because the underlying model exposes Nynorsk language support.
 
 ## 11. Visual direction
 
@@ -240,7 +241,7 @@ The identity should stay deliberately simple. Do not turn a letter into an illus
 
 ### Wordmark
 
-The name **bragi** is the logo. It should be set in a rounded, clean, modern, approachable sans-serif with strong readability at small sizes.
+The name **skrivi** is the logo. It should be set in a rounded, clean, modern, approachable sans-serif with strong readability at small sizes.
 
 The wordmark is primarily black. The dot of the final lowercase **i** is orange.
 
@@ -342,7 +343,7 @@ Potential reassurance blocks:
 
 ### Technical details
 
-Technical content belongs further down the page or one click away. This is where Bragi can explain:
+Technical content belongs further down the page or one click away. This is where Skrivi can explain:
 
 - Whisper
 - supported operating systems

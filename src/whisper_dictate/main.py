@@ -31,15 +31,31 @@ def _single_instance_mutex():
     kernel32.CreateMutexW.restype = ctypes.c_void_p
     kernel32.CloseHandle.argtypes = (ctypes.c_void_p,)
     kernel32.CloseHandle.restype = ctypes.c_bool
-    mutex = kernel32.CreateMutexW(None, False, "Local\\WhisperDictate-43D72B32")
-    if not mutex:
-        raise ctypes.WinError()
-    already_exists = kernel32.GetLastError() == 183
-    return mutex, already_exists
+    mutexes = []
+    already_exists = False
+    # Holding the legacy name prevents an older build and Skrivi from both
+    # owning the same global hotkey during the one-machine upgrade.
+    for name in (
+        "Local\\Skrivi-43D72B32",
+        "Local\\WhisperDictate-43D72B32",
+    ):
+        mutex = kernel32.CreateMutexW(None, False, name)
+        if not mutex:
+            for existing in mutexes:
+                kernel32.CloseHandle(existing)
+            raise ctypes.WinError()
+        mutexes.append(mutex)
+        already_exists = kernel32.GetLastError() == 183 or already_exists
+    return tuple(mutexes), already_exists
+
+
+def _close_mutexes(mutexes) -> None:
+    for mutex in mutexes:
+        ctypes.windll.kernel32.CloseHandle(mutex)
 
 
 def _arguments(argv: list[str] | None = None) -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Bragi local dictation")
+    parser = argparse.ArgumentParser(description="Skrivi local dictation")
     parser.add_argument(
         "--development",
         action="store_true",
@@ -56,7 +72,7 @@ def _arguments(argv: list[str] | None = None) -> argparse.Namespace:
 def main(argv: list[str] | None = None) -> None:
     args = _arguments(argv)
     if os.name != "nt":
-        print(tr("Bragi runs on Windows 11."), file=sys.stderr)
+        print(tr("Skrivi runs on Windows 11."), file=sys.stderr)
         raise SystemExit(1)
 
     identity = detect_build_identity(force_development=args.development)
@@ -69,15 +85,15 @@ def main(argv: list[str] | None = None) -> None:
         run_preview(identity.title)
         return
 
-    mutex, already_exists = _single_instance_mutex()
+    mutexes, already_exists = _single_instance_mutex()
     if already_exists:
         ctypes.windll.user32.MessageBoxW(
             None,
-            tr("Bragi is already running."),
+            tr("Skrivi is already running."),
             identity.title,
             0x40,
         )
-        ctypes.windll.kernel32.CloseHandle(mutex)
+        _close_mutexes(mutexes)
         return
 
     _application = create_application(identity.title)
@@ -187,7 +203,7 @@ def main(argv: list[str] | None = None) -> None:
             controller,
             model_manager,
             tray,
-            lambda: ctypes.windll.kernel32.CloseHandle(mutex),
+            lambda: _close_mutexes(mutexes),
         )
 
     indicator.set_exit_handler(shutdown)

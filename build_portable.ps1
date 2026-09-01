@@ -1,7 +1,7 @@
 $ErrorActionPreference = "Stop"
 Set-Location $PSScriptRoot
 
-Write-Host "Building Bragi portable executable..." -ForegroundColor Cyan
+Write-Host "Building Skrivi portable executable..." -ForegroundColor Cyan
 
 if (Get-Command py -ErrorAction SilentlyContinue) {
     $PythonLauncher = "py"
@@ -27,8 +27,8 @@ $BuildPython = Join-Path $PSScriptRoot ".build-venv\Scripts\python.exe"
     --clean `
     --onefile `
     --windowed `
-    --name WhisperDictate `
-    --icon assets\whisper-dictate.ico `
+    --name Skrivi `
+    --icon assets\skrivi.ico `
     --paths src `
     --collect-all faster_whisper `
     --collect-all ctranslate2 `
@@ -42,5 +42,5 @@ if ($LASTEXITCODE -ne 0) { throw "The portable build failed." }
 
 Write-Host ""
 Write-Host "Build complete:" -ForegroundColor Green
-Write-Host (Join-Path $PSScriptRoot "dist\WhisperDictate.exe")
+Write-Host (Join-Path $PSScriptRoot "dist\Skrivi.exe")
 Write-Host "The first launch installs and verifies the local multilingual Small model once."

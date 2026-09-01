@@ -14,7 +14,8 @@ from pathlib import Path
 
 from whisper_dictate.i18n import tr
 
-MODEL_MANIFEST = "bragi-model.json"
+MODEL_MANIFEST = "skrivi-model.json"
+LEGACY_MODEL_MANIFEST = "bragi-model.json"
 MODEL_SCHEMA_VERSION = 1
 MEMORY_ERRORS = (AttributeError, OSError, ValueError)
 MANIFEST_ERRORS = (OSError, ValueError, TypeError)
@@ -405,7 +406,7 @@ class LocalModelManager:
     @property
     def download_cache(self) -> Path:
         # Keep using the prototype's cache root so an existing Small download
-        # can be reused during migration into Bragi's verified installed area.
+        # can be reused during migration into Skrivi's verified installed area.
         return self.root
 
     @property
@@ -417,7 +418,7 @@ class LocalModelManager:
             return self._by_id[identifier]
         except KeyError:
             raise ModelManagerError(
-                tr("That model is not in Bragi's catalogue.")
+                tr("That model is not in Skrivi's catalogue.")
             ) from None
 
     def model_path(self, identifier: str) -> Path:
@@ -460,13 +461,24 @@ class LocalModelManager:
         }
 
     def _manifest_matches(self, directory: Path, spec: ModelSpec) -> bool:
+        manifest_path = directory / MODEL_MANIFEST
+        legacy_manifest_path = directory / LEGACY_MODEL_MANIFEST
+        if not manifest_path.is_file() and legacy_manifest_path.is_file():
+            manifest_path = legacy_manifest_path
         try:
-            document = json.loads(
-                (directory / MODEL_MANIFEST).read_text(encoding="utf-8")
-            )
+            document = json.loads(manifest_path.read_text(encoding="utf-8"))
         except MANIFEST_ERRORS:
             return False
         return document == self._manifest_document(spec)
+
+    @staticmethod
+    def _migrate_legacy_manifest(directory: Path) -> None:
+        legacy_manifest_path = directory / LEGACY_MODEL_MANIFEST
+        if not (directory / MODEL_MANIFEST).exists() and legacy_manifest_path.is_file():
+            try:
+                os.replace(legacy_manifest_path, directory / MODEL_MANIFEST)
+            except OSError:
+                pass
 
     def verify_directory(
         self,
@@ -533,6 +545,7 @@ class LocalModelManager:
             self.verify_directory(path, spec, thorough=False)
         except ModelIntegrityError:
             return False
+        self._migrate_legacy_manifest(path)
         return True
 
     def verify_installed(self, identifier: str, *, thorough: bool = True) -> Path:
@@ -546,6 +559,7 @@ class LocalModelManager:
                 )
             )
         self.verify_directory(path, spec, thorough=thorough)
+        self._migrate_legacy_manifest(path)
         return path
 
     def resolve_startup_model(
@@ -626,7 +640,7 @@ class LocalModelManager:
         with self._idle:
             if self._shutting_down:
                 raise ModelBusyError(
-                    tr("Bragi is shutting down. No new model operation can start.")
+                    tr("Skrivi is shutting down. No new model operation can start.")
                 )
             if self._active_operation is not None:
                 raise ModelBusyError(
@@ -838,17 +852,20 @@ class LocalModelManager:
         source: Path,
         callback: Callable[[ModelStatus], None] | None = None,
     ) -> Path:
+        manifest_path = source / MODEL_MANIFEST
+        if not manifest_path.is_file():
+            manifest_path = source / LEGACY_MODEL_MANIFEST
         try:
-            manifest = json.loads((source / MODEL_MANIFEST).read_text(encoding="utf-8"))
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
             identifier = manifest["model"]
         except (OSError, ValueError, KeyError, TypeError) as error:
             raise ModelIntegrityError(
-                tr("That folder is not a complete Bragi model export.")
+                tr("That folder is not a complete Skrivi model export.")
             ) from error
         spec = self.spec(identifier)
         if manifest != self._manifest_document(spec):
             raise ModelIntegrityError(
-                tr("That model does not match Bragi's trusted catalogue.")
+                tr("That model does not match Skrivi's trusted catalogue.")
             )
         cancel_event = self._begin(identifier)
         self.staging_root.mkdir(parents=True, exist_ok=True)

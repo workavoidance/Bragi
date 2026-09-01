@@ -51,7 +51,7 @@ class FloatingIndicator(QWidget):
         "error": 6000,
     }
 
-    def __init__(self, title: str = "Bragi", *, enabled: bool = True) -> None:
+    def __init__(self, title: str = "Skrivi", *, enabled: bool = True) -> None:
         if QApplication.instance() is None:
             raise RuntimeError("create_application() must be called before the UI")
         super().__init__(
@@ -64,15 +64,15 @@ class FloatingIndicator(QWidget):
         self.setWindowTitle(title)
         self.setAttribute(Qt.WidgetAttribute.WA_ShowWithoutActivating)
         self.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
-        self.setAccessibleName(tr("Bragi dictation status"))
+        self.setAccessibleName(tr("Skrivi dictation status"))
         self.setAccessibleDescription(
-            tr("Shows whether Bragi is loading, listening, or transcribing.")
+            tr("Shows whether Skrivi is loading, listening, or transcribing.")
         )
         self.setMinimumWidth(300)
         self.setMaximumWidth(480)
         self.setStyleSheet(
             """
-            QFrame#bragiStatusFrame {
+            QFrame#skriviStatusFrame {
                 background: #FFFDF9;
                 border: 1px solid #DED7CF;
                 border-radius: 16px;
@@ -81,7 +81,7 @@ class FloatingIndicator(QWidget):
                 color: #181817;
                 background: transparent;
             }
-            QLabel#bragiStateMark {
+            QLabel#skriviStateMark {
                 color: #F05A24;
             }
             """
@@ -94,13 +94,13 @@ class FloatingIndicator(QWidget):
         self._current_detail: str | None = None
 
         frame = QFrame(self)
-        frame.setObjectName("bragiStatusFrame")
+        frame.setObjectName("skriviStatusFrame")
         layout = QHBoxLayout(frame)
         layout.setContentsMargins(16, 12, 18, 12)
         layout.setSpacing(12)
 
         self._state_mark = QLabel("…", frame)
-        self._state_mark.setObjectName("bragiStateMark")
+        self._state_mark.setObjectName("skriviStateMark")
         state_font = self._state_mark.font()
         state_font.setBold(True)
         state_font.setPointSize(max(state_font.pointSize() + 4, 14))
@@ -180,9 +180,9 @@ class FloatingIndicator(QWidget):
         self.status_changed.emit(state, text)
 
     def retranslate_ui(self) -> None:
-        self.setAccessibleName(tr("Bragi dictation status"))
+        self.setAccessibleName(tr("Skrivi dictation status"))
         self.setAccessibleDescription(
-            tr("Shows whether Bragi is loading, listening, or transcribing.")
+            tr("Shows whether Skrivi is loading, listening, or transcribing.")
         )
         self._state_mark.setAccessibleName(tr("Status symbol"))
         self._message.setAccessibleName(tr("Dictation status message"))

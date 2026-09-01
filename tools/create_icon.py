@@ -3,8 +3,8 @@ from pathlib import Path
 from PIL import Image, ImageDraw
 
 ROOT = Path(__file__).resolve().parents[1]
-OUTPUT = ROOT / "assets" / "whisper-dictate.ico"
-BRAGI_ORANGE = "#F05A24"
+OUTPUT = ROOT / "assets" / "skrivi.ico"
+SKRIVI_ORANGE = "#F05A24"
 
 
 def _rounded_line(
@@ -14,12 +14,12 @@ def _rounded_line(
     *,
     width: int,
 ) -> None:
-    draw.line((start, end), fill=BRAGI_ORANGE, width=width)
+    draw.line((start, end), fill=SKRIVI_ORANGE, width=width)
     radius = width / 2
     for x, y in (start, end):
         draw.ellipse(
             (x - radius, y - radius, x + radius, y + radius),
-            fill=BRAGI_ORANGE,
+            fill=SKRIVI_ORANGE,
         )
 
 
@@ -38,7 +38,7 @@ def main() -> None:
             dot_x + dot_radius,
             dot_y + dot_radius,
         ),
-        fill=BRAGI_ORANGE,
+        fill=SKRIVI_ORANGE,
     )
 
     width = round(size * 0.105)

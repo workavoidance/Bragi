@@ -119,7 +119,7 @@ class ModelManagerPanel(QWidget):
         self.remove_button = QPushButton(f"&{tr('Remove')}", self)
         self.remove_button.setAccessibleName(tr("Remove selected model"))
         self.import_button = QPushButton(f"&{tr('Import folder…')}", self)
-        self.import_button.setAccessibleName(tr("Import a Bragi model folder"))
+        self.import_button.setAccessibleName(tr("Import a Skrivi model folder"))
         self.cancel_button = QPushButton(f"&{tr('Cancel download')}", self)
         self.cancel_button.setAccessibleName(tr("Cancel model download"))
         self.cancel_button.hide()
@@ -195,7 +195,7 @@ class ModelManagerPanel(QWidget):
         self.remove_button.setText(f"&{tr('Remove')}")
         self.remove_button.setAccessibleName(tr("Remove selected model"))
         self.import_button.setText(f"&{tr('Import folder…')}")
-        self.import_button.setAccessibleName(tr("Import a Bragi model folder"))
+        self.import_button.setAccessibleName(tr("Import a Skrivi model folder"))
         self.cancel_button.setText(f"&{tr('Cancel download')}")
         self.cancel_button.setAccessibleName(tr("Cancel model download"))
         self.refresh()
@@ -490,7 +490,7 @@ class ModelManagerPanel(QWidget):
             return
         selected = QFileDialog.getExistingDirectory(
             self,
-            tr("Choose a Bragi model folder"),
+            tr("Choose a Skrivi model folder"),
             str(Path.home()),
         )
         if not selected:

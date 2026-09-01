@@ -9,7 +9,8 @@ from dataclasses import dataclass
 from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 
-APP_NAME = "Bragi"
+APP_NAME = "Skrivi"
+LEGACY_APP_NAME = "Bragi"
 BUILD_INFO_FILENAME = "BUILD_INFO.json"
 BUILD_INFO_ERRORS = (OSError, ValueError, KeyError, TypeError)
 GIT_IDENTITY_ERRORS = (OSError, subprocess.SubprocessError)
@@ -35,6 +36,19 @@ def _fallback_data_root(home: Path | None = None) -> Path:
     return (home or Path.home()) / "AppData" / "Local"
 
 
+def _application_data_root(root: Path) -> Path:
+    path = root / APP_NAME
+    legacy_path = root / LEGACY_APP_NAME
+    if not path.exists() and legacy_path.exists():
+        try:
+            os.replace(legacy_path, path)
+        except OSError:
+            # Preserving existing settings and large model downloads is safer
+            # than silently starting with an empty Skrivi directory.
+            return legacy_path
+    return path
+
+
 def model_cache_directory(
     environment: Mapping[str, str] | None = None,
     home: Path | None = None,
@@ -45,7 +59,7 @@ def model_cache_directory(
         if env.get("LOCALAPPDATA")
         else _fallback_data_root(home)
     )
-    path = root / APP_NAME / "models"
+    path = _application_data_root(root) / "models"
     path.mkdir(parents=True, exist_ok=True)
     return path
 
@@ -60,7 +74,7 @@ def settings_directory(
         root = Path(env["APPDATA"])
     else:
         root = (home or Path.home()) / "AppData" / "Roaming"
-    path = root / APP_NAME
+    path = _application_data_root(root)
     if development:
         path /= "development"
     path.mkdir(parents=True, exist_ok=True)
@@ -100,7 +114,7 @@ def _source_commit(repo_root: Path) -> str | None:
 
 def _package_version() -> str:
     try:
-        return version("whisper-dictate")
+        return version("skrivi")
     except PackageNotFoundError:
         return "source"
 
@@ -113,8 +127,8 @@ def detect_build_identity(
     repo_root: Path | None = None,
 ) -> BuildIdentity:
     env = _environment(environment)
-    development = force_development or env.get("BRAGI_DEVELOPMENT") == "1"
-    explicit = env.get("BRAGI_BUILD_ID", "").strip()
+    development = force_development or env.get("SKRIVI_DEVELOPMENT") == "1"
+    explicit = env.get("SKRIVI_BUILD_ID", "").strip()
     if explicit:
         return BuildIdentity(identifier=explicit, development=development)
 

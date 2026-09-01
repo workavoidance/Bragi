@@ -9,6 +9,7 @@ from pathlib import Path
 import pytest
 
 from whisper_dictate.models import (
+    LEGACY_MODEL_MANIFEST,
     MODEL_MANIFEST,
     CpuSuitability,
     LocalModelManager,
@@ -204,6 +205,20 @@ def test_existing_download_cache_is_reused_without_network(tmp_path: Path) -> No
     assert path == manager.model_path("small")
 
 
+def test_existing_bragi_manifest_is_recognised_and_renamed(tmp_path: Path) -> None:
+    manager = LocalModelManager(
+        tmp_path / "models",
+        catalogue=[small_test_spec()],
+        downloader=FakeDownloader(),
+    )
+    installed = manager.install("small")
+    (installed / MODEL_MANIFEST).replace(installed / LEGACY_MODEL_MANIFEST)
+
+    assert manager.is_installed("small") is True
+    assert (installed / MODEL_MANIFEST).is_file()
+    assert not (installed / LEGACY_MODEL_MANIFEST).exists()
+
+
 def test_interrupted_or_corrupt_download_is_never_installed(tmp_path: Path) -> None:
     failed = LocalModelManager(
         tmp_path / "failed",
@@ -374,6 +389,26 @@ def test_verified_model_folder_can_be_imported_without_internet(tmp_path: Path) 
     imported = destination_manager.import_directory(source)
 
     assert imported.name == "small"
+    assert destination_manager.verify_installed("small").is_dir()
+
+
+def test_bragi_model_export_can_still_be_imported(tmp_path: Path) -> None:
+    source_manager = LocalModelManager(
+        tmp_path / "source",
+        catalogue=[small_test_spec()],
+        downloader=FakeDownloader(),
+    )
+    source = source_manager.install("small")
+    (source / MODEL_MANIFEST).replace(source / LEGACY_MODEL_MANIFEST)
+    destination_manager = LocalModelManager(
+        tmp_path / "destination",
+        catalogue=[small_test_spec()],
+        downloader=FakeDownloader(fail=True),
+    )
+
+    imported = destination_manager.import_directory(source)
+
+    assert (imported / MODEL_MANIFEST).is_file()
     assert destination_manager.verify_installed("small").is_dir()
 
 

@@ -2,7 +2,7 @@
 
 ## Supported versions
 
-Whisper Dictate is pre-1.0 software. Security fixes are applied to the latest
+Skrivi is pre-1.0 software. Security fixes are applied to the latest
 released version.
 
 ## Reporting a vulnerability

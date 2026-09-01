@@ -5,12 +5,12 @@ from collections.abc import Callable, Mapping
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QApplication, QMenu, QSystemTrayIcon
 
-from whisper_dictate.application import bragi_icon
+from whisper_dictate.application import skrivi_icon
 from whisper_dictate.i18n import add_interface_language_listener, tr
 
 
 class TrayIcon:
-    """Bragi's Qt system tray menu."""
+    """Skrivi's Qt system tray menu."""
 
     def __init__(
         self,
@@ -18,7 +18,7 @@ class TrayIcon:
         *,
         on_settings: Callable[[], None],
         on_retry_model: Callable[[], object] | None = None,
-        title: str = "Bragi",
+        title: str = "Skrivi",
         preview_actions: Mapping[str, Callable[[], None]] | None = None,
     ) -> None:
         app = QApplication.instance()
@@ -35,7 +35,7 @@ class TrayIcon:
         self._preview_action_items: list[tuple[str, QAction]] = []
 
         self._menu = QMenu()
-        self._menu.setAccessibleName(tr("Bragi tray menu"))
+        self._menu.setAccessibleName(tr("Skrivi tray menu"))
         title_action = self._menu.addAction(title)
         title_action.setEnabled(False)
         self._status_action = self._menu.addAction(
@@ -45,7 +45,7 @@ class TrayIcon:
         self._menu.addSeparator()
 
         self.settings_action = QAction(f"&{tr('Settings')}…", self._menu)
-        self.settings_action.setToolTip(tr("Open Bragi settings"))
+        self.settings_action.setToolTip(tr("Open Skrivi settings"))
         self.settings_action.triggered.connect(self._settings_clicked)
         self._menu.addAction(self.settings_action)
 
@@ -71,7 +71,7 @@ class TrayIcon:
         self.exit_action.triggered.connect(self._exit_clicked)
         self._menu.addAction(self.exit_action)
 
-        self._icon = QSystemTrayIcon(bragi_icon(), app)
+        self._icon = QSystemTrayIcon(skrivi_icon(), app)
         self._icon.setToolTip(title)
         self._icon.setContextMenu(self._menu)
         self._icon.activated.connect(self._activated)
@@ -97,9 +97,9 @@ class TrayIcon:
         )
 
     def retranslate_ui(self) -> None:
-        self._menu.setAccessibleName(tr("Bragi tray menu"))
+        self._menu.setAccessibleName(tr("Skrivi tray menu"))
         self.settings_action.setText(f"&{tr('Settings')}…")
-        self.settings_action.setToolTip(tr("Open Bragi settings"))
+        self.settings_action.setToolTip(tr("Open Skrivi settings"))
         self.retry_model_action.setText(f"&{tr('Retry speech model')}")
         self.retry_model_action.setToolTip(
             tr("Try loading the selected local speech model again")

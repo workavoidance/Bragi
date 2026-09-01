@@ -1,6 +1,6 @@
 # Settings storage
 
-Bragi's settings layer is independent of the current and future user-interface
+Skrivi's settings layer is independent of the current and future user-interface
 frameworks. It uses only the Python standard library and can be exercised in
 unit tests without Windows audio, global hotkeys, Whisper, or PySide6.
 
@@ -9,17 +9,23 @@ unit tests without Windows audio, global hotkeys, Whisper, or PySide6.
 Normal user settings are stored at:
 
 ```text
-%APPDATA%\Bragi\settings.json
+%APPDATA%\Skrivi\settings.json
 ```
 
 Development builds use a separate file:
 
 ```text
-%APPDATA%\Bragi\development\settings.json
+%APPDATA%\Skrivi\development\settings.json
 ```
 
+On the first renamed build, Skrivi moves an existing `%APPDATA%\Bragi`
+directory to `%APPDATA%\Skrivi` with a same-volume directory rename. This
+preserves both normal and development settings. If Windows temporarily prevents
+the rename, Skrivi continues using the existing directory rather than starting
+with empty settings.
+
 Downloaded models remain separately stored under
-`%LOCALAPPDATA%\Bragi\models`. Settings contain model identifiers, never model
+`%LOCALAPPDATA%\Skrivi\models`. Settings contain model identifiers, never model
 data.
 
 ## Version 4 schema
@@ -36,7 +42,7 @@ data.
 }
 ```
 
-The defaults preserve Bragi's existing behaviour. Supported language values are
+The defaults preserve Skrivi's existing behaviour. Supported language values are
 `auto`, `en`, `no`, and `multilingual`. Automatic detects one language for a
 recording. Multilingual allows faster-whisper to detect the language again for
 individual segments. Very short automatic-language recordings may not contain
@@ -59,7 +65,7 @@ do not become stale.
 Supported model identifiers are the packaged `tiny`, `base`, `small`, and
 `medium` catalogue. Arbitrary repository names are rejected. Settings store
 only the selected identifier; model files and integrity manifests remain under
-`%LOCALAPPDATA%\Bragi\models`.
+`%LOCALAPPDATA%\Skrivi\models`.
 
 ## Validation and recovery
 
@@ -70,7 +76,7 @@ and unreadable files use defaults and return a short warning suitable for the
 future interface.
 
 Warnings never include the rejected value, file contents, or underlying
-exception text. Bragi preserves an invalid or newer-version file rather than
+exception text. Skrivi preserves an invalid or newer-version file rather than
 silently overwriting it.
 
 ## Migrations
@@ -80,11 +86,11 @@ memory before validation. Version 0 is the reserved unversioned prototype shape
 and maps `language_mode`, `model_name`, and `show_overlay` to their version 1
 equivalents. Version 1 documents migrate to version 2 without changing their
 existing choices. Version 2 documents migrate to version 3, which restricts the
-model field to Bragi's trusted local catalogue. Version 3 documents migrate to
+model field to Skrivi's trusted local catalogue. Version 3 documents migrate to
 version 4 with automatic Windows interface-language selection.
 
 A migrated document is written in the current format the next time settings are
-explicitly saved. A schema newer than this Bragi version is never downgraded or
+explicitly saved. A schema newer than this Skrivi version is never downgraded or
 overwritten automatically.
 
 ## Atomic writes
@@ -94,7 +100,7 @@ directory, flushes it to disk, and then replaces `settings.json` with
 `os.replace`. If writing or replacement fails, the previous settings file is
 left intact and the temporary file is removed on a best-effort basis.
 
-Bragi has a single-instance application model, so concurrent user-interface
+Skrivi has a single-instance application model, so concurrent user-interface
 writes are not supported or required.
 
 ## Current interface support

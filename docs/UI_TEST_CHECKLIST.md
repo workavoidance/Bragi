@@ -11,28 +11,45 @@ could continue. Nothing below is considered complete by deferral. Run and
 record the full checklist before the v0.2 release candidate, and before closing
 issue #8.
 
+## Bragi-to-Skrivi upgrade
+
+- Before starting the renamed branch, confirm the current Bragi development
+  build still shows the expected saved language, microphone, hotkey, overlay,
+  and active model.
+- Stop Bragi completely, switch to the rename branch, and start `dev.bat`.
+- Confirm the tray, Settings window, accessibility labels, and status overlay
+  show Skrivi, not Bragi or Whisper Dictate.
+- Confirm the previous settings are still selected and the installed models are
+  immediately available without another download or file copy.
+- Confirm `%APPDATA%\Skrivi` and `%LOCALAPPDATA%\Skrivi` now contain the moved
+  data and the corresponding Bragi directories no longer exist.
+- Confirm an installed model contains `skrivi-model.json`, then perform a normal
+  dictation and switch between two installed models.
+- Build or download the portable preview and confirm the file is `Skrivi.exe`
+  inside a `Skrivi-...-windows-x64.zip` archive.
+
 ## Core workflow
 
-- Start Bragi and confirm the tray status changes from loading to ready without
+- Start Skrivi and confirm the tray status changes from loading to ready without
   freezing its menu.
 - Hold Right Ctrl, speak, release it, and confirm the text is inserted exactly
   as before the interface change.
 - Confirm recording and transcription continue while the Settings window is
   open.
 - Exit from the tray during idle, then repeat during recording.
-- Exit while Bragi is transcribing and confirm no text is inserted afterward.
-- Start a non-default model download, exit Bragi, and confirm the process closes
+- Exit while Skrivi is transcribing and confirm no text is inserted afterward.
+- Start a non-default model download, exit Skrivi, and confirm the process closes
   without hanging. Restart and confirm the cancelled model is not installed and
   can be downloaded normally.
 - In Settings, change the language between Automatic, English, Norwegian, and
   Multilingual. Confirm the next recording uses the new choice without a restart.
 - Select an available microphone, save, and dictate without restarting. Then
   disconnect it and confirm the next dictation temporarily uses Windows Default.
-  Reconnect it and confirm Bragi automatically returns to the selection.
+  Reconnect it and confirm Skrivi automatically returns to the selection.
 - With Windows Default selected, change the default input in Windows Sound
   settings and confirm the next dictation uses the new default without restarting.
 - Disconnect a microphone during a recording and confirm that recording is
-  discarded, Bragi returns to Ready, and the next dictation can start normally.
+  discarded, Skrivi returns to Ready, and the next dictation can start normally.
 - Change the push-to-talk key, confirm the old key no longer records, and confirm
   the new key records exactly once per press. Restore Right Ctrl afterward.
 - Dictate Norwegian text containing `æ`, `ø`, and `å` after each configuration
@@ -42,24 +59,24 @@ issue #8.
 - Download Base and confirm its name, downloaded size, total size, percentage,
   and separate verification stage remain visible. Cancel once, confirm Base is
   not offered as installed, then download it fully, activate it, and dictate
-  without restarting Bragi. Confirm Small can then be restored.
-- Interrupt a non-default model download by exiting Bragi. Restart and confirm
+  without restarting Skrivi. Confirm Small can then be restored.
+- Interrupt a non-default model download by exiting Skrivi. Restart and confirm
   the partial model is not offered as installed and can be downloaded again.
 - Copy an installed non-active model folder to another location, remove it in
-  Bragi, import the copied folder, and confirm it passes verification.
+  Skrivi, import the copied folder, and confirm it passes verification.
 - Disconnect the network, restart Windows, switch between two installed models,
   and dictate successfully with both.
 - Make the selected model temporarily unavailable before startup and confirm
   the tray offers **Retry speech model**. Restore the model, retry, and confirm
-  Bragi reaches Ready without restarting. Confirm repeated clicks do not start
+  Skrivi reaches Ready without restarting. Confirm repeated clicks do not start
   overlapping loads.
 - After a simulated transcription failure, confirm the recording is discarded,
-  Bragi returns to Ready, and the next normal dictation succeeds.
+  Skrivi returns to Ready, and the next normal dictation succeeds.
 
 ## Keyboard and assistive access
 
 - Open the tray menu from the Windows notification area using only the
-  keyboard, then open Settings and exit Bragi.
+  keyboard, then open Settings and exit Skrivi.
 - In Settings, use Tab, Shift+Tab, arrow keys, Alt+G, Alt+P, Alt+A, Ctrl+S and
   Escape. Confirm every action has a visible focus indicator.
 - With Windows Narrator, confirm the window, tabs, overlay option, Save, Cancel,
@@ -71,11 +88,11 @@ issue #8.
 ## English and Norwegian interface
 
 - With the interface language set to Automatic, change the Windows display
-  language between English and Norwegian where practical, restart Bragi, and
+  language between English and Norwegian where practical, restart Skrivi, and
   confirm the matching interface is selected.
 - Switch between English and Norsk bokmål in Settings. Confirm the open Settings
   window, tray, overlay, model status, and accessibility labels update
-  immediately without restarting Bragi. Confirm each language remains
+  immediately without restarting Skrivi. Confirm each language remains
   self-named in both pickers.
 - Change the interface language, choose Cancel, and confirm the previously saved
   language returns everywhere. Repeat the change, choose Save, reopen Settings,

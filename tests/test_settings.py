@@ -281,7 +281,7 @@ def test_user_store_separates_normal_and_development_settings(tmp_path) -> None:
         environment=environment,
     )
 
-    assert normal.path == tmp_path / "roaming" / "Bragi" / "settings.json"
+    assert normal.path == tmp_path / "roaming" / "Skrivi" / "settings.json"
     assert development.path == (
-        tmp_path / "roaming" / "Bragi" / "development" / "settings.json"
+        tmp_path / "roaming" / "Skrivi" / "development" / "settings.json"
     )

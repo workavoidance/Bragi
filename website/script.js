@@ -14,8 +14,8 @@
     button.setAttribute('aria-label', norwegian ? 'Switch to English' : 'Bytt til norsk');
     button.setAttribute('aria-pressed', norwegian ? 'false' : 'true');
     document.title = norwegian
-      ? 'Bragi — lokal tale-til-tekst'
-      : 'Bragi — local speech-to-text';
+      ? 'Skrivi — lokal tale-til-tekst'
+      : 'Skrivi — local speech-to-text';
   };
 
   button.addEventListener('click', () => {

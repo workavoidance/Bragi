@@ -1,6 +1,6 @@
 # Software quality bar
 
-Whisper Dictate's long-term aim is to become credible assistive software for
+Skrivi's long-term aim is to become credible assistive software for
 people with dyslexia, including students in Norwegian schools. That ambition
 does not change the immediate product scope, but it does affect the engineering
 standards used from the beginning.
