@@ -76,6 +76,7 @@ class HotkeyCaptureButton(QPushButton):
     ) -> None:
         super().__init__("&Change…", parent)
         self._capturing = False
+        self._captured_identifier: str | None = None
         self._can_capture = can_capture or (lambda: True)
         self.setAccessibleName("Change push-to-talk key")
         self.setAccessibleDescription(
@@ -97,6 +98,7 @@ class HotkeyCaptureButton(QPushButton):
             )
             return
         self._capturing = True
+        self._captured_identifier = None
         self.setText("Press a key…")
         self.setAccessibleName("Waiting for a push-to-talk key")
         self.grabKeyboard()
@@ -111,6 +113,7 @@ class HotkeyCaptureButton(QPushButton):
     def _finish_capture(self) -> None:
         self.releaseKeyboard()
         self._capturing = False
+        self._captured_identifier = None
         self.setText("&Change…")
         self.setAccessibleName("Change push-to-talk key")
         self.capture_finished.emit()
@@ -134,8 +137,25 @@ class HotkeyCaptureButton(QPushButton):
             )
             event.accept()
             return
+        self._captured_identifier = identifier
         self.hotkey_captured.emit(identifier)
-        self._finish_capture()
+        self.setText("Release key…")
+        self.setAccessibleName("Release the selected push-to-talk key")
+        event.accept()
+
+    def keyReleaseEvent(self, event: QKeyEvent) -> None:  # noqa: N802
+        if not self._capturing or self._captured_identifier is None:
+            super().keyReleaseEvent(event)
+            return
+        if event.isAutoRepeat():
+            event.accept()
+            return
+        identifier = hotkey_from_qt_key(event.key(), event.nativeVirtualKey())
+        if identifier == self._captured_identifier:
+            # Keep the global listener stopped until the selected key is
+            # physically up. Restarting it on key-down can give pynput half of
+            # the capture event and leave push-to-talk permanently pressed.
+            self._finish_capture()
         event.accept()
 
 

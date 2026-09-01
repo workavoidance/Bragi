@@ -27,6 +27,11 @@ here before a release.
 - Validated push-to-talk capture for Right Ctrl, Right Alt, and F6 through F12,
   including safe listener replacement and Restore Default.
 
+### Fixed
+
+- Wait for a newly captured push-to-talk key to be released before restarting
+  the global listener, preventing hotkey changes from leaving dictation stuck.
+
 ## [0.1.0] - 2026-08-31
 
 ### Added

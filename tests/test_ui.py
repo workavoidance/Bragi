@@ -7,8 +7,8 @@ from pathlib import Path
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QKeySequence
+from PySide6.QtCore import QEvent, Qt
+from PySide6.QtGui import QKeyEvent, QKeySequence
 from PySide6.QtWidgets import QApplication
 
 from whisper_dictate.application import create_application
@@ -106,6 +106,36 @@ def test_hotkey_capture_is_blocked_during_a_recording() -> None:
     assert messages == [
         "Finish the current recording before changing the push-to-talk key."
     ]
+
+
+def test_hotkey_listener_restarts_only_after_captured_key_is_released() -> None:
+    application()
+    button = HotkeyCaptureButton()
+    events: list[str] = []
+    button.capture_started.connect(lambda: events.append("listener stopped"))
+    button.hotkey_captured.connect(lambda key: events.append(f"captured {key}"))
+    button.capture_finished.connect(lambda: events.append("listener started"))
+
+    button.begin_capture()
+    press = QKeyEvent(
+        QEvent.Type.KeyPress,
+        Qt.Key.Key_F8,
+        Qt.KeyboardModifier.NoModifier,
+    )
+    button.keyPressEvent(press)
+
+    assert button.is_capturing is True
+    assert events == ["listener stopped", "captured f8"]
+
+    release = QKeyEvent(
+        QEvent.Type.KeyRelease,
+        Qt.Key.Key_F8,
+        Qt.KeyboardModifier.NoModifier,
+    )
+    button.keyReleaseEvent(release)
+
+    assert button.is_capturing is False
+    assert events == ["listener stopped", "captured f8", "listener started"]
 
 
 def test_settings_actions_are_named_and_keyboard_operable(tmp_path: Path) -> None:
