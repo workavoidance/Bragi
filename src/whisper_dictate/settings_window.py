@@ -62,8 +62,7 @@ def hotkey_from_qt_key(
     # Accept the side-specific virtual keys too, because synthetic events and
     # some keyboard drivers provide those instead.
     if native_virtual_key == 0xA3 or (
-        key == int(Qt.Key.Key_Control)
-        and native_scan_code in {0xE01D, 0x11D}
+        key == int(Qt.Key.Key_Control) and native_scan_code in {0xE01D, 0x11D}
     ):
         return "right_ctrl"
     if native_virtual_key == 0xA5 or (
