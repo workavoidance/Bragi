@@ -58,6 +58,12 @@ a successful model activation can request that retry. A transcription failure
 discards the current in-memory audio and returns the controller to Ready so the
 next dictation can proceed without restarting the process.
 
+Application exit uses one bounded shutdown sequence. It hides the tray, blocks
+new controller and model work, stops the global listener and microphone, signals
+transcription and model cancellation, then waits up to five seconds for workers
+to clear in-memory audio and remove incomplete staging files. The single-instance
+lock is released last, including when a cleanup component reports an error.
+
 The UI-independent settings module accepts and emits an explicit versioned
 schema. It validates a strict field allowlist, migrates old schemas in memory,
 returns privacy-safe recovery warnings, and replaces settings files atomically.

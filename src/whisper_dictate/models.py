@@ -385,8 +385,10 @@ class LocalModelManager:
         self._by_id = {model.identifier: model for model in self.catalogue}
         self._downloader = downloader or _default_downloader
         self._lock = threading.Lock()
+        self._idle = threading.Condition(self._lock)
         self._active_operation: str | None = None
         self._operation_cancel: threading.Event | None = None
+        self._shutting_down = False
         self._live_status: dict[str, ModelStatus] = {}
         self._status_listeners: list[Callable[[ModelStatus], None]] = []
         self._clean_stale_downloads()
@@ -602,7 +604,11 @@ class LocalModelManager:
                 pass
 
     def _begin(self, identifier: str) -> threading.Event:
-        with self._lock:
+        with self._idle:
+            if self._shutting_down:
+                raise ModelBusyError(
+                    "Bragi is shutting down. No new model operation can start."
+                )
             if self._active_operation is not None:
                 raise ModelBusyError(
                     "Finish the current model operation before starting another."
@@ -612,9 +618,21 @@ class LocalModelManager:
             return self._operation_cancel
 
     def _finish(self) -> None:
-        with self._lock:
+        with self._idle:
             self._active_operation = None
             self._operation_cancel = None
+            self._idle.notify_all()
+
+    def shutdown(self, timeout: float = 5.0) -> bool:
+        """Cancel an active operation and wait briefly for atomic cleanup."""
+        with self._idle:
+            self._shutting_down = True
+            if self._operation_cancel is not None:
+                self._operation_cancel.set()
+            return self._idle.wait_for(
+                lambda: self._active_operation is None,
+                timeout=max(0.0, timeout),
+            )
 
     def _write_manifest(self, directory: Path, spec: ModelSpec) -> None:
         payload = json.dumps(

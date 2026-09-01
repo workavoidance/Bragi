@@ -12,6 +12,7 @@ from whisper_dictate.config import AppConfig
 from whisper_dictate.controller import AppState, DictationController
 from whisper_dictate.hotkeys import PushToTalkListener
 from whisper_dictate.indicator import FloatingIndicator
+from whisper_dictate.lifecycle import shutdown_runtime
 from whisper_dictate.model_runtime import ModelRuntime
 from whisper_dictate.models import LocalModelManager
 from whisper_dictate.runtime import detect_build_identity, model_cache_directory
@@ -181,10 +182,12 @@ def main(argv: list[str] | None = None) -> None:
     )
 
     def shutdown() -> None:
-        model_manager.cancel_active()
-        controller.stop()
-        tray.stop()
-        ctypes.windll.kernel32.CloseHandle(mutex)
+        shutdown_runtime(
+            controller,
+            model_manager,
+            tray,
+            lambda: ctypes.windll.kernel32.CloseHandle(mutex),
+        )
 
     indicator.set_exit_handler(shutdown)
     tray.start()

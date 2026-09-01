@@ -31,11 +31,15 @@ class FakeRecorder:
 
 
 class FakeHotkey:
+    def __init__(self) -> None:
+        self.start_count = 0
+        self.stop_count = 0
+
     def start(self) -> None:
-        pass
+        self.start_count += 1
 
     def stop(self) -> None:
-        pass
+        self.stop_count += 1
 
 
 class FakeIndicator:
@@ -503,3 +507,182 @@ def test_cancelling_transcription_prevents_text_insertion_and_clears_audio() -> 
     assert np.count_nonzero(samples) == 0
     assert controller.state is AppState.READY
     assert indicator.events[-1] == ("cancelled", "Dictation cancelled")
+
+
+def test_shutdown_during_recording_cancels_input_and_timer() -> None:
+    timers: list[FakeTimer] = []
+
+    def timer_factory(interval, callback):
+        timer = FakeTimer(interval, callback)
+        timers.append(timer)
+        return timer
+
+    recorder = FakeRecorder()
+    hotkey = FakeHotkey()
+    controller = DictationController(
+        config=AppConfig(),
+        recorder=recorder,
+        transcriber=FakeTranscriber("Must not be typed"),
+        injector=FakeInjector(),
+        indicator=FakeIndicator(),
+        hotkey_listener=hotkey,
+        timer_factory=timer_factory,
+    )
+    controller._set_state(AppState.READY)
+    controller.on_hotkey_press()
+
+    assert controller.stop(timeout=0.5) is True
+
+    assert controller.state is AppState.STOPPED
+    assert recorder.cancel_count == 1
+    assert recorder.is_recording is False
+    assert timers[0].cancelled is True
+    assert hotkey.stop_count == 1
+    controller.on_hotkey_release()
+    assert controller.state is AppState.STOPPED
+
+
+def test_shutdown_during_transcription_prevents_late_text_and_clears_audio() -> None:
+    started = threading.Event()
+    prepared_audio: list[np.ndarray] = []
+
+    class CancellingTranscriber(FakeTranscriber):
+        def transcribe(
+            self,
+            audio: np.ndarray,
+            *,
+            cancel_event: threading.Event | None = None,
+        ) -> FakeResult:
+            prepared_audio.append(audio)
+            started.set()
+            assert cancel_event is not None
+            assert cancel_event.wait(timeout=0.5)
+            return FakeResult("Late text must not be inserted")
+
+    injector = FakeInjector()
+    indicator = FakeIndicator()
+    controller = DictationController(
+        config=AppConfig(injection_delay_seconds=0.0),
+        recorder=FakeRecorder(),
+        transcriber=CancellingTranscriber(""),
+        injector=injector,
+        indicator=indicator,
+        hotkey_listener=FakeHotkey(),
+    )
+    controller._set_state(AppState.READY)
+    controller.on_hotkey_press()
+    controller.on_hotkey_release()
+    assert started.wait(timeout=0.5)
+
+    assert controller.stop(timeout=0.5) is True
+
+    assert controller.state is AppState.STOPPED
+    assert injector.typed == []
+    assert prepared_audio
+    assert np.count_nonzero(prepared_audio[0]) == 0
+    assert indicator.events[-1] == ("transcribing", None)
+
+
+def test_shutdown_waits_for_registered_model_worker_without_posting_ready() -> None:
+    started = threading.Event()
+    release = threading.Event()
+
+    class SlowLoadingTranscriber(FakeTranscriber):
+        def load(self) -> None:
+            started.set()
+            release.wait(timeout=0.5)
+
+    indicator = FakeIndicator()
+    controller = DictationController(
+        config=AppConfig(),
+        recorder=FakeRecorder(),
+        transcriber=SlowLoadingTranscriber(""),
+        injector=FakeInjector(),
+        indicator=indicator,
+        hotkey_listener=FakeHotkey(),
+    )
+    controller.start()
+    assert started.wait(timeout=0.5)
+    threading.Timer(0.03, release.set).start()
+
+    assert controller.stop(timeout=0.5) is True
+
+    assert controller.state is AppState.STOPPED
+    assert indicator.events == [("loading", None)]
+
+
+def test_microphone_start_failure_cannot_restore_ready_after_shutdown() -> None:
+    started = threading.Event()
+    release = threading.Event()
+
+    class FailingRecorder(FakeRecorder):
+        def start(self) -> None:
+            started.set()
+            release.wait(timeout=0.5)
+            raise MicrophoneUnavailableError("private late device failure")
+
+    indicator = FakeIndicator()
+    controller = DictationController(
+        config=AppConfig(),
+        recorder=FailingRecorder(),
+        transcriber=FakeTranscriber(""),
+        injector=FakeInjector(),
+        indicator=indicator,
+        hotkey_listener=FakeHotkey(),
+    )
+    controller._set_state(AppState.READY)
+    callback = threading.Thread(target=controller.on_hotkey_press)
+    callback.start()
+    assert started.wait(timeout=0.5)
+
+    controller.begin_shutdown()
+    release.set()
+    callback.join(timeout=0.5)
+
+    assert controller.state is AppState.STOPPED
+    assert indicator.events == []
+
+
+def test_shutdown_waits_for_an_insertion_already_in_progress() -> None:
+    insertion_started = threading.Event()
+    release_insertion = threading.Event()
+
+    class BlockingInjector(FakeInjector):
+        def type_text(self, text: str) -> None:
+            insertion_started.set()
+            release_insertion.wait(timeout=0.5)
+            super().type_text(text)
+
+    injector = BlockingInjector()
+    indicator = FakeIndicator()
+    controller = DictationController(
+        config=AppConfig(injection_delay_seconds=0.0),
+        recorder=FakeRecorder(),
+        transcriber=FakeTranscriber("Already inserting"),
+        injector=injector,
+        indicator=indicator,
+        hotkey_listener=FakeHotkey(),
+    )
+    controller._set_state(AppState.TRANSCRIBING)
+    samples = np.full(48_000, 0.1, dtype=np.float32)
+    worker = threading.Thread(
+        target=controller._process_recording,
+        args=(CapturedAudio(samples=samples, sample_rate=48_000),),
+    )
+    worker.start()
+    assert insertion_started.wait(timeout=0.5)
+
+    shutdown = threading.Thread(target=controller.begin_shutdown)
+    shutdown.start()
+    assert wait_until(controller._stopping.is_set)
+    assert shutdown.is_alive() is True
+    release_insertion.set()
+    shutdown.join(timeout=0.5)
+    worker.join(timeout=0.5)
+
+    assert shutdown.is_alive() is False
+    assert worker.is_alive() is False
+    assert injector.typed == ["Already inserting"]
+    assert ("ready", None) not in indicator.events
+    assert controller.state is AppState.STOPPED
+    assert np.count_nonzero(samples) == 0

@@ -129,3 +129,31 @@ def test_escape_requests_cancellation_without_changing_key_state() -> None:
     listeners[0].on_release()
 
     assert events == ["start:right_ctrl", "press", "cancel", "release"]
+
+
+def test_stop_waits_briefly_for_native_listener_shutdown() -> None:
+    events: list[str] = []
+
+    class JoinableNativeListener(FakeNativeListener):
+        def join(self, timeout=None) -> None:
+            events.append(f"join:{timeout}")
+
+    def factory(identifier, on_press, on_release, on_cancel):
+        return JoinableNativeListener(
+            identifier,
+            on_press,
+            on_release,
+            on_cancel,
+            events,
+        )
+
+    listener = PushToTalkListener(
+        lambda: None,
+        lambda: None,
+        listener_factory=factory,
+    )
+    listener.start()
+
+    listener.stop(wait_timeout=0.25)
+
+    assert events == ["start:right_ctrl", "stop:right_ctrl", "join:0.25"]

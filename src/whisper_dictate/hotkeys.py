@@ -133,7 +133,7 @@ class PushToTalkListener:
                     self._generation += 1
             raise
 
-    def stop(self) -> None:
+    def stop(self, wait_timeout: float = 1.0) -> None:
         with self._lock:
             listener = self._listener
             self._listener = None
@@ -141,6 +141,12 @@ class PushToTalkListener:
             self._pressed = False
         if listener is not None:
             listener.stop()
+            join = getattr(listener, "join", None)
+            if callable(join) and listener is not threading.current_thread():
+                try:
+                    join(timeout=max(0.0, wait_timeout))
+                except RuntimeError:
+                    pass
 
     def replace_hotkey(self, identifier: str) -> None:
         replacement = validate_hotkey(identifier)
