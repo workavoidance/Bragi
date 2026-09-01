@@ -8,7 +8,11 @@ from dataclasses import dataclass
 from enum import StrEnum
 from pathlib import Path
 
-from whisper_dictate.hotkeys import HotkeyValidationError, validate_hotkey
+from whisper_dictate.hotkeys import (
+    DEFAULT_HOTKEY,
+    HotkeyValidationError,
+    validate_hotkey,
+)
 from whisper_dictate.runtime import settings_directory
 
 CURRENT_SCHEMA_VERSION = 2
@@ -183,6 +187,12 @@ def migrate_document(
             )
         migrated = migration(migrated)
         raw_version += 1
+
+    # Right Alt was briefly available in development builds, but it is AltGr
+    # on common Norwegian keyboards and cannot yet be used reliably. Preserve
+    # every other setting while returning those test installations to default.
+    if migrated.get("hotkey") == "right_alt":
+        migrated["hotkey"] = DEFAULT_HOTKEY
 
     migrated_from = (
         original_version if original_version < CURRENT_SCHEMA_VERSION else None

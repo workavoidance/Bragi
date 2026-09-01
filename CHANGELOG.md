@@ -24,15 +24,15 @@ here before a release.
 - PySide6 and Qt notices in preview and release archives.
 - Live Automatic, English, Norwegian, and Multilingual language selection.
 - Live Windows microphone selection with disconnected-device recovery.
-- Validated push-to-talk capture for Right Ctrl, Right Alt, and F6 through F12,
+- Validated push-to-talk capture for Right Ctrl and F6 through F12,
   including safe listener replacement and Restore Default.
 
 ### Fixed
 
 - Wait for a newly captured push-to-talk key to be released before restarting
   the global listener, preventing hotkey changes from leaving dictation stuck.
-- Recognise the extended Windows scan codes Qt reports for Right Ctrl and Right
-  Alt while keeping the left-side modifier keys unavailable.
+- Recognise the extended Windows scan code Qt reports for Right Ctrl while
+  keeping Alt and the left-side modifier keys unavailable.
 
 ## [0.1.0] - 2026-08-31
 

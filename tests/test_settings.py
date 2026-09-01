@@ -59,6 +59,22 @@ def test_settings_survive_save_and_reload(tmp_path) -> None:
     assert json.loads(store.path.read_text(encoding="utf-8")) == expected.to_document()
 
 
+def test_removed_right_alt_choice_returns_to_default_without_losing_settings(
+    tmp_path,
+) -> None:
+    document = defaults_document()
+    document["language"] = LanguageMode.NORWEGIAN.value
+    document["hotkey"] = "right_alt"
+    path = tmp_path / "settings.json"
+    path.write_text(json.dumps(document), encoding="utf-8")
+
+    result = SettingsStore(path).load()
+
+    assert result.settings.language is LanguageMode.NORWEGIAN
+    assert result.settings.hotkey == "right_ctrl"
+    assert result.warning is None
+
+
 @pytest.mark.parametrize(
     ("field", "value"),
     [
