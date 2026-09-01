@@ -43,7 +43,6 @@ class TrayIcon:
         self._menu.addAction(self.settings_action)
 
         self.retry_model_action = QAction("&Retry speech model", self._menu)
-        self.retry_model_action.setAccessibleName("Retry speech model")
         self.retry_model_action.setToolTip(
             "Try loading the selected local speech model again"
         )

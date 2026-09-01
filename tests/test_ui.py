@@ -219,7 +219,7 @@ def test_tray_offers_model_retry_only_after_model_load_failure() -> None:
     tray.set_status("model_error", "Speech model unavailable")
 
     assert tray.retry_model_action.isVisible() is True
-    assert tray.retry_model_action.accessibleName() == "Retry speech model"
+    assert tray.retry_model_action.text().replace("&", "") == "Retry speech model"
     tray.retry_model_action.trigger()
     assert events == ["retry"]
 
