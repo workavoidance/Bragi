@@ -5,6 +5,8 @@ import threading
 import time
 from pathlib import Path
 
+import pytest
+
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from PySide6.QtCore import QEvent, Qt
@@ -23,6 +25,13 @@ from whisper_dictate.settings_window import (
     hotkey_from_qt_key,
 )
 from whisper_dictate.tray import TrayIcon
+
+
+@pytest.fixture(autouse=True)
+def reset_interface_language():
+    set_interface_language(InterfaceLanguage.ENGLISH)
+    yield
+    set_interface_language(InterfaceLanguage.ENGLISH)
 
 
 def application() -> QApplication:
@@ -249,9 +258,10 @@ def test_norwegian_interface_covers_settings_models_tray_and_overlay(
     tmp_path: Path,
 ) -> None:
     application()
-    set_interface_language(InterfaceLanguage.NORWEGIAN_BOKMAL)
+    store = SettingsStore(tmp_path / "settings.json")
+    store.save(UserSettings(interface_language=InterfaceLanguage.NORWEGIAN_BOKMAL))
     try:
-        window = SettingsWindow(SettingsStore(tmp_path / "settings.json"))
+        window = SettingsWindow(store)
         tray = TrayIcon(lambda: None, on_settings=lambda: None)
         indicator = FloatingIndicator(enabled=False)
         statuses: list[str] = []
@@ -315,6 +325,7 @@ def test_interface_language_previews_live_cancel_restores_and_save_persists(
     assert tray.settings_action.text().replace("&", "") == "Settings…"
     assert store.load().settings.interface_language is InterfaceLanguage.ENGLISH
 
+    window.reload()
     window.interface_language_combo.setCurrentIndex(norwegian_index)
     window._save()
 
