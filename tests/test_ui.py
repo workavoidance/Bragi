@@ -90,9 +90,7 @@ def test_settings_window_saves_live_language_and_hotkey_choices(tmp_path: Path) 
 def test_hotkey_capture_translation_accepts_only_safe_keys() -> None:
     assert hotkey_from_qt_key(int(Qt.Key.Key_Control), 0xA3) == "right_ctrl"
     assert hotkey_from_qt_key(int(Qt.Key.Key_Alt), 0xA5) == "right_alt"
-    assert hotkey_from_qt_key(int(Qt.Key.Key_Control), 0x11, 0xE01D) == (
-        "right_ctrl"
-    )
+    assert hotkey_from_qt_key(int(Qt.Key.Key_Control), 0x11, 0xE01D) == ("right_ctrl")
     assert hotkey_from_qt_key(int(Qt.Key.Key_Alt), 0x12, 0xE038) == "right_alt"
     assert hotkey_from_qt_key(int(Qt.Key.Key_Control), 0x11, 0x1D) is None
     assert hotkey_from_qt_key(int(Qt.Key.Key_Alt), 0x12, 0x38) is None
