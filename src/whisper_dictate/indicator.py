@@ -57,19 +57,35 @@ class FloatingIndicator(QWidget):
         )
         self.setMinimumWidth(300)
         self.setMaximumWidth(480)
+        self.setStyleSheet(
+            """
+            QFrame#bragiStatusFrame {
+                background: #FFFDF9;
+                border: 1px solid #DED7CF;
+                border-radius: 16px;
+            }
+            QLabel {
+                color: #181817;
+                background: transparent;
+            }
+            QLabel#bragiStateMark {
+                color: #F05A24;
+            }
+            """
+        )
 
         self._enabled = enabled
         self._exit_handler: Callable[[], None] | None = None
         self._exiting = False
 
         frame = QFrame(self)
-        frame.setFrameShape(QFrame.Shape.StyledPanel)
-        frame.setLineWidth(2)
+        frame.setObjectName("bragiStatusFrame")
         layout = QHBoxLayout(frame)
         layout.setContentsMargins(16, 12, 18, 12)
         layout.setSpacing(12)
 
         self._state_mark = QLabel("…", frame)
+        self._state_mark.setObjectName("bragiStateMark")
         state_font = self._state_mark.font()
         state_font.setBold(True)
         state_font.setPointSize(max(state_font.pointSize() + 4, 14))
