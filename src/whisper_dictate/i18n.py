@@ -32,6 +32,11 @@ NORWEGIAN_BOKMAL = {
     "Windows Default": "Windows-standard",
     "Right Ctrl": "Høyre Ctrl",
     "Settings": "Innstillinger",
+    "Choose how Skrivi listens, looks and starts.": (
+        "Velg hvordan Skrivi lytter, ser ut og starter."
+    ),
+    "Skrivi logo": "Skrivi-logo",
+    "Ctrl+S saves changes": "Ctrl+S lagrer endringene",
     "{title} Settings": "Innstillinger for {title}",
     "Skrivi settings": "Skrivi-innstillinger",
     "Skrivi settings heading": "Overskrift for Skrivi-innstillinger",
@@ -49,9 +54,22 @@ NORWEGIAN_BOKMAL = {
     "Current status": "Gjeldende status",
     "Starting": "Starter",
     "Current dictation status": "Gjeldende status for diktering",
+    "Dictation": "Diktering",
+    "Choose what Skrivi listens for and how you start speaking.": (
+        "Velg hva Skrivi skal lytte etter, og hvordan du starter dikteringen."
+    ),
     "Dictation setup": "Oppsett for diktering",
     "Dictation language": "Dikteringsspråk",
     "Language": "Språk",
+    "Detects English or Norwegian for each dictation. Best for most people.": (
+        "Oppdager English eller norsk for hver diktering. Passer best for de fleste."
+    ),
+    "Always listens for English.": "Lytter alltid etter English.",
+    "Always listens for Norwegian.": "Lytter alltid etter norsk.",
+    "Can switch languages within one dictation, but may be less accurate.": (
+        "Kan bytte språk i samme diktering, men kan være mindre nøyaktig."
+    ),
+    "Dictation language guidance": "Veiledning for dikteringsspråk",
     "Automatic": "Automatisk",
     "Norwegian": "Norsk",
     "Multilingual": "Flerspråklig",
@@ -61,6 +79,8 @@ NORWEGIAN_BOKMAL = {
     ),
     "Speech model": "Talemodell",
     "Speech model value": "Verdi for talemodell",
+    "Models…": "Modeller …",
+    "Manage speech models": "Administrer talemodeller",
     "Microphone": "Mikrofon",
     "Refresh": "Oppdater",
     "Refresh microphones": "Oppdater mikrofoner",
@@ -91,6 +111,10 @@ NORWEGIAN_BOKMAL = {
     ),
     "Push-to-talk key guidance": "Veiledning for dikteringstast",
     "Appearance": "Utseende",
+    "Application": "Programmet",
+    "Choose how Skrivi looks and behaves when Windows starts.": (
+        "Velg hvordan Skrivi ser ut og oppfører seg når Windows starter."
+    ),
     "Show the compact status overlay while dictating": (
         "Vis det kompakte statusfeltet under diktering"
     ),
@@ -127,6 +151,32 @@ NORWEGIAN_BOKMAL = {
         "vanlig diktering ingen internettilgang."
     ),
     "Skrivi privacy summary": "Sammendrag av personvernet i Skrivi",
+    "Your words stay yours.": "Ordene dine forblir dine.",
+    "Skrivi is designed to turn your speech into text without creating an account or sending your dictation to us.": (
+        "Skrivi er laget for å gjøre tale om til tekst uten konto og uten å sende dikteringen til oss."
+    ),
+    "Processed on this PC": "Behandles på denne PC-en",
+    "Your recording is transcribed locally by the speech model installed on this computer.": (
+        "Opptaket transkriberes lokalt av talemodellen som er installert på denne datamaskinen."
+    ),
+    "Nothing saved by Skrivi": "Ingenting lagres av Skrivi",
+    "Skrivi does not keep a history of recordings or dictated text.": (
+        "Skrivi lagrer ingen historikk over opptak eller diktert tekst."
+    ),
+    "No account or clipboard": "Ingen konto eller utklippstavle",
+    "You do not sign in, and dictated text is inserted without using the Windows clipboard.": (
+        "Du logger ikke inn, og diktert tekst settes inn uten å bruke utklippstavlen i Windows."
+    ),
+    "Works offline after setup": "Fungerer uten nett etter oppsett",
+    "Internet is needed to download a speech model. Installed models work without it.": (
+        "Internett trengs for å laste ned en talemodell. Installerte modeller fungerer uten nett."
+    ),
+    "One important boundary": "Én viktig avgrensning",
+    "The app receiving your text, such as Word, a browser or a school platform, may save or sync it according to that app's own settings.": (
+        "Programmet som mottar teksten, for eksempel Word, en nettleser eller en skoleplattform, kan lagre eller synkronisere den etter sine egne innstillinger."
+    ),
+    "Read full privacy details": "Les alle personverndetaljene",
+    "Open privacy documentation": "Åpne personverndokumentasjonen",
     "Skrivi is free and open-source local speech-to-text software.\n\nThe interface uses PySide6 and Qt under their open-source licences. See THIRD_PARTY_NOTICES.md included with Skrivi for copyright and licence information.": (
         "Skrivi er gratis lokal tale-til-tekst-programvare med åpen kildekode.\n\n"
         "Grensesnittet bruker PySide6 og Qt under deres åpne lisenser. Se "
@@ -134,6 +184,20 @@ NORWEGIAN_BOKMAL = {
         "opphavsrett og lisenser."
     ),
     "About Skrivi": "Om Skrivi",
+    "Get your thoughts onto the page.": "Få tankene dine ned på siden.",
+    "Skrivi version": "Skrivi-versjon",
+    "Free, local and open source": "Gratis, lokal og med åpen kildekode",
+    "Skrivi is a small speech-to-text tool. It transcribes your own words locally and does not generate answers or rewrite what you say.": (
+        "Skrivi er et lite tale-til-tekst-verktøy. Det transkriberer ordene dine lokalt og verken lager svar eller omskriver det du sier."
+    ),
+    "Learn more": "Finn ut mer",
+    "Open documentation in your web browser.": "Åpne dokumentasjon i nettleseren.",
+    "Website": "Nettsted",
+    "Open Skrivi website": "Åpne Skrivi-nettstedet",
+    "Source code": "Kildekode",
+    "Open Skrivi source code": "Åpne kildekoden til Skrivi",
+    "Third-party licences": "Tredjepartslisenser",
+    "Open third-party licence notices": "Åpne lisensmerknader for tredjeparter",
     "Microphones could not be listed. Check Windows Sound settings or use Windows Default.": (
         "Mikrofonene kunne ikke vises. Kontroller lydinnstillingene i Windows, "
         "eller bruk Windows-standard."
@@ -213,6 +277,12 @@ NORWEGIAN_BOKMAL = {
     "Skrivi is already running.": "Skrivi kjører allerede.",
     "Skrivi runs on Windows 11.": "Skrivi kjører på Windows 11.",
     "Local speech models": "Lokale talemodeller",
+    "Speech models": "Talemodeller",
+    "Choose the balance between speed and accuracy. Models are stored on this PC and work offline after download.": (
+        "Velg balansen mellom hastighet og nøyaktighet. Modellene lagres på denne PC-en og fungerer uten nett etter nedlasting."
+    ),
+    "Choose a model": "Velg en modell",
+    "Model": "Modell",
     "Speech models are installed on this PC. Downloading a new model uses the internet only when you request it. Installed models work without an internet connection.": (
         "Talemodeller installeres på denne PC-en. Internett brukes bare når du "
         "ber om å laste ned en ny modell. Installerte modeller fungerer uten "
@@ -226,12 +296,20 @@ NORWEGIAN_BOKMAL = {
     "Selected model status": "Status for valgt modell",
     "Model operation progress": "Fremdrift for modellhandling",
     "Download": "Last ned",
+    "Download model": "Last ned modell",
     "Download selected model": "Last ned valgt modell",
     "Use model": "Bruk modell",
+    "Use this model": "Bruk denne modellen",
     "Use selected speech model": "Bruk valgt talemodell",
     "Remove": "Fjern",
+    "Remove from this PC": "Fjern fra denne PC-en",
     "Remove selected model": "Fjern valgt modell",
     "Import folder…": "Importer mappe …",
+    "Already have a model?": "Har du allerede en modell?",
+    "Import a verified Skrivi model folder copied from another computer.": (
+        "Importer en verifisert Skrivi-modellmappe som er kopiert fra en annen datamaskin."
+    ),
+    "Choose model folder…": "Velg modellmappe …",
     "Import a Skrivi model folder": "Importer en Skrivi-modellmappe",
     "Cancel download": "Avbryt nedlasting",
     "Cancel model download": "Avbryt modellnedlasting",
