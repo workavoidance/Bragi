@@ -2,8 +2,10 @@ name: Windows release
 
 on:
   push:
-    tags:
-      - "v*"
+    branches: [main]
+    paths:
+      - "release/VERSION"
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -13,6 +15,15 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Read and validate release version
+        id: version
+        shell: powershell
+        run: |
+          $tag = (Get-Content release\VERSION -Raw).Trim()
+          if ($tag -notmatch '^v[0-9]+\.[0-9]+\.[0-9]+(?:-[0-9A-Za-z.-]+)?$') {
+            throw "release/VERSION must contain a tag such as v0.2.0-alpha.1."
+          }
+          "tag=$tag" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
       - uses: actions/setup-python@v5
         with:
           python-version: "3.14"
@@ -25,25 +36,27 @@ jobs:
         run: choco install innosetup --no-progress -y
       - name: Build per-user installer
         shell: powershell
-        run: .\build_installer.ps1 -Version "${{ github.ref_name }}"
+        run: .\build_installer.ps1 -Version "${{ steps.version.outputs.tag }}"
       - name: Package release
         shell: powershell
         run: |
-          New-Item -ItemType Directory -Path release -Force | Out-Null
-          Copy-Item dist\Skrivi.exe release\
-          Copy-Item README.md, LICENSE, CHANGELOG.md, THIRD_PARTY_NOTICES.md release\
-          $archive = "Skrivi-${{ github.ref_name }}-windows-x64.zip"
-          Compress-Archive -Path release\* -DestinationPath $archive
+          $tag = "${{ steps.version.outputs.tag }}"
+          $releaseDir = "build\release-package"
+          New-Item -ItemType Directory -Path $releaseDir -Force | Out-Null
+          Copy-Item dist\Skrivi.exe $releaseDir\
+          Copy-Item README.md, LICENSE, CHANGELOG.md, THIRD_PARTY_NOTICES.md $releaseDir\
+          $archive = "Skrivi-$tag-windows-x64.zip"
+          Compress-Archive -Path "$releaseDir\*" -DestinationPath $archive
           $hash = (Get-FileHash $archive -Algorithm SHA256).Hash.ToLower()
           "$hash *$archive" | Set-Content "$archive.sha256"
           $installer = Get-Item "dist\installer\Skrivi-*-windows-x64-setup.exe"
-          $publishedInstaller = "Skrivi-${{ github.ref_name }}-windows-x64-setup.exe"
+          $publishedInstaller = "Skrivi-$tag-windows-x64-setup.exe"
           Copy-Item $installer.FullName $publishedInstaller
           $installerHash = (Get-FileHash $publishedInstaller -Algorithm SHA256).Hash.ToLower()
           "$installerHash *$publishedInstaller" | Set-Content "$publishedInstaller.sha256"
       - uses: actions/upload-artifact@v4
         with:
-          name: Skrivi-${{ github.ref_name }}-windows-x64
+          name: Skrivi-${{ steps.version.outputs.tag }}-windows-x64
           path: |
             Skrivi-${{ github.ref_name }}-windows-x64.zip
             Skrivi-${{ github.ref_name }}-windows-x64.zip.sha256
@@ -54,23 +67,31 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         shell: powershell
         run: |
-          $tag = "${{ github.ref_name }}"
-          $releaseArgs = @(
-            "release", "create", $tag,
+          $tag = "${{ steps.version.outputs.tag }}"
+          $assets = @(
             "Skrivi-$tag-windows-x64.zip",
             "Skrivi-$tag-windows-x64.zip.sha256",
             "Skrivi-$tag-windows-x64-setup.exe",
-            "Skrivi-$tag-windows-x64-setup.exe.sha256",
-            "--title", "Skrivi $tag"
+            "Skrivi-$tag-windows-x64-setup.exe.sha256"
           )
           $notesFile = "docs/releases/$tag.md"
+          $notesArgs = @("--generate-notes")
           if (Test-Path $notesFile) {
-            $releaseArgs += @("--notes-file", $notesFile)
-          } else {
-            $releaseArgs += "--generate-notes"
+            $notesArgs = @("--notes-file", $notesFile)
           }
+          $prereleaseArgs = @()
           if ($tag.Contains("-")) {
-            $releaseArgs += "--prerelease"
+            $prereleaseArgs = @("--prerelease")
           }
-          & gh @releaseArgs
+          & gh release view $tag *> $null
+          if ($LASTEXITCODE -eq 0) {
+            & gh release upload $tag @assets --clobber
+            if ($LASTEXITCODE -ne 0) { throw "GitHub release upload failed." }
+            & gh release edit $tag --title "Skrivi $tag" @notesArgs @prereleaseArgs
+          } else {
+            & gh release create $tag @assets `
+              --target "${{ github.sha }}" `
+              --title "Skrivi $tag" `
+              @notesArgs @prereleaseArgs
+          }
           if ($LASTEXITCODE -ne 0) { throw "GitHub release publication failed." }

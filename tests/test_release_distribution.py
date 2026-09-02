@@ -39,6 +39,14 @@ def test_tagged_release_uses_curated_notes_and_marks_alpha_as_prerelease() -> No
     notes = ROOT / "docs" / "releases" / f"{TAG}.md"
 
     assert '"--notes-file", $notesFile' in workflow
-    assert '$releaseArgs += "--prerelease"' in workflow
+    assert '$prereleaseArgs = @("--prerelease")' in workflow
+    assert '--target "${{ github.sha }}"' in workflow
+    assert "gh release upload $tag @assets --clobber" in workflow
     assert notes.is_file()
     assert "not code-signed" in notes.read_text(encoding="utf-8")
+
+
+def test_release_version_file_matches_the_public_download() -> None:
+    version = (ROOT / "release" / "VERSION").read_text(encoding="utf-8").strip()
+
+    assert version == TAG
