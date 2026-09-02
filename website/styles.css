@@ -59,6 +59,18 @@ button, a { -webkit-tap-highlight-color: transparent; }
   line-height: 1;
 }
 
+.wordmark::before {
+  content: "";
+  position: absolute;
+  top: 0.015em;
+  right: 0.65em;
+  z-index: 1;
+  width: 0.19em;
+  height: 0.19em;
+  border-radius: 50%;
+  background: var(--orange);
+}
+
 .wordmark::after {
   content: "";
   position: absolute;

@@ -13,4 +13,6 @@ def test_website_wordmark_uses_one_text_element() -> None:
     assert html.count(wordmark) == 2
     assert "wordmark-base" not in html
     assert "wordmark-i" not in html
+    assert ".wordmark::before" in css
+    assert "background: var(--orange);" in css
     assert ".wordmark::after" in css
