@@ -15,6 +15,7 @@ from PySide6.QtWidgets import QApplication
 
 from whisper_dictate.application import (
     SKRIVI_ICON_SIZES,
+    application_stylesheet,
     create_application,
     skrivi_icon,
 )
@@ -234,10 +235,57 @@ def test_settings_actions_are_named_and_keyboard_operable(tmp_path: Path) -> Non
     assert window.model_panel.accessibleName() == "Local speech models"
     assert window.model_panel.model_combo.accessibleName() == "Speech model"
     assert window.model_panel.download_button.isEnabled() is False
+    assert window.windowTitle() == "Settings"
+    assert window.minimumWidth() <= 640
+    assert window.minimumHeight() <= 520
     assert window.overlay_checkbox.focusPolicy() & Qt.FocusPolicy.TabFocus
     assert window.save_shortcut.key().matches(QKeySequence.StandardKey.Save) == (
         QKeySequence.SequenceMatch.ExactMatch
     )
+
+
+def test_settings_guidance_and_navigation_follow_the_current_choice(
+    tmp_path: Path,
+) -> None:
+    application()
+    window = SettingsWindow(SettingsStore(tmp_path / "settings.json"))
+
+    assert window._language_help.text() == (
+        "Detects English or Norwegian for each dictation. Best for most people."
+    )
+    window.language_combo.setCurrentIndex(
+        window.language_combo.findData(LanguageMode.MULTILINGUAL.value)
+    )
+    assert window._language_help.text() == (
+        "Can switch languages within one dictation, but may be less accurate."
+    )
+
+    window.manage_models_button.click()
+    assert window.tabs.currentWidget() is window.model_panel
+
+
+def test_privacy_and_about_pages_explain_the_product_boundary(tmp_path: Path) -> None:
+    application()
+    window = SettingsWindow(SettingsStore(tmp_path / "settings.json"))
+
+    assert len(window._privacy_facts) == 4
+    assert "may save or sync it" in window._privacy_boundary.text()
+    assert "does not generate answers" in window._about.text()
+    assert window.privacy_details_button.accessibleName() == (
+        "Open privacy documentation"
+    )
+    assert window.website_button.accessibleName() == "Open Skrivi website"
+
+
+def test_theme_has_visible_focus_disabled_states_and_high_contrast_fallback() -> None:
+    app = application()
+    normal = application_stylesheet(app.palette(), high_contrast=False)
+    high_contrast = application_stylesheet(app.palette(), high_contrast=True)
+
+    assert "QPushButton:focus, QComboBox:focus" in normal
+    assert "QPushButton:disabled, QComboBox:disabled" in normal
+    assert "#faf7f2" in normal.lower()
+    assert "#faf7f2" not in high_contrast.lower()
 
 
 def test_model_download_progress_is_specific_and_cancellable(tmp_path: Path) -> None:
@@ -321,7 +369,7 @@ def test_norwegian_interface_covers_settings_models_tray_and_overlay(
         indicator.post("transcribing")
         process_events_until(lambda: bool(statuses))
 
-        assert window.windowTitle() == "Innstillinger for Skrivi"
+        assert window.windowTitle() == "Innstillinger"
         assert window.accessibleName() == "Skrivi-innstillinger"
         assert [window.tabs.tabText(index).replace("&", "") for index in range(4)] == [
             "Generelt",
@@ -330,7 +378,7 @@ def test_norwegian_interface_covers_settings_models_tray_and_overlay(
             "Om Skrivi",
         ]
         assert window.model_panel.download_button.text().replace("&", "") == (
-            "Last ned"
+            "Last ned modell"
         )
         assert window.language_combo.itemText(1) == "English"
         assert window.interface_language_combo.itemText(1) == "English"
@@ -362,17 +410,21 @@ def test_interface_language_previews_live_cancel_restores_and_save_persists(
     )
     window.interface_language_combo.setCurrentIndex(norwegian_index)
 
-    assert window.windowTitle() == "Innstillinger for Skrivi"
+    assert window.windowTitle() == "Innstillinger"
     assert window._status.text() == "Klar. Hold Høyre Ctrl for å diktere"
-    assert window.model_panel.download_button.text().replace("&", "") == "Last ned"
+    assert window.model_panel.download_button.text().replace("&", "") == (
+        "Last ned modell"
+    )
     assert tray.settings_action.text().replace("&", "") == "Innstillinger…"
     assert store.load().settings.interface_language is InterfaceLanguage.ENGLISH
 
     window.reject()
 
-    assert window.windowTitle() == "Skrivi Settings"
+    assert window.windowTitle() == "Settings"
     assert window._status.text() == "Ready. Hold Right Ctrl to dictate"
-    assert window.model_panel.download_button.text().replace("&", "") == "Download"
+    assert window.model_panel.download_button.text().replace("&", "") == (
+        "Download model"
+    )
     assert tray.settings_action.text().replace("&", "") == "Settings…"
     assert store.load().settings.interface_language is InterfaceLanguage.ENGLISH
 
@@ -383,7 +435,7 @@ def test_interface_language_previews_live_cancel_restores_and_save_persists(
     assert (
         store.load().settings.interface_language is InterfaceLanguage.NORWEGIAN_BOKMAL
     )
-    assert window.windowTitle() == "Innstillinger for Skrivi"
+    assert window.windowTitle() == "Innstillinger"
     set_interface_language(InterfaceLanguage.ENGLISH)
 
 

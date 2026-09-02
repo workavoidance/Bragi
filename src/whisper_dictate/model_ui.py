@@ -4,10 +4,12 @@ import threading
 from collections.abc import Callable
 from pathlib import Path
 
-from PySide6.QtCore import QObject, QSignalBlocker, Signal, Slot
+from PySide6.QtCore import QObject, QSignalBlocker, Qt, Signal, Slot
 from PySide6.QtWidgets import (
     QComboBox,
     QFileDialog,
+    QFormLayout,
+    QFrame,
     QHBoxLayout,
     QLabel,
     QMessageBox,
@@ -39,6 +41,30 @@ class _TaskSignals(QObject):
     cancelled = Signal(str)
 
 
+def _role(widget: QWidget, name: str) -> QWidget:
+    widget.setProperty("uiRole", name)
+    return widget
+
+
+def _label(
+    text: str = "", *, parent: QWidget | None = None, role: str | None = None
+) -> QLabel:
+    label = QLabel(text, parent)
+    label.setWordWrap(True)
+    if role is not None:
+        _role(label, role)
+    return label
+
+
+def _card(parent: QWidget, *, quiet: bool = False) -> tuple[QFrame, QVBoxLayout]:
+    frame = QFrame(parent)
+    _role(frame, "quietCard" if quiet else "card")
+    layout = QVBoxLayout(frame)
+    layout.setContentsMargins(18, 16, 18, 17)
+    layout.setSpacing(10)
+    return frame, layout
+
+
 class ModelManagerPanel(QWidget):
     """Accessible model installation and activation controls."""
 
@@ -65,23 +91,32 @@ class ModelManagerPanel(QWidget):
             manager.add_status_listener(self._manager_signals.status.emit)
         self.setAccessibleName(tr("Local speech models"))
 
+        self.setObjectName("settingsPage")
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(12, 14, 12, 12)
-        layout.setSpacing(12)
+        layout.setContentsMargins(6, 16, 6, 14)
+        layout.setSpacing(14)
 
-        self.introduction = QLabel(
+        self.page_title = _label(tr("Speech models"), parent=self, role="pageTitle")
+        layout.addWidget(self.page_title)
+
+        self.introduction = _label(
             tr(
-                "Speech models are installed on this PC. Downloading a new model "
-                "uses the internet only when you request it. Installed models work "
-                "without an internet connection."
+                "Choose the balance between speed and accuracy. Models are stored "
+                "on this PC and work offline after download."
             ),
-            self,
+            parent=self,
+            role="secondary",
         )
-        self.introduction.setWordWrap(True)
         self.introduction.setAccessibleName(
             tr("Model privacy and download explanation")
         )
         layout.addWidget(self.introduction)
+
+        self.model_card, model_layout = _card(self)
+        self.model_card_title = _label(
+            tr("Choose a model"), parent=self.model_card, role="sectionTitle"
+        )
+        model_layout.addWidget(self.model_card_title)
 
         self.model_combo = QComboBox(self)
         self.model_combo.setAccessibleName(tr("Speech model"))
@@ -93,32 +128,43 @@ class ModelManagerPanel(QWidget):
             )
             self.model_combo.addItem(label, spec.identifier)
         self.model_combo.currentIndexChanged.connect(self.refresh)
-        layout.addWidget(self.model_combo)
+        self.model_label = QLabel(f"&{tr('Model')}:", self.model_card)
+        self.model_label.setBuddy(self.model_combo)
+        model_form = QFormLayout()
+        model_form.setFieldGrowthPolicy(
+            QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow
+        )
+        model_form.addRow(self.model_label, self.model_combo)
+        model_layout.addLayout(model_form)
 
-        self.details = QLabel(self)
-        self.details.setWordWrap(True)
+        self.details = _label(parent=self.model_card, role="secondary")
         self.details.setAccessibleName(tr("Selected model details"))
-        layout.addWidget(self.details)
+        self.details.setTextInteractionFlags(
+            Qt.TextInteractionFlag.TextSelectableByKeyboard
+        )
+        model_layout.addWidget(self.details)
 
-        self.state = QLabel(self)
-        self.state.setWordWrap(True)
+        self.state = _label(parent=self.model_card, role="statusBadge")
         self.state.setAccessibleName(tr("Selected model status"))
-        layout.addWidget(self.state)
+        model_layout.addWidget(self.state)
 
         self.progress = QProgressBar(self)
         self.progress.setAccessibleName(tr("Model operation progress"))
         self.progress.setTextVisible(True)
         self.progress.hide()
-        layout.addWidget(self.progress)
+        model_layout.addWidget(self.progress)
 
         button_row = QHBoxLayout()
-        self.download_button = QPushButton(f"&{tr('Download')}", self)
+        self.download_button = QPushButton(f"&{tr('Download model')}", self)
         self.download_button.setAccessibleName(tr("Download selected model"))
-        self.activate_button = QPushButton(f"&{tr('Use model')}", self)
+        self.download_button.setProperty("buttonRole", "primary")
+        self.activate_button = QPushButton(f"&{tr('Use this model')}", self)
         self.activate_button.setAccessibleName(tr("Use selected speech model"))
-        self.remove_button = QPushButton(f"&{tr('Remove')}", self)
+        self.activate_button.setProperty("buttonRole", "primary")
+        self.remove_button = QPushButton(f"&{tr('Remove from this PC')}", self)
         self.remove_button.setAccessibleName(tr("Remove selected model"))
-        self.import_button = QPushButton(f"&{tr('Import folder…')}", self)
+        self.remove_button.setProperty("buttonRole", "destructive")
+        self.import_button = QPushButton(f"&{tr('Choose model folder…')}", self)
         self.import_button.setAccessibleName(tr("Import a Skrivi model folder"))
         self.cancel_button = QPushButton(f"&{tr('Cancel download')}", self)
         self.cancel_button.setAccessibleName(tr("Cancel model download"))
@@ -126,9 +172,28 @@ class ModelManagerPanel(QWidget):
         button_row.addWidget(self.download_button)
         button_row.addWidget(self.activate_button)
         button_row.addWidget(self.remove_button)
-        button_row.addWidget(self.import_button)
         button_row.addWidget(self.cancel_button)
-        layout.addLayout(button_row)
+        button_row.addStretch(1)
+        model_layout.addLayout(button_row)
+        layout.addWidget(self.model_card)
+
+        self.import_card, import_layout = _card(self, quiet=True)
+        self.import_title = _label(
+            tr("Already have a model?"), parent=self.import_card, role="sectionTitle"
+        )
+        import_layout.addWidget(self.import_title)
+        self.import_help = _label(
+            tr("Import a verified Skrivi model folder copied from another computer."),
+            parent=self.import_card,
+            role="secondary",
+        )
+        import_layout.addWidget(self.import_help)
+        import_row = QHBoxLayout()
+        import_row.addWidget(self.import_button)
+        import_row.addStretch(1)
+        import_layout.addLayout(import_row)
+        layout.addWidget(self.import_card)
+        layout.addStretch(1)
 
         self.download_button.clicked.connect(self._download)
         self.activate_button.clicked.connect(self._activate)
@@ -147,6 +212,12 @@ class ModelManagerPanel(QWidget):
                 self.import_button,
             ):
                 button.setEnabled(False)
+            for button in (
+                self.download_button,
+                self.activate_button,
+                self.remove_button,
+            ):
+                button.hide()
         self.refresh()
 
     def selected_identifier(self) -> str:
@@ -164,11 +235,13 @@ class ModelManagerPanel(QWidget):
         self.setAccessibleName(tr("Local speech models"))
         self.introduction.setText(
             tr(
-                "Speech models are installed on this PC. Downloading a new model "
-                "uses the internet only when you request it. Installed models work "
-                "without an internet connection."
+                "Choose the balance between speed and accuracy. Models are stored "
+                "on this PC and work offline after download."
             )
         )
+        self.page_title.setText(tr("Speech models"))
+        self.model_card_title.setText(tr("Choose a model"))
+        self.model_label.setText(f"&{tr('Model')}:")
         self.introduction.setAccessibleName(
             tr("Model privacy and download explanation")
         )
@@ -188,13 +261,17 @@ class ModelManagerPanel(QWidget):
         self.details.setAccessibleName(tr("Selected model details"))
         self.state.setAccessibleName(tr("Selected model status"))
         self.progress.setAccessibleName(tr("Model operation progress"))
-        self.download_button.setText(f"&{tr('Download')}")
+        self.download_button.setText(f"&{tr('Download model')}")
         self.download_button.setAccessibleName(tr("Download selected model"))
-        self.activate_button.setText(f"&{tr('Use model')}")
+        self.activate_button.setText(f"&{tr('Use this model')}")
         self.activate_button.setAccessibleName(tr("Use selected speech model"))
-        self.remove_button.setText(f"&{tr('Remove')}")
+        self.remove_button.setText(f"&{tr('Remove from this PC')}")
         self.remove_button.setAccessibleName(tr("Remove selected model"))
-        self.import_button.setText(f"&{tr('Import folder…')}")
+        self.import_title.setText(tr("Already have a model?"))
+        self.import_help.setText(
+            tr("Import a verified Skrivi model folder copied from another computer.")
+        )
+        self.import_button.setText(f"&{tr('Choose model folder…')}")
         self.import_button.setAccessibleName(tr("Import a Skrivi model folder"))
         self.cancel_button.setText(f"&{tr('Cancel download')}")
         self.cancel_button.setAccessibleName(tr("Cancel model download"))
@@ -251,6 +328,9 @@ class ModelManagerPanel(QWidget):
         else:
             state = tr("Not installed. Download requires an internet connection.")
         self.state.setText(state)
+        self.download_button.setVisible(not installed)
+        self.activate_button.setVisible(installed and not active)
+        self.remove_button.setVisible(installed and not active)
         self.download_button.setEnabled(not installed)
         self.activate_button.setEnabled(installed and not active)
         self.remove_button.setEnabled(installed and not active)
@@ -296,6 +376,12 @@ class ModelManagerPanel(QWidget):
         self.cancel_button.setVisible(busy and cancellable)
         self.cancel_button.setEnabled(busy and cancellable)
         if busy:
+            for button in (
+                self.download_button,
+                self.activate_button,
+                self.remove_button,
+            ):
+                button.hide()
             self.progress.setRange(0, 0)
             self.progress.setFormat(tr("Working locally…"))
 

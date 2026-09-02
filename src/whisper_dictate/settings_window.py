@@ -3,15 +3,17 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import replace
 
-from PySide6.QtCore import QSignalBlocker, Qt, Signal, Slot
-from PySide6.QtGui import QKeyEvent, QKeySequence, QShortcut
+from PySide6.QtCore import QSignalBlocker, Qt, QUrl, Signal, Slot
+from PySide6.QtGui import QDesktopServices, QKeyEvent, QKeySequence, QShortcut
 from PySide6.QtWidgets import (
+    QApplication,
     QCheckBox,
     QComboBox,
     QDialog,
     QDialogButtonBox,
     QFormLayout,
-    QGroupBox,
+    QFrame,
+    QGridLayout,
     QHBoxLayout,
     QLabel,
     QMessageBox,
@@ -36,6 +38,7 @@ from whisper_dictate.hotkeys import (
 from whisper_dictate.i18n import (
     InterfaceLanguage,
     add_interface_language_listener,
+    current_interface_language,
     set_interface_language,
     tr,
 )
@@ -63,6 +66,65 @@ INTERFACE_LANGUAGE_CHOICES = (
     ("English", InterfaceLanguage.ENGLISH),
     ("Norwegian Bokmål", InterfaceLanguage.NORWEGIAN_BOKMAL),
 )
+
+PRIVACY_URL = "https://github.com/workavoidance/Skrivi/blob/main/docs/PRIVACY.md"
+PRIVACY_URL_NB = "https://github.com/workavoidance/Skrivi/blob/main/docs/PRIVACY_NB.md"
+SOURCE_URL = "https://github.com/workavoidance/Skrivi"
+WEBSITE_URL = "https://skrivi.no/"
+NOTICES_URL = "https://github.com/workavoidance/Skrivi/blob/main/THIRD_PARTY_NOTICES.md"
+
+
+def _set_ui_role(widget: QWidget, role: str) -> QWidget:
+    widget.setProperty("uiRole", role)
+    return widget
+
+
+def _text_label(
+    text: str = "",
+    parent: QWidget | None = None,
+    *,
+    role: str | None = None,
+    selectable: bool = False,
+) -> QLabel:
+    label = QLabel(text, parent)
+    label.setWordWrap(True)
+    if role is not None:
+        _set_ui_role(label, role)
+    if selectable:
+        label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByKeyboard)
+    return label
+
+
+def _card(parent: QWidget, *, quiet: bool = False) -> tuple[QFrame, QVBoxLayout]:
+    frame = QFrame(parent)
+    _set_ui_role(frame, "quietCard" if quiet else "card")
+    layout = QVBoxLayout(frame)
+    layout.setContentsMargins(18, 16, 18, 17)
+    layout.setSpacing(10)
+    return frame, layout
+
+
+def _add_section_heading(
+    layout: QVBoxLayout,
+    title: str,
+    description: str | None = None,
+) -> tuple[QLabel, QLabel | None]:
+    title_label = _text_label(title, role="sectionTitle")
+    layout.addWidget(title_label)
+    description_label = None
+    if description:
+        description_label = _text_label(description, role="secondary")
+        layout.addWidget(description_label)
+    return title_label, description_label
+
+
+def _scrollable_page(page: QWidget, owner: QWidget) -> QScrollArea:
+    scroll = QScrollArea(owner)
+    scroll.setWidgetResizable(True)
+    scroll.setFrameShape(QScrollArea.Shape.NoFrame)
+    scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+    scroll.setWidget(page)
+    return scroll
 
 
 def hotkey_from_qt_key(
@@ -233,35 +295,47 @@ class SettingsWindow(QDialog):
         self._settings_warning: str | None = None
         self._status_state = "starting"
         self._selected_hotkey = DEFAULT_HOTKEY
-        self.setWindowTitle(tr("{title} Settings", title=title))
+        self.setWindowTitle(tr("Settings"))
         self.setWindowModality(Qt.WindowModality.NonModal)
-        self.setMinimumSize(600, 560)
+        self.setMinimumSize(640, 520)
+        self.resize(760, 680)
         self.setAccessibleName(tr("Skrivi settings"))
         self.setAccessibleDescription(
             tr("Configure Skrivi and review its local privacy behaviour.")
         )
 
         root = QVBoxLayout(self)
-        root.setContentsMargins(20, 20, 20, 16)
-        root.setSpacing(14)
+        root.setContentsMargins(24, 20, 24, 18)
+        root.setSpacing(16)
 
-        self._heading = QLabel(tr("Skrivi settings"), self)
+        header = QHBoxLayout()
+        header.setSpacing(16)
+        header_copy = QVBoxLayout()
+        header_copy.setSpacing(2)
+        self._product_name = _text_label("Skrivi", self, role="eyebrow")
+        header_copy.addWidget(self._product_name)
+        self._heading = _text_label(tr("Settings"), self, role="windowTitle")
         self._heading.setAccessibleName(tr("Skrivi settings heading"))
-        heading_font = self._heading.font()
-        heading_font.setBold(True)
-        heading_font.setPointSize(max(heading_font.pointSize() + 5, 16))
-        self._heading.setFont(heading_font)
-        root.addWidget(self._heading)
-
-        self._warning = QLabel(self)
-        self._warning.setWordWrap(True)
-        self._warning.setAccessibleName(tr("Settings warning"))
-        self._warning.setTextInteractionFlags(
-            Qt.TextInteractionFlag.TextSelectableByKeyboard
+        header_copy.addWidget(self._heading)
+        self._header_description = _text_label(
+            tr("Choose how Skrivi listens, looks and starts."),
+            self,
+            role="secondary",
         )
+        header_copy.addWidget(self._header_description)
+        header.addLayout(header_copy, 1)
+        self._header_icon = QLabel(self)
+        self._header_icon.setPixmap(QApplication.windowIcon().pixmap(46, 46))
+        self._header_icon.setAccessibleName(tr("Skrivi logo"))
+        header.addWidget(self._header_icon, 0, Qt.AlignmentFlag.AlignTop)
+        root.addLayout(header)
+
+        self._warning = _text_label(parent=self, role="warning", selectable=True)
+        self._warning.setAccessibleName(tr("Settings warning"))
         root.addWidget(self._warning)
 
         self.tabs = QTabWidget(self)
+        self.tabs.setDocumentMode(True)
         self.tabs.setAccessibleName(tr("Settings sections"))
         self.tabs.addTab(self._general_page(), f"&{tr('General')}")
         self.model_panel = ModelManagerPanel(model_manager, model_runtime, self)
@@ -270,6 +344,7 @@ class SettingsWindow(QDialog):
         self.tabs.addTab(self._privacy_page(), f"&{tr('Privacy')}")
         self.tabs.addTab(self._about_page(), f"&{tr('About')}")
         root.addWidget(self.tabs, 1)
+        self.manage_models_button.clicked.connect(lambda: self.tabs.setCurrentIndex(1))
 
         self.buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Save
@@ -279,10 +354,21 @@ class SettingsWindow(QDialog):
         self.buttons.setAccessibleName(tr("Settings actions"))
         self.buttons.accepted.connect(self._save)
         self.buttons.rejected.connect(self.reject)
-        root.addWidget(self.buttons)
+
+        footer = QHBoxLayout()
+        footer.setSpacing(12)
+        self._save_hint = _text_label(
+            tr("Ctrl+S saves changes"), self, role="secondary"
+        )
+        self._save_hint.setWordWrap(False)
+        footer.addWidget(self._save_hint)
+        footer.addStretch(1)
+        footer.addWidget(self.buttons)
+        root.addLayout(footer)
 
         save_button = self.buttons.button(QDialogButtonBox.StandardButton.Save)
         if save_button is not None:
+            save_button.setProperty("buttonRole", "primary")
             save_button.setText(f"&{tr('Save')}")
             save_button.setAccessibleName(tr("Save settings"))
         cancel_button = self.buttons.button(QDialogButtonBox.StandardButton.Cancel)
@@ -309,63 +395,81 @@ class SettingsWindow(QDialog):
 
     def _general_page(self) -> QWidget:
         page = QWidget(self)
+        page.setObjectName("settingsPage")
         layout = QVBoxLayout(page)
-        layout.setContentsMargins(12, 14, 12, 12)
-        layout.setSpacing(16)
+        layout.setContentsMargins(6, 10, 6, 14)
+        layout.setSpacing(14)
 
-        self._status_group = QGroupBox(tr("Current status"), page)
-        status_layout = QVBoxLayout(self._status_group)
-        self._status = QLabel(tr("Starting"), self._status_group)
+        self._status_card = QFrame(page)
+        _set_ui_role(self._status_card, "quietCard")
+        status_layout = QHBoxLayout(self._status_card)
+        status_layout.setContentsMargins(16, 11, 16, 12)
+        status_layout.setSpacing(12)
+        self._status_dot = QLabel("●", self._status_card)
+        self._status_dot.setObjectName("statusDot")
+        self._status_dot.setProperty("statusState", self._status_state)
+        self._status_dot.setAccessibleName(tr("Status symbol"))
+        status_layout.addWidget(self._status_dot)
+        status_copy = QVBoxLayout()
+        status_copy.setSpacing(1)
+        self._status_title = _text_label(
+            tr("Current status"), self._status_card, role="secondary"
+        )
+        status_copy.addWidget(self._status_title)
+        self._status = _text_label(
+            tr("Starting"), self._status_card, role="value", selectable=True
+        )
         self._status.setWordWrap(True)
         self._status.setAccessibleName(tr("Current dictation status"))
-        status_layout.addWidget(self._status)
-        layout.addWidget(self._status_group)
+        status_copy.addWidget(self._status)
+        status_layout.addLayout(status_copy, 1)
+        layout.addWidget(self._status_card)
 
-        self._setup_group = QGroupBox(tr("Dictation setup"), page)
-        setup_layout = QFormLayout(self._setup_group)
+        self._dictation_card, dictation_layout = _card(page)
+        self._dictation_title, self._dictation_description = _add_section_heading(
+            dictation_layout,
+            tr("Dictation"),
+            tr("Choose what Skrivi listens for and how you start speaking."),
+        )
+        setup_layout = QFormLayout()
+        setup_layout.setContentsMargins(0, 6, 0, 0)
+        setup_layout.setHorizontalSpacing(18)
+        setup_layout.setVerticalSpacing(10)
+        setup_layout.setLabelAlignment(Qt.AlignmentFlag.AlignLeft)
+        setup_layout.setFieldGrowthPolicy(
+            QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow
+        )
 
-        self.language_combo = QComboBox(self._setup_group)
+        self.language_combo = QComboBox(self._dictation_card)
         self.language_combo.setAccessibleName(tr("Dictation language"))
         for label, mode in LANGUAGE_CHOICES:
             self.language_combo.addItem(tr(label), mode.value)
-        self._language_label = QLabel(f"&{tr('Language')}:", self._setup_group)
+        self._language_label = QLabel(f"&{tr('Language')}:", self._dictation_card)
         self._language_label.setBuddy(self.language_combo)
         setup_layout.addRow(self._language_label, self.language_combo)
-        self._language_help = QLabel(
-            tr(
-                "Automatic detects one language per recording and works best with a "
-                "complete phrase. Multilingual can detect language again within a "
-                "recording."
-            ),
-            self._setup_group,
+        self._language_help = _text_label(
+            parent=self._dictation_card,
+            role="secondary",
         )
-        self._language_help.setWordWrap(True)
         setup_layout.addRow(self._language_help)
+        self.language_combo.currentIndexChanged.connect(self._set_language_help)
 
         self._model = self._value_label(tr("Speech model value"))
-        self._model_label = QLabel(f"{tr('Speech model')}:", self._setup_group)
-        setup_layout.addRow(self._model_label, self._model)
+        model_row = QWidget(self._dictation_card)
+        model_layout = QHBoxLayout(model_row)
+        model_layout.setContentsMargins(0, 0, 0, 0)
+        model_layout.setSpacing(8)
+        model_layout.addWidget(self._model, 1)
+        self.manage_models_button = QPushButton(f"&{tr('Models…')}", model_row)
+        self.manage_models_button.setAccessibleName(tr("Manage speech models"))
+        model_layout.addWidget(self.manage_models_button)
+        self._model_label = QLabel(f"{tr('Speech model')}:", self._dictation_card)
+        setup_layout.addRow(self._model_label, model_row)
 
-        self.interface_language_combo = QComboBox(self._setup_group)
-        self.interface_language_combo.setAccessibleName(tr("Interface language"))
-        for label, language in INTERFACE_LANGUAGE_CHOICES:
-            self.interface_language_combo.addItem(tr(label), language.value)
-        self._interface_language_label = QLabel(
-            f"{tr('Interface language')}:", self._setup_group
-        )
-        self._interface_language_label.setBuddy(self.interface_language_combo)
-        setup_layout.addRow(
-            self._interface_language_label, self.interface_language_combo
-        )
-        self._interface_help = QLabel(
-            tr("Interface language updates immediately."), self._setup_group
-        )
-        self._interface_help.setWordWrap(True)
-        setup_layout.addRow(self._interface_help)
-
-        microphone_row = QWidget(self._setup_group)
+        microphone_row = QWidget(self._dictation_card)
         microphone_layout = QHBoxLayout(microphone_row)
         microphone_layout.setContentsMargins(0, 0, 0, 0)
+        microphone_layout.setSpacing(8)
         self.microphone_combo = QComboBox(microphone_row)
         self.microphone_combo.setAccessibleName(tr("Microphone"))
         self.refresh_microphones_button = QPushButton(
@@ -375,17 +479,19 @@ class SettingsWindow(QDialog):
         self.refresh_microphones_button.clicked.connect(self._refresh_microphones)
         microphone_layout.addWidget(self.microphone_combo, 1)
         microphone_layout.addWidget(self.refresh_microphones_button)
-        self._microphone_label = QLabel(f"&{tr('Microphone')}:", self._setup_group)
+        self._microphone_label = QLabel(f"&{tr('Microphone')}:", self._dictation_card)
         self._microphone_label.setBuddy(self.microphone_combo)
         setup_layout.addRow(self._microphone_label, microphone_row)
-        self._microphone_help = QLabel(self._setup_group)
-        self._microphone_help.setWordWrap(True)
+        self._microphone_help = _text_label(
+            parent=self._dictation_card, role="secondary"
+        )
         self._microphone_help.setAccessibleName(tr("Microphone availability"))
         setup_layout.addRow(self._microphone_help)
 
-        hotkey_row = QWidget(self._setup_group)
+        hotkey_row = QWidget(self._dictation_card)
         hotkey_layout = QHBoxLayout(hotkey_row)
         hotkey_layout.setContentsMargins(0, 0, 0, 0)
+        hotkey_layout.setSpacing(8)
         self._hotkey = self._value_label(tr("Push-to-talk key value"))
         self.hotkey_capture_button = HotkeyCaptureButton(
             hotkey_row, can_capture=self._can_change_input
@@ -399,16 +505,16 @@ class SettingsWindow(QDialog):
         hotkey_layout.addWidget(self._hotkey, 1)
         hotkey_layout.addWidget(self.hotkey_capture_button)
         hotkey_layout.addWidget(self.restore_hotkey_button)
-        self._hotkey_label = QLabel(f"{tr('Push-to-talk key')}:", self._setup_group)
+        self._hotkey_label = QLabel(f"{tr('Push-to-talk key')}:", self._dictation_card)
         setup_layout.addRow(self._hotkey_label, hotkey_row)
-        self._hotkey_help = QLabel(
+        self._hotkey_help = _text_label(
             tr(
                 "Safe choices are Right Ctrl and F6 through F12. "
                 "Press Escape to cancel key capture."
             ),
-            self._setup_group,
+            self._dictation_card,
+            role="secondary",
         )
-        self._hotkey_help.setWordWrap(True)
         self._hotkey_help.setAccessibleName(tr("Push-to-talk key guidance"))
         setup_layout.addRow(self._hotkey_help)
         self.hotkey_capture_button.hotkey_captured.connect(self._set_hotkey)
@@ -420,13 +526,46 @@ class SettingsWindow(QDialog):
         self.restore_hotkey_button.clicked.connect(
             lambda: self._set_hotkey(DEFAULT_HOTKEY)
         )
-        layout.addWidget(self._setup_group)
+        dictation_layout.addLayout(setup_layout)
+        layout.addWidget(self._dictation_card)
 
-        self._appearance_group = QGroupBox(tr("Appearance"), page)
-        appearance_layout = QVBoxLayout(self._appearance_group)
+        self._application_card, application_layout = _card(page)
+        self._application_title, self._application_description = _add_section_heading(
+            application_layout,
+            tr("Application"),
+            tr("Choose how Skrivi looks and behaves when Windows starts."),
+        )
+        application_form = QFormLayout()
+        application_form.setContentsMargins(0, 6, 0, 2)
+        application_form.setHorizontalSpacing(18)
+        application_form.setVerticalSpacing(10)
+        application_form.setLabelAlignment(Qt.AlignmentFlag.AlignLeft)
+        application_form.setFieldGrowthPolicy(
+            QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow
+        )
+
+        self.interface_language_combo = QComboBox(self._application_card)
+        self.interface_language_combo.setAccessibleName(tr("Interface language"))
+        for label, language in INTERFACE_LANGUAGE_CHOICES:
+            self.interface_language_combo.addItem(tr(label), language.value)
+        self._interface_language_label = QLabel(
+            f"{tr('Interface language')}:", self._application_card
+        )
+        self._interface_language_label.setBuddy(self.interface_language_combo)
+        application_form.addRow(
+            self._interface_language_label, self.interface_language_combo
+        )
+        self._interface_help = _text_label(
+            tr("Interface language updates immediately."),
+            self._application_card,
+            role="secondary",
+        )
+        application_form.addRow(self._interface_help)
+        application_layout.addLayout(application_form)
+
         self.overlay_checkbox = QCheckBox(
             f"&{tr('Show the compact status overlay while dictating')}",
-            self._appearance_group,
+            self._application_card,
         )
         self.overlay_checkbox.setAccessibleName(tr("Show dictation status overlay"))
         self.overlay_checkbox.setAccessibleDescription(
@@ -435,85 +574,209 @@ class SettingsWindow(QDialog):
                 "transcribes."
             )
         )
-        appearance_layout.addWidget(self.overlay_checkbox)
-        layout.addWidget(self._appearance_group)
+        application_layout.addWidget(self.overlay_checkbox)
 
-        self._startup_group = QGroupBox(tr("Startup"), page)
-        startup_layout = QVBoxLayout(self._startup_group)
         self.startup_checkbox = QCheckBox(
             f"&{tr('Start Skrivi automatically when I sign in')}",
-            self._startup_group,
+            self._application_card,
         )
         self.startup_checkbox.setAccessibleName(tr("Start Skrivi automatically"))
         self.startup_checkbox.setEnabled(self._startup_available)
-        startup_layout.addWidget(self.startup_checkbox)
-        self._startup_help = QLabel(self._startup_group)
-        self._startup_help.setWordWrap(True)
+        application_layout.addWidget(self.startup_checkbox)
+        self._startup_help = _text_label(
+            parent=self._application_card, role="secondary"
+        )
         self._startup_help.setAccessibleName(tr("Automatic startup guidance"))
-        startup_layout.addWidget(self._startup_help)
+        application_layout.addWidget(self._startup_help)
         self._set_startup_help()
-        layout.addWidget(self._startup_group)
+        layout.addWidget(self._application_card)
         layout.addStretch(1)
 
-        scroll = QScrollArea(self)
-        scroll.setWidgetResizable(True)
-        scroll.setFrameShape(QScrollArea.Shape.NoFrame)
-        scroll.setWidget(page)
-        return scroll
+        return _scrollable_page(page, self)
 
     @staticmethod
     def _value_label(accessible_name: str) -> QLabel:
-        label = QLabel()
+        label = _text_label(role="value")
         label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByKeyboard)
         label.setAccessibleName(accessible_name)
         return label
 
     def _privacy_page(self) -> QWidget:
         page = QWidget(self)
+        page.setObjectName("settingsPage")
         layout = QVBoxLayout(page)
-        layout.setContentsMargins(12, 14, 12, 12)
-        self._privacy = QLabel(
+        layout.setContentsMargins(6, 16, 6, 14)
+        layout.setSpacing(14)
+
+        self._privacy_title = _text_label(
+            tr("Your words stay yours."), page, role="pageTitle"
+        )
+        layout.addWidget(self._privacy_title)
+        self._privacy = _text_label(
             tr(
-                "Speech is processed locally on this PC. Skrivi does not save your "
-                "recordings or transcripts, does not use the clipboard for dictated "
-                "text, and needs no account. After the selected speech model has been "
-                "downloaded, normal dictation does not require internet access."
+                "Skrivi is designed to turn your speech into text without creating "
+                "an account or sending your dictation to us."
             ),
             page,
-        )
-        self._privacy.setWordWrap(True)
-        self._privacy.setAlignment(
-            Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft
-        )
-        self._privacy.setTextInteractionFlags(
-            Qt.TextInteractionFlag.TextSelectableByKeyboard
+            role="secondary",
+            selectable=True,
         )
         self._privacy.setAccessibleName(tr("Skrivi privacy summary"))
         layout.addWidget(self._privacy)
+
+        facts = QGridLayout()
+        facts.setHorizontalSpacing(12)
+        facts.setVerticalSpacing(12)
+        fact_copy = (
+            (
+                "Processed on this PC",
+                "Your recording is transcribed locally by the speech model installed "
+                "on this computer.",
+            ),
+            (
+                "Nothing saved by Skrivi",
+                "Skrivi does not keep a history of recordings or dictated text.",
+            ),
+            (
+                "No account or clipboard",
+                "You do not sign in, and dictated text is inserted without using the "
+                "Windows clipboard.",
+            ),
+            (
+                "Works offline after setup",
+                "Internet is needed to download a speech model. Installed models work "
+                "without it.",
+            ),
+        )
+        self._privacy_facts: list[tuple[QLabel, QLabel, str, str]] = []
+        for index, (title, body) in enumerate(fact_copy):
+            fact_card, fact_layout = _card(page, quiet=True)
+            title_label, _ = _add_section_heading(fact_layout, tr(title))
+            body_label = _text_label(
+                tr(body), fact_card, role="secondary", selectable=True
+            )
+            fact_layout.addWidget(body_label)
+            facts.addWidget(fact_card, index // 2, index % 2)
+            self._privacy_facts.append((title_label, body_label, title, body))
+        layout.addLayout(facts)
+
+        self._privacy_boundary_card, boundary_layout = _card(page)
+        self._privacy_boundary_title, _ = _add_section_heading(
+            boundary_layout, tr("One important boundary")
+        )
+        self._privacy_boundary = _text_label(
+            tr(
+                "The app receiving your text, such as Word, a browser or a school "
+                "platform, may save or sync it according to that app's own settings."
+            ),
+            self._privacy_boundary_card,
+            role="secondary",
+            selectable=True,
+        )
+        boundary_layout.addWidget(self._privacy_boundary)
+        layout.addWidget(self._privacy_boundary_card)
+
+        privacy_actions = QHBoxLayout()
+        self.privacy_details_button = QPushButton(
+            f"&{tr('Read full privacy details')}", page
+        )
+        self.privacy_details_button.setAccessibleName(tr("Open privacy documentation"))
+        self.privacy_details_button.clicked.connect(self._open_privacy_details)
+        privacy_actions.addWidget(self.privacy_details_button)
+        privacy_actions.addStretch(1)
+        layout.addLayout(privacy_actions)
         layout.addStretch(1)
-        return page
+        return _scrollable_page(page, self)
 
     def _about_page(self) -> QWidget:
         page = QWidget(self)
+        page.setObjectName("settingsPage")
         layout = QVBoxLayout(page)
-        layout.setContentsMargins(12, 14, 12, 12)
-        self._about = QLabel(
-            tr(
-                "Skrivi is free and open-source local speech-to-text software.\n\n"
-                "The interface uses PySide6 and Qt under their open-source licences. "
-                "See THIRD_PARTY_NOTICES.md included with Skrivi for copyright and "
-                "licence information."
-            ),
-            page,
+        layout.setContentsMargins(6, 16, 6, 14)
+        layout.setSpacing(14)
+
+        about_header = QHBoxLayout()
+        about_header.setSpacing(16)
+        self._about_icon = QLabel(page)
+        self._about_icon.setPixmap(QApplication.windowIcon().pixmap(60, 60))
+        self._about_icon.setAccessibleName(tr("Skrivi logo"))
+        about_header.addWidget(self._about_icon, 0, Qt.AlignmentFlag.AlignTop)
+        about_copy = QVBoxLayout()
+        about_copy.setSpacing(3)
+        self._about_title = _text_label("Skrivi", page, role="pageTitle")
+        about_copy.addWidget(self._about_title)
+        self._about_tagline = _text_label(
+            tr("Get your thoughts onto the page."), page, role="secondary"
         )
-        self._about.setWordWrap(True)
-        self._about.setTextInteractionFlags(
-            Qt.TextInteractionFlag.TextSelectableByKeyboard
+        about_copy.addWidget(self._about_tagline)
+        self._about_version = _text_label(
+            self._title, page, role="statusBadge", selectable=True
+        )
+        self._about_version.setWordWrap(False)
+        self._about_version.setAccessibleName(tr("Skrivi version"))
+        about_copy.addWidget(self._about_version, 0, Qt.AlignmentFlag.AlignLeft)
+        about_header.addLayout(about_copy, 1)
+        layout.addLayout(about_header)
+
+        self._about_card, about_layout = _card(page)
+        self._about_section_title, _ = _add_section_heading(
+            about_layout, tr("Free, local and open source")
+        )
+        self._about = _text_label(
+            tr(
+                "Skrivi is a small speech-to-text tool. It transcribes your own words "
+                "locally and does not generate answers or rewrite what you say."
+            ),
+            self._about_card,
+            role="secondary",
+            selectable=True,
         )
         self._about.setAccessibleName(tr("About Skrivi"))
-        layout.addWidget(self._about)
+        about_layout.addWidget(self._about)
+        layout.addWidget(self._about_card)
+
+        self._links_card, links_layout = _card(page, quiet=True)
+        self._links_title, self._links_description = _add_section_heading(
+            links_layout,
+            tr("Learn more"),
+            tr("Open documentation in your web browser."),
+        )
+        links = QHBoxLayout()
+        links.setSpacing(8)
+        self.website_button = QPushButton(f"&{tr('Website')}", self._links_card)
+        self.website_button.setAccessibleName(tr("Open Skrivi website"))
+        self.website_button.clicked.connect(
+            lambda: QDesktopServices.openUrl(QUrl(WEBSITE_URL))
+        )
+        self.source_button = QPushButton(f"&{tr('Source code')}", self._links_card)
+        self.source_button.setAccessibleName(tr("Open Skrivi source code"))
+        self.source_button.clicked.connect(
+            lambda: QDesktopServices.openUrl(QUrl(SOURCE_URL))
+        )
+        self.notices_button = QPushButton(
+            f"&{tr('Third-party licences')}", self._links_card
+        )
+        self.notices_button.setAccessibleName(tr("Open third-party licence notices"))
+        self.notices_button.clicked.connect(
+            lambda: QDesktopServices.openUrl(QUrl(NOTICES_URL))
+        )
+        links.addWidget(self.website_button)
+        links.addWidget(self.source_button)
+        links.addWidget(self.notices_button)
+        links.addStretch(1)
+        links_layout.addLayout(links)
+        layout.addWidget(self._links_card)
         layout.addStretch(1)
-        return page
+        return _scrollable_page(page, self)
+
+    @Slot()
+    def _open_privacy_details(self) -> None:
+        url = (
+            PRIVACY_URL_NB
+            if current_interface_language() is InterfaceLanguage.NORWEGIAN_BOKMAL
+            else PRIVACY_URL
+        )
+        QDesktopServices.openUrl(QUrl(url))
 
     def _set_hotkey(self, identifier: str) -> None:
         try:
@@ -546,6 +809,22 @@ class SettingsWindow(QDialog):
         index = self.language_combo.findData(language.value)
         self.language_combo.setCurrentIndex(max(index, 0))
 
+    @Slot(int)
+    def _set_language_help(self, _index: int = -1) -> None:
+        descriptions = {
+            LanguageMode.AUTOMATIC.value: (
+                "Detects English or Norwegian for each dictation. Best for most people."
+            ),
+            LanguageMode.ENGLISH.value: "Always listens for English.",
+            LanguageMode.NORWEGIAN.value: "Always listens for Norwegian.",
+            LanguageMode.MULTILINGUAL.value: (
+                "Can switch languages within one dictation, but may be less accurate."
+            ),
+        }
+        key = self.language_combo.currentData() or LanguageMode.AUTOMATIC.value
+        self._language_help.setText(tr(descriptions[str(key)]))
+        self._language_help.setAccessibleName(tr("Dictation language guidance"))
+
     @staticmethod
     def _replace_choices(combo: QComboBox, choices) -> None:
         selected = combo.currentData()
@@ -566,13 +845,17 @@ class SettingsWindow(QDialog):
         )
 
     def retranslate_ui(self) -> None:
-        self.setWindowTitle(tr("{title} Settings", title=self._title))
+        self.setWindowTitle(tr("Settings"))
         self.setAccessibleName(tr("Skrivi settings"))
         self.setAccessibleDescription(
             tr("Configure Skrivi and review its local privacy behaviour.")
         )
-        self._heading.setText(tr("Skrivi settings"))
+        self._heading.setText(tr("Settings"))
         self._heading.setAccessibleName(tr("Skrivi settings heading"))
+        self._header_description.setText(
+            tr("Choose how Skrivi listens, looks and starts.")
+        )
+        self._header_icon.setAccessibleName(tr("Skrivi logo"))
         self._warning.setAccessibleName(tr("Settings warning"))
         self._warning.setText(
             tr(self._settings_warning) if self._settings_warning else ""
@@ -591,24 +874,29 @@ class SettingsWindow(QDialog):
         if cancel_button is not None:
             cancel_button.setText(f"&{tr('Cancel')}")
             cancel_button.setAccessibleName(tr("Cancel changes"))
+        self._save_hint.setText(tr("Ctrl+S saves changes"))
 
-        self._status_group.setTitle(tr("Current status"))
+        self._status_title.setText(tr("Current status"))
         if self._status_state == "starting":
             self._status.setText(tr("Starting"))
         self._status.setAccessibleName(tr("Current dictation status"))
-        self._setup_group.setTitle(tr("Dictation setup"))
+        self._status_dot.setAccessibleName(tr("Status symbol"))
+        self._dictation_title.setText(tr("Dictation"))
+        self._dictation_description.setText(
+            tr("Choose what Skrivi listens for and how you start speaking.")
+        )
         self._replace_choices(self.language_combo, LANGUAGE_CHOICES)
         self.language_combo.setAccessibleName(tr("Dictation language"))
         self._language_label.setText(f"&{tr('Language')}:")
-        self._language_help.setText(
-            tr(
-                "Automatic detects one language per recording and works best with a "
-                "complete phrase. Multilingual can detect language again within a "
-                "recording."
-            )
-        )
+        self._set_language_help()
         self._model_label.setText(f"{tr('Speech model')}:")
         self._model.setAccessibleName(tr("Speech model value"))
+        self.manage_models_button.setText(f"&{tr('Models…')}")
+        self.manage_models_button.setAccessibleName(tr("Manage speech models"))
+        self._application_title.setText(tr("Application"))
+        self._application_description.setText(
+            tr("Choose how Skrivi looks and behaves when Windows starts.")
+        )
         self._replace_choices(self.interface_language_combo, INTERFACE_LANGUAGE_CHOICES)
         self.interface_language_combo.setAccessibleName(tr("Interface language"))
         self._interface_language_label.setText(f"{tr('Interface language')}:")
@@ -627,7 +915,6 @@ class SettingsWindow(QDialog):
         )
         self._set_hotkey(self._selected_hotkey)
         self._hotkey_help.setAccessibleName(tr("Push-to-talk key guidance"))
-        self._appearance_group.setTitle(tr("Appearance"))
         self.overlay_checkbox.setText(
             f"&{tr('Show the compact status overlay while dictating')}"
         )
@@ -638,31 +925,53 @@ class SettingsWindow(QDialog):
                 "transcribes."
             )
         )
-        self._startup_group.setTitle(tr("Startup"))
         self.startup_checkbox.setText(
             f"&{tr('Start Skrivi automatically when I sign in')}"
         )
         self.startup_checkbox.setAccessibleName(tr("Start Skrivi automatically"))
         self._startup_help.setAccessibleName(tr("Automatic startup guidance"))
         self._set_startup_help()
+
+        self._privacy_title.setText(tr("Your words stay yours."))
         self._privacy.setText(
             tr(
-                "Speech is processed locally on this PC. Skrivi does not save your "
-                "recordings or transcripts, does not use the clipboard for dictated "
-                "text, and needs no account. After the selected speech model has been "
-                "downloaded, normal dictation does not require internet access."
+                "Skrivi is designed to turn your speech into text without creating "
+                "an account or sending your dictation to us."
             )
         )
         self._privacy.setAccessibleName(tr("Skrivi privacy summary"))
+        for title_label, body_label, title, body in self._privacy_facts:
+            title_label.setText(tr(title))
+            body_label.setText(tr(body))
+        self._privacy_boundary_title.setText(tr("One important boundary"))
+        self._privacy_boundary.setText(
+            tr(
+                "The app receiving your text, such as Word, a browser or a school "
+                "platform, may save or sync it according to that app's own settings."
+            )
+        )
+        self.privacy_details_button.setText(f"&{tr('Read full privacy details')}")
+        self.privacy_details_button.setAccessibleName(tr("Open privacy documentation"))
+
+        self._about_icon.setAccessibleName(tr("Skrivi logo"))
+        self._about_tagline.setText(tr("Get your thoughts onto the page."))
+        self._about_version.setAccessibleName(tr("Skrivi version"))
+        self._about_section_title.setText(tr("Free, local and open source"))
         self._about.setText(
             tr(
-                "Skrivi is free and open-source local speech-to-text software.\n\n"
-                "The interface uses PySide6 and Qt under their open-source licences. "
-                "See THIRD_PARTY_NOTICES.md included with Skrivi for copyright and "
-                "licence information."
+                "Skrivi is a small speech-to-text tool. It transcribes your own words "
+                "locally and does not generate answers or rewrite what you say."
             )
         )
         self._about.setAccessibleName(tr("About Skrivi"))
+        self._links_title.setText(tr("Learn more"))
+        self._links_description.setText(tr("Open documentation in your web browser."))
+        self.website_button.setText(f"&{tr('Website')}")
+        self.website_button.setAccessibleName(tr("Open Skrivi website"))
+        self.source_button.setText(f"&{tr('Source code')}")
+        self.source_button.setAccessibleName(tr("Open Skrivi source code"))
+        self.notices_button.setText(f"&{tr('Third-party licences')}")
+        self.notices_button.setAccessibleName(tr("Open third-party licence notices"))
         self._refresh_microphones()
         self.model_panel.retranslate_ui()
 
@@ -711,6 +1020,7 @@ class SettingsWindow(QDialog):
         self.overlay_checkbox.setChecked(self._settings.overlay_enabled)
         self.startup_checkbox.setChecked(self._settings.start_with_system)
         self._select_language(self._settings.language)
+        self._set_language_help()
         blocker = QSignalBlocker(self.interface_language_combo)
         interface_index = self.interface_language_combo.findData(
             self._settings.interface_language.value
@@ -748,6 +1058,10 @@ class SettingsWindow(QDialog):
     def set_status(self, state: str, text: str) -> None:
         self._status_state = state
         self._status.setText(text)
+        self._status_dot.setProperty("statusState", state)
+        self._status_dot.style().unpolish(self._status_dot)
+        self._status_dot.style().polish(self._status_dot)
+        self._status_dot.update()
 
     @Slot()
     def reject(self) -> None:
