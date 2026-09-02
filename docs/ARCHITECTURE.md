@@ -1,5 +1,7 @@
 # Architecture
 
+**Language:** [Norsk](ARCHITECTURE_NB.md) | English
+
 Skrivi is a Windows tray application with a privacy-first local speech pipeline.
 
 ## Current flow

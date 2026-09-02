@@ -1,5 +1,7 @@
 # Security policy
 
+**Language:** [Norsk](SECURITY_NB.md) | English
+
 ## Supported versions
 
 Skrivi is pre-1.0 software. Security fixes are applied to the latest

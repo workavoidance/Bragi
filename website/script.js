@@ -14,6 +14,10 @@
       element.setAttribute('aria-label', norwegian ? element.dataset.ariaNb : element.dataset.ariaEn);
     });
 
+    document.querySelectorAll('[data-href-nb][data-href-en]').forEach((element) => {
+      element.href = norwegian ? element.dataset.hrefNb : element.dataset.hrefEn;
+    });
+
     const description = document.querySelector('meta[name="description"]');
     if (description) {
       description.content = norwegian
