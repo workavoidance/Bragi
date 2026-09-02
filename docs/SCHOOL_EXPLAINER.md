@@ -1,5 +1,7 @@
 # Skrivi: Offline Speech-to-Text Support for Pupils with Reading and Writing Difficulties
 
+**Language:** [Norsk](SCHOOL_EXPLAINER_NB.md) | English
+
 > **Draft for discussion with schools.** Skrivi is currently alpha software. This document explains its intended design and use as an accessibility tool; it does not claim that Skrivi is formally approved by Udir, Oslo kommune, or any school.
 
 ## What is Skrivi?

@@ -1,5 +1,7 @@
 # Privacy model
 
+**Language:** [Norsk](PRIVACY_NB.md) | English
+
 Skrivi is designed to perform speech recognition locally.
 
 ## Data that persists
