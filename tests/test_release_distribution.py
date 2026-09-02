@@ -4,7 +4,7 @@ import tomllib
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-TAG = "v0.2.0-alpha.1"
+TAG = "v0.2.0-alpha.2"
 INSTALLER = f"Skrivi-{TAG}-windows-x64-setup.exe"
 INSTALLER_URL = (
     f"https://github.com/workavoidance/Skrivi/releases/download/{TAG}/{INSTALLER}"
@@ -17,10 +17,16 @@ def test_alpha_version_is_consistent_across_package_and_installer() -> None:
         encoding="utf-8"
     )
     installer = (ROOT / "build_installer.ps1").read_text(encoding="utf-8")
+    preview = (ROOT / ".github" / "workflows" / "preview.yml").read_text(
+        encoding="utf-8"
+    )
 
-    assert project["project"]["version"] == "0.2.0a1"
-    assert '__version__ = "0.2.0a1"' in package
-    assert '[string]$Version = "0.2.0-alpha.1"' in installer
+    assert project["project"]["version"] == "0.2.0a2"
+    assert '__version__ = "0.2.0a2"' in package
+    assert '[string]$Version = "0.2.0-alpha.2"' in installer
+    assert '-Version "0.2.0-alpha.2-pr.${{ github.event.pull_request.number }}"' in (
+        preview
+    )
 
 
 def test_website_and_readme_link_directly_to_alpha_installer() -> None:

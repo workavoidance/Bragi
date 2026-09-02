@@ -5,6 +5,33 @@ here before a release.
 
 ## [Unreleased]
 
+## [0.2.0-alpha.2] - 2026-09-02
+
+### Changed
+
+- Redesign the settings window around a calmer, more deliberate visual
+  hierarchy with compact status, dictation, application, model, privacy, and
+  product-information sections.
+- Keep Save and Cancel available while settings content scrolls on smaller
+  laptop displays.
+- Show language-specific guidance and provide direct navigation from the
+  current model to model management.
+- Present only the model actions that are relevant to the selected model, with
+  a separate path for importing a verified model from another computer.
+- Expand the Privacy and About pages with plain-language explanations of local
+  processing, storage boundaries, offline use, and Skrivi's non-generative
+  purpose.
+- Use a warm Skrivi theme with stronger control boundaries, visible keyboard
+  focus, clear disabled states, palette-aware dark styling, and Windows
+  high-contrast fallback.
+- Complete the redesigned interface in English and Norwegian Bokmål while
+  continuing to label English as English in language pickers.
+
+### Fixed
+
+- Avoid repeating Skrivi's product name in the Windows settings title bar.
+- Prevent long build labels and model-status messages from clipping.
+
 ## [0.2.0-alpha.1] - 2026-09-02
 
 ### Added
