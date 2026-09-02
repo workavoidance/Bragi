@@ -39,6 +39,7 @@ $BuildPython = Join-Path $PSScriptRoot ".build-venv\Scripts\python.exe"
 $InstallerDist = Join-Path $PSScriptRoot "dist\installed"
 $InstallerWork = Join-Path $PSScriptRoot "build\installer"
 $InstallerSpec = Join-Path $PSScriptRoot "build\installer-spec"
+$IconPath = Join-Path $PSScriptRoot "assets\skrivi.ico"
 New-Item -ItemType Directory -Path $InstallerDist, $InstallerWork, $InstallerSpec -Force | Out-Null
 
 & $BuildPython -m PyInstaller `
@@ -48,7 +49,7 @@ New-Item -ItemType Directory -Path $InstallerDist, $InstallerWork, $InstallerSpe
     --contents-directory runtime `
     --windowed `
     --name Skrivi `
-    --icon assets\skrivi.ico `
+    --icon $IconPath `
     --paths src `
     --distpath $InstallerDist `
     --workpath $InstallerWork `
