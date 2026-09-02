@@ -5,6 +5,8 @@ here before a release.
 
 ## [Unreleased]
 
+## [0.2.0-alpha.1] - 2026-09-02
+
 ### Added
 
 - Rename the product from Bragi to Skrivi across the Windows application,

@@ -73,7 +73,7 @@ produces both a portable ZIP and a per-user installer named in these forms:
 
 ```text
 Skrivi-PR-11-a1b2c3d-windows-x64.zip
-Skrivi-0.1.0-pr.11-windows-x64-setup.exe
+Skrivi-0.2.0-alpha.1-pr.11-windows-x64-setup.exe
 ```
 
 Download either artifact from the pull request's Actions run. Extract the
