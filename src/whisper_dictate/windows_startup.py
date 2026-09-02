@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import ctypes
 import os
 import sys
 from pathlib import Path
@@ -13,6 +14,7 @@ from whisper_dictate.platform_services import (
 
 RUN_KEY = r"Software\Microsoft\Windows\CurrentVersion\Run"
 VALUE_NAME = "Skrivi"
+APPMODEL_ERROR_NO_PACKAGE = 15700
 
 
 class RegistryBackend(Protocol):
@@ -107,8 +109,28 @@ class WindowsStartupManager:
             ) from error
 
 
-def startup_manager_for_current_app() -> StartupManager:
-    """Return startup support only for a packaged Windows executable."""
+def _running_with_package_identity() -> bool:
+    if os.name != "nt":
+        return False
+    try:
+        length = ctypes.c_uint32()
+        result = ctypes.windll.kernel32.GetCurrentPackageFullName(
+            ctypes.byref(length), None
+        )
+    except AttributeError, OSError:
+        return False
+    return result != APPMODEL_ERROR_NO_PACKAGE
+
+
+def startup_manager_for_current_app(*, packaged: bool | None = None) -> StartupManager:
+    """Return startup support only where Windows registry startup is effective."""
     if os.name != "nt" or not getattr(sys, "frozen", False):
+        return UnavailableStartupManager()
+    if packaged is None:
+        packaged = _running_with_package_identity()
+    if packaged:
+        # HKCU writes are virtualized for MSIX applications and therefore do
+        # not register a real Windows startup entry. Keep the setting disabled
+        # until Skrivi adopts the packaged StartupTask API.
         return UnavailableStartupManager()
     return WindowsStartupManager(Path(sys.executable))

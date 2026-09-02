@@ -802,7 +802,7 @@ class SettingsWindow(QDialog):
             )
         else:
             self._startup_help.setText(
-                tr("Automatic startup is available in packaged Skrivi builds.")
+                tr("Automatic startup is unavailable in this Skrivi build.")
             )
 
     def _select_language(self, language: LanguageMode) -> None:

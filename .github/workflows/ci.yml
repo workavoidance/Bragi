@@ -35,3 +35,16 @@ jobs:
         run: python -m pytest
       - name: Compile modules
         run: python -m compileall -q src tests tools
+
+  store-package-schema:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate Microsoft Store package
+        shell: powershell
+        run: >-
+          .\build_store_msix.ps1
+          -Version "v0.2.0-alpha.2"
+          -StoreBuild "${{ github.run_number }}"
+          -ExecutablePath "$env:WINDIR\System32\notepad.exe"
+          -OutputDirectory "$env:RUNNER_TEMP\skrivi-store"

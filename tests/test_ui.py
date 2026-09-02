@@ -131,7 +131,7 @@ def test_source_build_explains_that_automatic_startup_is_unavailable(
 
     assert window.startup_checkbox.isEnabled() is False
     assert window._startup_help.text() == (
-        "Automatic startup is available in packaged Skrivi builds."
+        "Automatic startup is unavailable in this Skrivi build."
     )
 
 

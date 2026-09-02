@@ -9,6 +9,7 @@ from whisper_dictate.windows_startup import (
     RUN_KEY,
     VALUE_NAME,
     WindowsStartupManager,
+    startup_manager_for_current_app,
 )
 
 
@@ -76,3 +77,32 @@ def test_registry_errors_are_reported_without_exposing_the_path(tmp_path) -> Non
 
     assert str(tmp_path) not in str(caught.value)
     assert "private registry detail" not in str(caught.value)
+
+
+def test_msix_build_does_not_offer_virtualized_registry_startup(
+    monkeypatch,
+) -> None:
+    monkeypatch.setattr("whisper_dictate.windows_startup.os.name", "nt")
+    monkeypatch.setattr(
+        "whisper_dictate.windows_startup.sys.frozen", True, raising=False
+    )
+
+    manager = startup_manager_for_current_app(packaged=True)
+
+    assert manager.available is False
+
+
+def test_unpacked_executable_keeps_registry_startup(monkeypatch, tmp_path) -> None:
+    executable = tmp_path / "Skrivi.exe"
+    monkeypatch.setattr("whisper_dictate.windows_startup.os.name", "nt")
+    monkeypatch.setattr(
+        "whisper_dictate.windows_startup.sys.frozen", True, raising=False
+    )
+    monkeypatch.setattr(
+        "whisper_dictate.windows_startup.sys.executable", str(executable)
+    )
+
+    manager = startup_manager_for_current_app(packaged=False)
+
+    assert isinstance(manager, WindowsStartupManager)
+    assert manager.command == f'"{executable.resolve()}"'
