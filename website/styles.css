@@ -507,6 +507,21 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .download-inner h2 { font-size: clamp(2rem, 4vw, 4rem); }
 .download-inner p { margin: 12px 0 0; font-size: 1.05rem; }
 .download-inner .kicker { margin: 0; color: rgba(24,24,23,.65); }
+.download-steps {
+  margin: 24px 0 0;
+  padding-left: 1.35rem;
+  max-width: 760px;
+}
+.download-steps li {
+  padding-left: .35rem;
+  margin-top: 10px;
+  line-height: 1.55;
+}
+.download-inner .download-note {
+  max-width: 720px;
+  font-size: .9rem;
+  color: rgba(24,24,23,.72);
+}
 
 .site-footer {
   min-height: 140px;

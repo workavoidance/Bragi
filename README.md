@@ -40,20 +40,26 @@ hardware testing are being developed.
 Whisper itself may add punctuation or omit hesitations. The app does not perform
 any additional rewriting or filler-word removal.
 
-## Fastest way to try it
+## Install Skrivi
 
-1. Install the standard 64-bit Python 3.14 build from
-   <https://www.python.org/downloads/windows/>. Do not select the experimental
-   free-threaded build. Enable **Add Python to PATH** during installation.
-2. Double-click `run_from_source.bat`.
-3. On the first run, wait while the multilingual Small speech model downloads
+1. [Download the Skrivi v0.2 alpha installer for Windows 11](https://github.com/workavoidance/Skrivi/releases/download/v0.2.0-alpha.1/Skrivi-v0.2.0-alpha.1-windows-x64-setup.exe).
+2. Open the downloaded installer. This alpha is not code-signed yet, so Windows
+   may show SmartScreen. If you trust this project, choose **More info**, then
+   **Run anyway**.
+3. Complete the short installer and start Skrivi from the Start menu.
+4. On the first run, wait while the multilingual Small speech model downloads
    and is verified under `%LOCALAPPDATA%\Skrivi\models`. This is a one-time
    download of roughly 486 MB shared by later Skrivi versions.
-4. Put the cursor in Word, Outlook, Notepad, or a browser text field.
-5. Hold **Right Ctrl**, speak, then release it. Press **Escape** to cancel.
+5. Put the cursor in Word, Outlook, Notepad, or a browser text field.
+6. Hold **Right Ctrl**, speak, then release it. Press **Escape** to cancel.
 
 After the first model download, speech recognition does not require an internet
 connection and no speech is sent to a cloud service.
+
+The installer needs no administrator permission and provides standard Start
+menu and uninstall entries. Advanced users can instead download the portable
+ZIP from the [release page](https://github.com/workavoidance/Skrivi/releases/tag/v0.2.0-alpha.1)
+or follow [the development guide](docs/DEVELOPMENT.md) to run from source.
 
 ## Build the portable executable
 

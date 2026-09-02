@@ -27,11 +27,10 @@ Last reviewed: 2026-09-02
 
 **Current target:** v0.2, a configurable and accessible desktop application.
 
-**Current engineering task:** Phase 8 distribution, adding a small per-user
-Windows installer and a default-off automatic-startup setting. The completed
-Bragi-to-Skrivi rename remains in `main`. The remaining Phase 6 reliability
-checks and Phase 7 manual accessibility checks remain deferred and unchecked
-below.
+**Current engineering task:** Phase 8 distribution, publishing the tested
+per-user installer as a clearly labelled v0.2 alpha and providing a direct,
+bilingual website download. The remaining Phase 6 reliability checks and Phase
+7 manual accessibility checks remain deferred and unchecked below.
 
 The manual high-DPI, high-contrast, multi-display, and screen-reader checks for
 issue [#8](https://github.com/workavoidance/Skrivi/issues/8) are intentionally
@@ -181,10 +180,10 @@ Tracked by [#4](https://github.com/workavoidance/Skrivi/issues/4).
 - [x] Complete the Bragi-to-Skrivi application, executable, package, storage,
   model-manifest, website, documentation, and repository rename tracked by
   [#25](https://github.com/workavoidance/Skrivi/issues/25).
-- [ ] Build a conventional per-user Windows installer that needs no
+- [x] Build a conventional per-user Windows installer that needs no
   administrator rights and preserves settings and downloaded models.
-- [ ] Add Start menu and uninstall entries, with an optional desktop shortcut.
-- [ ] Add a default-off automatic-startup setting for packaged builds and keep
+- [x] Add Start menu and uninstall entries, with an optional desktop shortcut.
+- [x] Add a default-off automatic-startup setting for packaged builds and keep
   operating-system integration behind a replaceable platform boundary.
 - [ ] Test fresh installation, upgrade over an existing version, automatic
   startup, uninstall, and portable operation on Windows 11.
