@@ -100,6 +100,13 @@ The destination application can still retain what was typed through its own
 undo history, autosave, cloud sync, or browser behaviour. Python cannot provide
 forensic guarantees that an immutable string has vanished instantly from RAM.
 
+## Code signing policy
+
+Current Skrivi releases are not code-signed. The project's
+[code signing policy](CODE_SIGNING_POLICY.md) documents the Windows artifacts,
+team roles, privacy information, and manual approval process proposed for the
+SignPath Foundation open-source programme.
+
 ## Expected limitations
 
 - The first model load can take a little while on a CPU, particularly the first
