@@ -17,7 +17,7 @@
         <span class="wordmark-base">skriv</span><span class="wordmark-i"><span class="i-stem"></span><span class="i-dot"></span><span class="i-dash i-dash-1"></span><span class="i-dash i-dash-2"></span><span class="i-dash i-dash-3"></span></span>
       </span>
     </a>
-    <nav class="header-actions" aria-label="Hovedmeny">
+    <nav class="header-actions" aria-label="Hovedmeny" data-aria-nb="Hovedmeny" data-aria-en="Main navigation">
       <a href="#schools" data-nb="For skoler" data-en="For schools">For skoler</a>
       <a href="#technical" data-nb="Teknisk" data-en="Technical">Teknisk</a>
       <button class="language-switch" type="button" aria-label="Switch to English" aria-pressed="false">EN</button>
@@ -33,7 +33,7 @@
         <a class="button button-primary" href="https://github.com/workavoidance/Skrivi#fastest-way-to-try-it" target="_blank" rel="noreferrer" data-nb="Last ned alfa" data-en="Download alpha">Last ned alfa</a>
         <a class="button button-secondary" href="#how" data-nb="Slik fungerer det" data-en="How it works">Slik fungerer det</a>
       </div>
-      <div class="trust-row" aria-label="Skrivi egenskaper">
+      <div class="trust-row" aria-label="Skrivi-egenskaper" data-aria-nb="Skrivi-egenskaper" data-aria-en="Skrivi features">
         <span><i aria-hidden="true">●</i><b data-nb="Kjører lokalt" data-en="Runs locally">Kjører lokalt</b></span>
         <span><i aria-hidden="true">●</i><b data-nb="Privat" data-en="Private">Privat</b></span>
         <span><i aria-hidden="true">●</i><b data-nb="Ingen konto" data-en="No account">Ingen konto</b></span>
@@ -88,8 +88,8 @@
       <div class="feature-grid">
         <article class="feature-card">
           <div class="feature-icon">⌁</div>
-          <h3 data-nb="Lokalt" data-en="Local">Lokalt</h3>
-          <p data-nb="Tale og transkripsjon behandles på elevens egen maskin. Etter første modellnedlasting trenger transkripsjonen ikke internett." data-en="Speech and transcription are processed on the student's own computer. After the first model download, transcription does not require the internet.">Tale og transkripsjon behandles på elevens egen maskin. Etter første modellnedlasting trenger transkripsjonen ikke internett.</p>
+          <h3 data-nb="Lokal behandling" data-en="Local processing">Lokal behandling</h3>
+          <p data-nb="Tale og transkripsjon behandles på elevens egen maskin. Etter første modellnedlasting sendes ikke elevens lyd eller tekst til Skrivi eller en skytjeneste." data-en="Speech and transcription are processed on the student's own computer. After the first model download, the student's audio and text are not sent to Skrivi or a cloud service.">Tale og transkripsjon behandles på elevens egen maskin. Etter første modellnedlasting sendes ikke elevens lyd eller tekst til Skrivi eller en skytjeneste.</p>
         </article>
         <article class="feature-card">
           <div class="feature-icon">○</div>
@@ -98,29 +98,82 @@
         </article>
         <article class="feature-card">
           <div class="feature-icon">0</div>
-          <h3 data-nb="Gratis" data-en="Free">Gratis</h3>
-          <p data-nb="Ingen lisensavgift, abonnement eller betalt nivå." data-en="No licence fee, subscription or paid tier.">Ingen lisensavgift, abonnement eller betalt nivå.</p>
+          <h3 data-nb="Ingen lisensavgift" data-en="No licence fee">Ingen lisensavgift</h3>
+          <p data-nb="Skrivi er gratis å bruke. Det finnes ingen abonnementsavtale, lisensserver eller betalt nivå." data-en="Skrivi is free to use. There is no subscription agreement, licence server or paid tier.">Skrivi er gratis å bruke. Det finnes ingen abonnementsavtale, lisensserver eller betalt nivå.</p>
         </article>
         <article class="feature-card">
           <div class="feature-icon">≠</div>
-          <h3 data-nb="Ikke-generativt" data-en="Non-generative">Ikke-generativt</h3>
-          <p data-nb="Skrivi transkriberer det eleven sier. Det legger ikke til ideer eller skriver om svaret." data-en="Skrivi transcribes what the student says. It does not add ideas or rewrite the answer.">Skrivi transkriberer det eleven sier. Det legger ikke til ideer eller skriver om svaret.</p>
+          <h3 data-nb="Ikke-generativ tale-til-tekst" data-en="Non-generative speech-to-text">Ikke-generativ tale-til-tekst</h3>
+          <p data-nb="Skrivi transkriberer det eleven sier. Det lager ikke ideer, forbedrer ikke teksten og skriver ikke svaret for eleven." data-en="Skrivi transcribes what the student says. It does not create ideas, improve the text or write the answer for the student.">Skrivi transkriberer det eleven sier. Det lager ikke ideer, forbedrer ikke teksten og skriver ikke svaret for eleven.</p>
         </article>
         <article class="feature-card">
           <div class="feature-icon">&lt;/&gt;</div>
           <h3 data-nb="Åpen kildekode" data-en="Open source">Åpen kildekode</h3>
-          <p data-nb="Koden er offentlig. Skoler og IT-team kan se hvordan Skrivi fungerer." data-en="The code is public. Schools and IT teams can inspect how Skrivi works.">Koden er offentlig. Skoler og IT-team kan se hvordan Skrivi fungerer.</p>
+          <p data-nb="Koden og utviklingshistorikken er offentlig. Skoler og IT-team kan undersøke hvordan Skrivi faktisk fungerer." data-en="The code and development history are public. Schools and IT teams can inspect how Skrivi actually works.">Koden og utviklingshistorikken er offentlig. Skoler og IT-team kan undersøke hvordan Skrivi faktisk fungerer.</p>
         </article>
         <article class="feature-card">
-          <div class="feature-icon">↓</div>
-          <h3 data-nb="Lite IT-arbeid" data-en="Low IT overhead">Lite IT-arbeid</h3>
-          <p data-nb="Målet er enkel installasjon, tydelige versjoner og så få avhengigheter som mulig." data-en="The goal is simple installation, clear versions and as few dependencies as possible.">Målet er enkel installasjon, tydelige versjoner og så få avhengigheter som mulig.</p>
+          <div class="feature-icon">✓</div>
+          <h3 data-nb="Dokumentert for vurdering" data-en="Documented for review">Dokumentert for vurdering</h3>
+          <p data-nb="Personvern, sikkerhet, dataflyt og teknisk arkitektur er beskrevet åpent, slik at skolen kan gjøre sin egen vurdering." data-en="Privacy, security, data flow and technical architecture are documented openly so the school can conduct its own review.">Personvern, sikkerhet, dataflyt og teknisk arkitektur er beskrevet åpent, slik at skolen kan gjøre sin egen vurdering.</p>
         </article>
       </div>
-      <div class="doc-links">
-        <a href="https://github.com/workavoidance/Skrivi/blob/main/docs/PRIVACY.md" target="_blank" rel="noreferrer" data-nb="Personvern" data-en="Privacy">Personvern</a>
-        <a href="https://github.com/workavoidance/Skrivi/blob/main/SECURITY.md" target="_blank" rel="noreferrer" data-nb="Sikkerhet" data-en="Security">Sikkerhet</a>
-        <a href="https://github.com/workavoidance/Skrivi/blob/main/docs/SCHOOL_EXPLAINER.md" target="_blank" rel="noreferrer" data-nb="Informasjon for skoler" data-en="Information for schools">Informasjon for skoler</a>
+
+      <div class="approval-panel">
+        <div class="approval-intro">
+          <p class="kicker" data-nb="Fra spørsmål til vurdering" data-en="From questions to review">Fra spørsmål til vurdering</p>
+          <h3 data-nb="En tydelig vei til skolens godkjenning." data-en="A clear path to school approval.">En tydelig vei til skolens godkjenning.</h3>
+          <p data-nb="Skrivi lover ikke at programmet automatisk er godkjent. Vi gjør det enklere for skolen, kommunen eller personvernombudet å forstå løsningen og ta en informert beslutning." data-en="Skrivi does not claim to be automatically approved. We make it easier for a school, municipality or data protection officer to understand the software and make an informed decision.">Skrivi lover ikke at programmet automatisk er godkjent. Vi gjør det enklere for skolen, kommunen eller personvernombudet å forstå løsningen og ta en informert beslutning.</p>
+        </div>
+
+        <div class="data-flow" aria-label="Skrivi-dataflyt" data-aria-nb="Skrivi-dataflyt" data-aria-en="Skrivi data flow">
+          <div class="flow-main">
+            <span class="flow-node" data-nb="Elevens mikrofon" data-en="Student's microphone">Elevens mikrofon</span>
+            <span class="flow-arrow" aria-hidden="true">→</span>
+            <span class="flow-node flow-node-accent" data-nb="Skrivi på elevens PC" data-en="Skrivi on the student's PC">Skrivi på elevens PC</span>
+            <span class="flow-arrow" aria-hidden="true">→</span>
+            <span class="flow-node" data-nb="Tekst i valgt program" data-en="Text in the chosen app">Tekst i valgt program</span>
+          </div>
+          <p class="flow-boundary" data-nb="Lyd og transkripsjon forlater ikke denne lokale dataflyten. Programmet teksten settes inn i, kan lagre eller synkronisere teksten etter sine egne regler." data-en="Audio and transcription do not leave this local data flow. The app receiving the text may store or sync it according to its own policies.">Lyd og transkripsjon forlater ikke denne lokale dataflyten. Programmet teksten settes inn i, kan lagre eller synkronisere teksten etter sine egne regler.</p>
+        </div>
+
+        <ol class="approval-steps">
+          <li>
+            <span class="approval-number">01</span>
+            <div>
+              <h4 data-nb="Forstå løsningen" data-en="Understand the software">Forstå løsningen</h4>
+              <p data-nb="Start med den korte skoleforklaringen og se hva Skrivi gjør – og ikke gjør." data-en="Start with the short school explainer and see what Skrivi does—and does not do.">Start med den korte skoleforklaringen og se hva Skrivi gjør – og ikke gjør.</p>
+            </div>
+          </li>
+          <li>
+            <span class="approval-number">02</span>
+            <div>
+              <h4 data-nb="Kontroller dokumentasjonen" data-en="Review the documentation">Kontroller dokumentasjonen</h4>
+              <p data-nb="Gå gjennom personvern, sikkerhet, arkitektur og offentlig kildekode." data-en="Review privacy, security, architecture and the public source code.">Gå gjennom personvern, sikkerhet, arkitektur og offentlig kildekode.</p>
+            </div>
+          </li>
+          <li>
+            <span class="approval-number">03</span>
+            <div>
+              <h4 data-nb="Vurder og prøv" data-en="Assess and pilot">Vurder og prøv</h4>
+              <p data-nb="Skolen gjør sin egen risiko- og personvernvurdering før en avgrenset utprøving." data-en="The school conducts its own risk and privacy review before a limited pilot.">Skolen gjør sin egen risiko- og personvernvurdering før en avgrenset utprøving.</p>
+            </div>
+          </li>
+        </ol>
+
+        <div class="approval-docs">
+          <div class="approval-docs-heading">
+            <h4 data-nb="Dokumentasjon for skolen" data-en="Documentation for schools">Dokumentasjon for skolen</h4>
+            <p data-nb="Åpent tilgjengelig og oppdatert sammen med kildekoden." data-en="Publicly available and maintained alongside the source code.">Åpent tilgjengelig og oppdatert sammen med kildekoden.</p>
+          </div>
+          <div class="doc-links">
+            <a href="https://github.com/workavoidance/Skrivi/blob/main/docs/SCHOOL_EXPLAINER.md" target="_blank" rel="noreferrer"><span data-nb="Skoleforklaring" data-en="School explainer">Skoleforklaring</span><i aria-hidden="true">↗</i></a>
+            <a href="https://github.com/workavoidance/Skrivi/blob/main/docs/PRIVACY.md" target="_blank" rel="noreferrer"><span data-nb="Personvern og dataflyt" data-en="Privacy and data flow">Personvern og dataflyt</span><i aria-hidden="true">↗</i></a>
+            <a href="https://github.com/workavoidance/Skrivi/blob/main/SECURITY.md" target="_blank" rel="noreferrer"><span data-nb="Sikkerhet" data-en="Security">Sikkerhet</span><i aria-hidden="true">↗</i></a>
+            <a href="https://github.com/workavoidance/Skrivi/blob/main/docs/ARCHITECTURE.md" target="_blank" rel="noreferrer"><span data-nb="Teknisk arkitektur" data-en="Technical architecture">Teknisk arkitektur</span><i aria-hidden="true">↗</i></a>
+            <a href="https://github.com/workavoidance/Skrivi" target="_blank" rel="noreferrer"><span data-nb="Kildekode" data-en="Source code">Kildekode</span><i aria-hidden="true">↗</i></a>
+          </div>
+        </div>
+        <p class="approval-status" data-nb="Status: Skrivi er alfa-programvare. Dokumentasjonen støtter skolens egen vurdering, men er ikke en offentlig godkjenning eller en juridisk vurdering." data-en="Status: Skrivi is alpha software. The documentation supports the school's own review; it is not an official approval or legal advice.">Status: Skrivi er alfa-programvare. Dokumentasjonen støtter skolens egen vurdering, men er ikke en offentlig godkjenning eller en juridisk vurdering.</p>
       </div>
     </section>
 

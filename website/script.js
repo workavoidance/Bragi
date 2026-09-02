@@ -10,6 +10,17 @@
       element.textContent = norwegian ? element.dataset.nb : element.dataset.en;
     });
 
+    document.querySelectorAll('[data-aria-nb][data-aria-en]').forEach((element) => {
+      element.setAttribute('aria-label', norwegian ? element.dataset.ariaNb : element.dataset.ariaEn);
+    });
+
+    const description = document.querySelector('meta[name="description"]');
+    if (description) {
+      description.content = norwegian
+        ? 'Skrivi er svært nøyaktig, lokal tale-til-tekst. Gratis for alle.'
+        : 'Skrivi is highly accurate, local speech-to-text. Free for everyone.';
+    }
+
     button.textContent = norwegian ? 'EN' : 'NO';
     button.setAttribute('aria-label', norwegian ? 'Switch to English' : 'Bytt til norsk');
     button.setAttribute('aria-pressed', norwegian ? 'false' : 'true');
