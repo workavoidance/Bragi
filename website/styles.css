@@ -49,36 +49,9 @@ button, a { -webkit-tap-highlight-color: transparent; }
 }
 
 .wordmark {
-  position: relative;
-  display: inline-block;
-  padding-right: 0.56em;
-  color: var(--ink);
-  font-size: 1.52rem;
-  font-weight: 760;
-  letter-spacing: -0.055em;
-  line-height: 1;
-}
-
-.wordmark::before {
-  content: "";
-  position: absolute;
-  top: 0.015em;
-  right: 0.65em;
-  z-index: 1;
-  width: 0.19em;
-  height: 0.19em;
-  border-radius: 50%;
-  background: var(--orange);
-}
-
-.wordmark::after {
-  content: "";
-  position: absolute;
-  top: 0.02em;
-  right: 0;
-  width: 0.43em;
-  height: 0.38em;
-  background: no-repeat center / contain url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 43 38'%3E%3Cg fill='none' stroke='%23f05a24' stroke-width='6' stroke-linecap='round'%3E%3Cpath d='M3 12L25 3'/%3E%3Cpath d='M5 19H36'/%3E%3Cpath d='M3 26L25 35'/%3E%3C/g%3E%3C/svg%3E");
+  display: block;
+  width: 5rem;
+  height: auto;
 }
 
 .header-actions,
