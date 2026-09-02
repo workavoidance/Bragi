@@ -100,3 +100,38 @@ jobs:
               @notesArgs @prereleaseArgs
           }
           if ($LASTEXITCODE -ne 0) { throw "GitHub release publication failed." }
+
+  store-package:
+    # Store packaging is deliberately independent: GitHub releases remain
+    # available immediately even if this job or Store certification is delayed.
+    continue-on-error: true
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Read and validate release version
+        id: version
+        shell: powershell
+        run: |
+          $tag = (Get-Content release\VERSION -Raw).Trim()
+          if ($tag -notmatch '^v[0-9]+\.[0-9]+\.[0-9]+(?:-[0-9A-Za-z.-]+)?$') {
+            throw "release/VERSION must contain a tag such as v0.2.0-alpha.1."
+          }
+          "tag=$tag" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+          cache: pip
+      - name: Build portable executable
+        shell: powershell
+        run: .\build_portable.ps1
+      - name: Build unsigned Microsoft Store package
+        shell: powershell
+        run: >-
+          .\build_store_msix.ps1
+          -Version "${{ steps.version.outputs.tag }}"
+          -StoreBuild "${{ github.run_number }}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Skrivi-${{ steps.version.outputs.tag }}-Microsoft-Store
+          path: dist/store/*.msix
+          if-no-files-found: error
