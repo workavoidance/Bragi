@@ -5,6 +5,7 @@ from dataclasses import replace
 import pytest
 
 from whisper_dictate.audio import MicrophoneUnavailableError
+from whisper_dictate.platform_services import StartupRegistrationError
 from whisper_dictate.runtime_settings import (
     RuntimeSettingsApplier,
     RuntimeSettingsError,
@@ -44,7 +45,27 @@ class FakeHotkey:
         self.hotkey = identifier
 
 
-def make_applier(tmp_path, *, can_change_input=lambda: True):
+class FakeStartupManager:
+    available = True
+
+    def __init__(self) -> None:
+        self.enabled = False
+        self.changes: list[bool] = []
+
+    def is_enabled(self) -> bool:
+        return self.enabled
+
+    def set_enabled(self, enabled: bool) -> None:
+        self.changes.append(enabled)
+        self.enabled = enabled
+
+
+def make_applier(
+    tmp_path,
+    *,
+    can_change_input=lambda: True,
+    startup_manager=None,
+):
     store = SettingsStore(tmp_path / "settings.json")
     initial = UserSettings()
     store.save(initial)
@@ -58,6 +79,7 @@ def make_applier(tmp_path, *, can_change_input=lambda: True):
         transcriber,
         hotkey,
         can_change_input=can_change_input,
+        startup_manager=startup_manager,
     )
     return applier, store, recorder, transcriber, hotkey
 
@@ -128,3 +150,71 @@ def test_save_failure_rolls_back_all_live_choices(tmp_path, monkeypatch) -> None
     assert transcriber.language is LanguageMode.AUTOMATIC
     assert hotkey.hotkey == "right_ctrl"
     assert hotkey.replacements == ["f8", "right_ctrl"]
+
+
+def test_runtime_settings_apply_automatic_startup(tmp_path) -> None:
+    startup = FakeStartupManager()
+    applier, store, _recorder, _transcriber, _hotkey = make_applier(
+        tmp_path, startup_manager=startup
+    )
+
+    updated = replace(UserSettings(), start_with_system=True)
+    applier.apply(updated)
+
+    assert startup.enabled is True
+    assert startup.changes == [True]
+    assert store.load().settings.start_with_system is True
+
+
+def test_startup_failure_preserves_previous_settings(tmp_path) -> None:
+    class FailingStartupManager(FakeStartupManager):
+        def set_enabled(self, enabled: bool) -> None:
+            del enabled
+            raise StartupRegistrationError("startup failed")
+
+    startup = FailingStartupManager()
+    applier, store, _recorder, _transcriber, _hotkey = make_applier(
+        tmp_path, startup_manager=startup
+    )
+
+    with pytest.raises(RuntimeSettingsError, match="startup failed"):
+        applier.apply(replace(UserSettings(), start_with_system=True))
+
+    assert store.load().settings == UserSettings()
+
+
+def test_startup_failure_rolls_back_a_hotkey_changed_in_the_same_save(tmp_path) -> None:
+    class FailingStartupManager(FakeStartupManager):
+        def set_enabled(self, enabled: bool) -> None:
+            del enabled
+            raise StartupRegistrationError("startup failed")
+
+    applier, store, _recorder, _transcriber, hotkey = make_applier(
+        tmp_path, startup_manager=FailingStartupManager()
+    )
+
+    with pytest.raises(RuntimeSettingsError, match="startup failed"):
+        applier.apply(replace(UserSettings(), hotkey="f8", start_with_system=True))
+
+    assert hotkey.hotkey == "right_ctrl"
+    assert hotkey.replacements == ["f8", "right_ctrl"]
+    assert store.load().settings == UserSettings()
+
+
+def test_save_failure_rolls_back_automatic_startup(tmp_path, monkeypatch) -> None:
+    startup = FakeStartupManager()
+    applier, store, _recorder, _transcriber, _hotkey = make_applier(
+        tmp_path, startup_manager=startup
+    )
+
+    def fail_save(settings) -> None:
+        del settings
+        raise OSError("simulated write failure")
+
+    monkeypatch.setattr(store, "save", fail_save)
+
+    with pytest.raises(OSError, match="simulated write failure"):
+        applier.apply(replace(UserSettings(), start_with_system=True))
+
+    assert startup.enabled is False
+    assert startup.changes == [True, False]

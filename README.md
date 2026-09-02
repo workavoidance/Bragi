@@ -32,6 +32,8 @@ hardware testing are being developed.
 - Provides a keyboard-operable Qt tray menu with status, Settings, and Exit.
 - Provides complete English and Norwegian Bokmål interfaces, following the
   Windows display language by default with an explicit choice in Settings.
+- Can start quietly when the current user signs in, when explicitly enabled in
+  Settings. This is off by default and requires no administrator rights.
 - Uses the native Windows palette and scaling, including high-DPI displays and
   high-contrast themes.
 
@@ -64,6 +66,23 @@ On a Windows 11 PC with standard 64-bit Python 3.14 installed:
 The output is a single executable. Downloaded models are kept in the stable
 per-user `%LOCALAPPDATA%\Skrivi\models` directory so later builds can reuse them.
 Python is not required on PCs that only run the finished executable.
+
+## Build the Windows installer
+
+The conventional installer uses a one-folder application build so Skrivi does
+not unpack its full Python runtime on every launch. On Windows 11, install
+Python 3.14 and Inno Setup 6, then run:
+
+```bat
+build_installer.bat
+```
+
+The installer is written to `dist\installer`. It installs for the current user
+under `%LOCALAPPDATA%\Programs\Skrivi`, adds Start menu and uninstall entries,
+and does not request administrator rights. Settings and downloaded models stay
+in their existing application-data directories, so installing, upgrading, or
+uninstalling the program does not silently delete user choices or large model
+downloads.
 
 ## Privacy behaviour
 

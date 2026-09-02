@@ -23,6 +23,7 @@ from whisper_dictate.settings_window import SettingsWindow
 from whisper_dictate.transcriber import LocalWhisperTranscriber
 from whisper_dictate.tray import TrayIcon
 from whisper_dictate.windows_input import WindowsTextInjector
+from whisper_dictate.windows_startup import startup_manager_for_current_app
 
 
 def _single_instance_mutex():
@@ -78,6 +79,14 @@ def main(argv: list[str] | None = None) -> None:
     identity = detect_build_identity(force_development=args.development)
     settings_store = SettingsStore.for_user(development=identity.development)
     settings = settings_store.load().settings
+    startup_manager = startup_manager_for_current_app()
+    if settings.start_with_system and startup_manager.available:
+        try:
+            # Repair the command if a portable copy was deliberately moved and
+            # then launched manually from its new permanent folder.
+            startup_manager.set_enabled(True)
+        except OSError:
+            pass
     set_interface_language(settings.interface_language)
     if args.preview:
         from whisper_dictate.preview import run_preview
@@ -163,6 +172,7 @@ def main(argv: list[str] | None = None) -> None:
         transcriber,
         listener,
         can_change_input=lambda: not recorder.is_recording,
+        startup_manager=startup_manager,
     )
     model_runtime = ModelRuntime(
         model_manager,
@@ -180,6 +190,7 @@ def main(argv: list[str] | None = None) -> None:
         active_model=config.model_name,
         model_manager=model_manager,
         model_runtime=model_runtime,
+        startup_available=startup_manager.available,
     )
     tray = TrayIcon(
         indicator.request_exit,

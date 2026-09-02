@@ -98,6 +98,28 @@ NORWEGIAN_BOKMAL = {
     "Show a non-activating message while Skrivi loads, listens and transcribes.": (
         "Vis en melding uten å ta fokus mens Skrivi laster, lytter og transkriberer."
     ),
+    "Startup": "Oppstart",
+    "Start Skrivi automatically when I sign in": (
+        "Start Skrivi automatisk når jeg logger på"
+    ),
+    "Start Skrivi automatically": "Start Skrivi automatisk",
+    "Automatic startup guidance": "Veiledning for automatisk oppstart",
+    "Skrivi starts quietly in the system tray. Keep a portable copy in a permanent folder while this is enabled.": (
+        "Skrivi starter stille i systemstatusfeltet. Oppbevar en portabel kopi i "
+        "en permanent mappe mens dette er aktivert."
+    ),
+    "Automatic startup is available in packaged Skrivi builds.": (
+        "Automatisk oppstart er tilgjengelig i pakkede Skrivi-versjoner."
+    ),
+    "Automatic startup is unavailable in this Skrivi build.": (
+        "Automatisk oppstart er ikke tilgjengelig i denne Skrivi-versjonen."
+    ),
+    "Skrivi could not read Windows startup settings.": (
+        "Skrivi kunne ikke lese oppstartsinnstillingene i Windows."
+    ),
+    "Skrivi could not change Windows startup settings.": (
+        "Skrivi kunne ikke endre oppstartsinnstillingene i Windows."
+    ),
     "Speech is processed locally on this PC. Skrivi does not save your recordings or transcripts, does not use the clipboard for dictated text, and needs no account. After the selected speech model has been downloaded, normal dictation does not require internet access.": (
         "Tale behandles lokalt på denne PC-en. Skrivi lagrer ikke opptak eller "
         "transkripsjoner, bruker ikke utklippstavlen for diktert tekst og krever "

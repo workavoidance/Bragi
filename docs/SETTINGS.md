@@ -28,17 +28,18 @@ Downloaded models remain separately stored under
 `%LOCALAPPDATA%\Skrivi\models`. Settings contain model identifiers, never model
 data.
 
-## Version 4 schema
+## Version 5 schema
 
 ```json
 {
-  "schema_version": 4,
+  "schema_version": 5,
   "language": "auto",
   "model": "small",
   "hotkey": "right_ctrl",
   "microphone": "windows_default",
   "overlay_enabled": true,
-  "interface_language": "auto"
+  "interface_language": "auto",
+  "start_with_system": false
 }
 ```
 
@@ -54,6 +55,12 @@ Users can explicitly select English or Norwegian Bokmål in Settings. An
 interface-language change updates the open Settings window, tray, overlay, and
 model status immediately. Cancel restores the previously saved language, while
 Save persists the previewed choice.
+
+`start_with_system` records the user's platform-neutral automatic-startup
+choice. The Windows platform service applies it to the current user's Run
+entry. It is disabled by default, needs no administrator rights, and is
+unavailable during source development so a Python development process is never
+registered accidentally.
 
 Supported push-to-talk identifiers are `right_ctrl` and `f6` through `f12`.
 Letters, Windows keys, modifier keys such as Alt, and common editing keys are
@@ -87,7 +94,8 @@ and maps `language_mode`, `model_name`, and `show_overlay` to their version 1
 equivalents. Version 1 documents migrate to version 2 without changing their
 existing choices. Version 2 documents migrate to version 3, which restricts the
 model field to Skrivi's trusted local catalogue. Version 3 documents migrate to
-version 4 with automatic Windows interface-language selection.
+version 4 with automatic Windows interface-language selection. Version 4
+documents migrate to version 5 with automatic startup disabled.
 
 A migrated document is written in the current format the next time settings are
 explicitly saved. A schema newer than this Skrivi version is never downgraded or
@@ -106,7 +114,8 @@ writes are not supported or required.
 ## Current interface support
 
 The v0.2 settings window can change dictation language, interface language,
-microphone, push-to-talk key, speech model, and overlay visibility. Dictation
+microphone, push-to-talk key, speech model, overlay visibility, and automatic
+startup. Dictation
 language changes affect the next recording. Interface language changes are
 previewed immediately and do not restart dictation or model activity.
 Microphones are enumerated locally and validated before a selection becomes

@@ -29,6 +29,14 @@ The core must not import the user-interface implementation. UI events cross the
 boundary through small interfaces so core behaviour remains independently
 testable.
 
+Platform-specific operating-system integration follows the same rule. The
+automatic-startup preference is platform-neutral, while the current Windows
+adapter owns the per-user registry entry. Source builds receive an unavailable
+adapter and cannot register a development Python process accidentally. Future
+macOS support can provide its own login-item, hotkey, text-insertion, permission,
+and system-path adapters without changing the dictation controller or settings
+interface.
+
 ## Threading
 
 Audio callbacks, model loading and transcription must never block the UI event
