@@ -109,6 +109,31 @@ def test_settings_window_saves_overlay_choice(tmp_path: Path) -> None:
     assert saved == [UserSettings(overlay_enabled=False)]
 
 
+def test_settings_window_saves_automatic_startup_choice(tmp_path: Path) -> None:
+    application()
+    store = SettingsStore(tmp_path / "settings.json")
+    window = SettingsWindow(store, startup_available=True)
+
+    window.startup_checkbox.setChecked(True)
+    window._save()
+
+    assert store.load().settings.start_with_system is True
+
+
+def test_source_build_explains_that_automatic_startup_is_unavailable(
+    tmp_path: Path,
+) -> None:
+    application()
+    window = SettingsWindow(
+        SettingsStore(tmp_path / "settings.json"), startup_available=False
+    )
+
+    assert window.startup_checkbox.isEnabled() is False
+    assert window._startup_help.text() == (
+        "Automatic startup is available in packaged Skrivi builds."
+    )
+
+
 def test_settings_window_saves_live_language_and_hotkey_choices(tmp_path: Path) -> None:
     application()
     store = SettingsStore(tmp_path / "settings.json")
@@ -203,6 +228,7 @@ def test_settings_actions_are_named_and_keyboard_operable(tmp_path: Path) -> Non
     assert window.accessibleName() == "Skrivi settings"
     assert window.tabs.accessibleName() == "Settings sections"
     assert window.overlay_checkbox.accessibleName() == ("Show dictation status overlay")
+    assert window.startup_checkbox.accessibleName() == "Start Skrivi automatically"
     assert window.language_combo.accessibleName() == "Dictation language"
     assert window.microphone_combo.accessibleName() == "Microphone"
     assert window.model_panel.accessibleName() == "Local speech models"

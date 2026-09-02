@@ -69,16 +69,18 @@ Preview mode itself never uses speech services or requires a model.
 ## Test a pull request build
 
 Every pull request starts the **Windows preview** GitHub Actions workflow. It
-produces a ZIP named in this form:
+produces both a portable ZIP and a per-user installer named in these forms:
 
 ```text
 Skrivi-PR-11-a1b2c3d-windows-x64.zip
+Skrivi-0.1.0-pr.11-windows-x64-setup.exe
 ```
 
-Download the artifact from the pull request's Actions run, extract the complete
-ZIP, and run the executable. Keep `BUILD_INFO.json` beside the executable. It
-marks the build as a development preview and supplies the PR and commit identity
-shown in the tray title.
+Download either artifact from the pull request's Actions run. Extract the
+complete ZIP before running its executable, or run the installer to exercise
+the normal Start menu, upgrade, and uninstall flow. Keep `BUILD_INFO.json`
+beside the portable executable. Both packages are marked as development
+previews and supply the PR and commit identity shown in the tray title.
 
 Preview artifacts are retained for seven days and are never published as
 releases. They are unsigned development builds and may trigger Windows security

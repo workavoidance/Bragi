@@ -33,6 +33,7 @@ def test_defaults_match_the_existing_product_behaviour() -> None:
     assert settings.microphone == "windows_default"
     assert settings.overlay_enabled is True
     assert settings.interface_language is InterfaceLanguage.AUTOMATIC
+    assert settings.start_with_system is False
 
 
 def test_missing_file_returns_defaults_without_warning(tmp_path) -> None:
@@ -52,6 +53,7 @@ def test_settings_survive_save_and_reload(tmp_path) -> None:
         microphone=microphone_identifier("Windows WASAPI", "USB microphone æøå"),
         overlay_enabled=False,
         interface_language=InterfaceLanguage.NORWEGIAN_BOKMAL,
+        start_with_system=True,
     )
 
     store.save(expected)
@@ -87,6 +89,7 @@ def test_removed_right_alt_choice_returns_to_default_without_losing_settings(
         ("microphone", "bad\x00device"),
         ("overlay_enabled", "yes"),
         ("interface_language", "sv"),
+        ("start_with_system", "yes"),
     ],
 )
 def test_invalid_values_fall_back_with_a_generic_warning(
@@ -205,6 +208,19 @@ def test_version_3_document_adds_automatic_interface_language(tmp_path) -> None:
 
     assert result.settings.interface_language is InterfaceLanguage.AUTOMATIC
     assert result.migrated_from == 3
+
+
+def test_version_4_document_adds_disabled_automatic_startup(tmp_path) -> None:
+    legacy = defaults_document()
+    legacy["schema_version"] = 4
+    legacy.pop("start_with_system")
+    path = tmp_path / "settings.json"
+    path.write_text(json.dumps(legacy), encoding="utf-8")
+
+    result = SettingsStore(path).load()
+
+    assert result.settings.start_with_system is False
+    assert result.migrated_from == 4
 
 
 def test_save_rejects_an_invalid_directly_constructed_model(tmp_path) -> None:

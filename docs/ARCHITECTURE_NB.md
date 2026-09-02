@@ -31,6 +31,14 @@ Kjernen skal ikke importere implementasjonen av brukergrensesnittet.
 Hendelser i brukergrensesnittet krysser grensen gjennom små grensesnitt, slik
 at oppførselen i kjernen kan testes uavhengig.
 
+Plattformspesifikk integrasjon med operativsystemet følger samme regel. Valget
+om automatisk oppstart er plattformnøytralt, mens den nåværende
+Windows-adapteren eier registeroppføringen for brukeren. Kjøring fra kildekode
+får en utilgjengelig adapter og kan ikke registrere en Python-utviklingsprosess
+ved et uhell. Fremtidig støtte for macOS kan tilby egne adaptere for
+påloggingselement, hurtigtast, innsetting av tekst, tillatelser og systembaner
+uten å endre dikteringskontrolleren eller innstillingsgrensesnittet.
+
 ## Tråder
 
 Tilbakekall fra lyd, modellasting og transkripsjon skal aldri blokkere

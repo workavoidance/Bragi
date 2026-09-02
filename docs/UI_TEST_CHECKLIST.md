@@ -73,6 +73,25 @@ issue #8.
 - After a simulated transcription failure, confirm the recording is discarded,
   Skrivi returns to Ready, and the next normal dictation succeeds.
 
+## Installer and automatic startup
+
+- Download the installer preview and confirm Windows identifies it as an
+  unsigned development build before proceeding.
+- Install without administrator approval. Confirm Skrivi appears in the Start
+  menu, Apps list, and standard uninstall list.
+- Confirm Skrivi starts after installation and reaches Ready.
+- Enable **Start Skrivi automatically when I sign in**, save, restart Windows,
+  and confirm exactly one tray instance starts.
+- Disable the setting, restart Windows, and confirm Skrivi does not start.
+- Install a newer preview over the existing copy. Confirm settings, installed
+  models, and the automatic-startup choice remain intact.
+- Uninstall Skrivi. Confirm the application and shortcuts are removed while
+  `%APPDATA%\Skrivi` and `%LOCALAPPDATA%\Skrivi\models` remain available for a
+  later reinstall.
+- Run the portable executable from a permanent folder, enable automatic
+  startup, and restart Windows. Confirm it starts from that folder. Disable the
+  setting before moving or deleting the portable executable.
+
 ## Keyboard and assistive access
 
 - Open the tray menu from the Windows notification area using only the

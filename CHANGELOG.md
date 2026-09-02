@@ -50,6 +50,10 @@ here before a release.
 - Live English and Norwegian interface previews that update existing controls,
   tray actions, overlay messages, model progress, and accessibility labels,
   with Cancel restoring the saved language.
+- Per-user Windows installer with Start menu, optional desktop shortcut,
+  standard uninstall support, and no administrator requirement.
+- Default-off automatic startup setting for packaged builds, backed by an
+  isolated Windows platform service and safe persistence rollback.
 
 ### Fixed
 

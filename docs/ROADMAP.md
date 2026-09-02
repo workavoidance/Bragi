@@ -17,6 +17,8 @@ current priority is a trustworthy personal desktop application.
 - Offer the complete interface in English and Norwegian Bokmål, following the
   Windows display language initially with an explicit language choice in Settings.
 - Add start-with-Windows and overlay appearance settings.
+- Provide a conventional per-user Windows installer while retaining the
+  portable ZIP.
 - Preserve the no-audio-history and no-transcript-history defaults.
 
 ### Acceptance criteria
@@ -32,7 +34,8 @@ current priority is a trustworthy personal desktop application.
 
 - Resumable downloads and reclaiming unused model-cache files.
 - Microphone reconnection and clearer error recovery.
-- Portable ZIP and conventional Windows installer.
+- Installer upgrade and managed-deployment improvements informed by alpha
+  testing.
 - Optional non-content diagnostic logs with redaction tests.
 - Code signing when a sustainable certificate strategy is available.
 - Software bill of materials and automated vulnerability scanning.

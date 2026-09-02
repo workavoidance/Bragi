@@ -218,6 +218,7 @@ class SettingsWindow(QDialog):
         active_model: str = "small",
         model_manager: LocalModelManager | None = None,
         model_runtime: ModelRuntime | None = None,
+        startup_available: bool = False,
     ) -> None:
         super().__init__()
         self._store = store
@@ -227,6 +228,7 @@ class SettingsWindow(QDialog):
         self._title = title
         self._active_model = active_model
         self._model_runtime = model_runtime
+        self._startup_available = startup_available
         self._settings = UserSettings()
         self._settings_warning: str | None = None
         self._status_state = "starting"
@@ -435,6 +437,22 @@ class SettingsWindow(QDialog):
         )
         appearance_layout.addWidget(self.overlay_checkbox)
         layout.addWidget(self._appearance_group)
+
+        self._startup_group = QGroupBox(tr("Startup"), page)
+        startup_layout = QVBoxLayout(self._startup_group)
+        self.startup_checkbox = QCheckBox(
+            f"&{tr('Start Skrivi automatically when I sign in')}",
+            self._startup_group,
+        )
+        self.startup_checkbox.setAccessibleName(tr("Start Skrivi automatically"))
+        self.startup_checkbox.setEnabled(self._startup_available)
+        startup_layout.addWidget(self.startup_checkbox)
+        self._startup_help = QLabel(self._startup_group)
+        self._startup_help.setWordWrap(True)
+        self._startup_help.setAccessibleName(tr("Automatic startup guidance"))
+        startup_layout.addWidget(self._startup_help)
+        self._set_startup_help()
+        layout.addWidget(self._startup_group)
         layout.addStretch(1)
 
         scroll = QScrollArea(self)
@@ -510,6 +528,19 @@ class SettingsWindow(QDialog):
                 "Press Escape to cancel key capture."
             )
         )
+
+    def _set_startup_help(self) -> None:
+        if self._startup_available:
+            self._startup_help.setText(
+                tr(
+                    "Skrivi starts quietly in the system tray. Keep a portable "
+                    "copy in a permanent folder while this is enabled."
+                )
+            )
+        else:
+            self._startup_help.setText(
+                tr("Automatic startup is available in packaged Skrivi builds.")
+            )
 
     def _select_language(self, language: LanguageMode) -> None:
         index = self.language_combo.findData(language.value)
@@ -607,6 +638,13 @@ class SettingsWindow(QDialog):
                 "transcribes."
             )
         )
+        self._startup_group.setTitle(tr("Startup"))
+        self.startup_checkbox.setText(
+            f"&{tr('Start Skrivi automatically when I sign in')}"
+        )
+        self.startup_checkbox.setAccessibleName(tr("Start Skrivi automatically"))
+        self._startup_help.setAccessibleName(tr("Automatic startup guidance"))
+        self._set_startup_help()
         self._privacy.setText(
             tr(
                 "Speech is processed locally on this PC. Skrivi does not save your "
@@ -671,6 +709,7 @@ class SettingsWindow(QDialog):
         self._warning.setText(tr(result.warning) if result.warning else "")
         self._warning.setVisible(result.warning is not None)
         self.overlay_checkbox.setChecked(self._settings.overlay_enabled)
+        self.startup_checkbox.setChecked(self._settings.start_with_system)
         self._select_language(self._settings.language)
         blocker = QSignalBlocker(self.interface_language_combo)
         interface_index = self.interface_language_combo.findData(
@@ -729,6 +768,7 @@ class SettingsWindow(QDialog):
             interface_language=InterfaceLanguage(
                 self.interface_language_combo.currentData()
             ),
+            start_with_system=self.startup_checkbox.isChecked(),
         )
         try:
             self._save_settings(updated)

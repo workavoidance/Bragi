@@ -5,7 +5,7 @@ for development progress. Update it in the same pull request that completes or
 changes an item. The [roadmap](ROADMAP.md) describes intended releases; this
 file records the work, its order, and its status.
 
-Last reviewed: 2026-09-01
+Last reviewed: 2026-09-02
 
 ## Product requirements that must remain true
 
@@ -27,12 +27,11 @@ Last reviewed: 2026-09-01
 
 **Current target:** v0.2, a configurable and accessible desktop application.
 
-**Current engineering task:** Phase 8, renaming the alpha product from Bragi to
-Skrivi without losing the existing installation's settings or downloaded
-models. Progress is tracked by
-[#25](https://github.com/workavoidance/Skrivi/issues/25). The remaining Phase 6
-reliability checks and Phase 7 manual accessibility checks remain deferred and
-unchecked below.
+**Current engineering task:** Phase 8 distribution, adding a small per-user
+Windows installer and a default-off automatic-startup setting. The completed
+Bragi-to-Skrivi rename remains in `main`. The remaining Phase 6 reliability
+checks and Phase 7 manual accessibility checks remain deferred and unchecked
+below.
 
 The manual high-DPI, high-contrast, multi-display, and screen-reader checks for
 issue [#8](https://github.com/workavoidance/Skrivi/issues/8) are intentionally
@@ -61,6 +60,8 @@ The v0.2 tracking issue is
 - [x] Record the PySide6 user-interface decision.
 - [x] Create focused v0.2 issues and an overall tracking issue.
 - [x] Rename the public README to Skrivi.
+- [x] Rename the application, repository, website, storage roots, model
+  manifests, and public documentation to Skrivi without losing user data.
 
 ## Phase 1: fast development and preview loop
 
@@ -177,9 +178,16 @@ Tracked by [#4](https://github.com/workavoidance/Skrivi/issues/4).
 
 - [ ] Complete every acceptance criterion in tracking issue
   [#10](https://github.com/workavoidance/Skrivi/issues/10).
-- [ ] Complete the Bragi-to-Skrivi application, executable, package, storage,
+- [x] Complete the Bragi-to-Skrivi application, executable, package, storage,
   model-manifest, website, documentation, and repository rename tracked by
   [#25](https://github.com/workavoidance/Skrivi/issues/25).
+- [ ] Build a conventional per-user Windows installer that needs no
+  administrator rights and preserves settings and downloaded models.
+- [ ] Add Start menu and uninstall entries, with an optional desktop shortcut.
+- [ ] Add a default-off automatic-startup setting for packaged builds and keep
+  operating-system integration behind a replaceable platform boundary.
+- [ ] Test fresh installation, upgrade over an existing version, automatic
+  startup, uninstall, and portable operation on Windows 11.
 - [ ] Perform clean source-install and portable-build tests on Windows 11.
 - [ ] Test English, Norwegian, mixed-language speech, and `æ`, `ø`, and `å` in
   Notepad, a browser, and Microsoft Office.
@@ -197,7 +205,7 @@ claims about the present alpha.
 - [ ] Publish representative school-laptop performance results.
 - [ ] Conduct structured usability testing with people who have dyslexia.
 - [ ] Obtain an independent accessibility evaluation.
-- [ ] Add signed releases, an installer suitable for managed devices, an SBOM,
+- [ ] Add signed releases, managed-device packaging, an SBOM,
   and vulnerability scanning.
 - [ ] Document the threat model, support policy, and vulnerability-response
   process.

@@ -22,6 +22,19 @@ jobs:
       - name: Build portable executable
         shell: powershell
         run: .\build_portable.ps1
+      - name: Install installer compiler
+        shell: powershell
+        run: choco install innosetup --no-progress -y
+      - name: Build per-user installer
+        shell: powershell
+        run: |
+          $sha = "${{ github.event.pull_request.head.sha }}"
+          $shortSha = $sha.Substring(0, 7)
+          $buildId = "PR-${{ github.event.pull_request.number }}-$shortSha"
+          .\build_installer.ps1 `
+            -Version "0.1.0-pr.${{ github.event.pull_request.number }}" `
+            -BuildId $buildId `
+            -Development
       - name: Package identifiable preview
         shell: powershell
         run: |
@@ -42,4 +55,9 @@ jobs:
         with:
           name: Skrivi-PR-${{ github.event.pull_request.number }}-${{ github.event.pull_request.head.sha }}
           path: Skrivi-PR-*-windows-x64.zip
+          retention-days: 7
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Skrivi-PR-${{ github.event.pull_request.number }}-installer-${{ github.event.pull_request.head.sha }}
+          path: dist/installer/Skrivi-*-windows-x64-setup.exe
           retention-days: 7

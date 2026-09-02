@@ -20,6 +20,12 @@ jobs:
       - name: Build portable executable
         shell: powershell
         run: .\build_portable.ps1
+      - name: Install installer compiler
+        shell: powershell
+        run: choco install innosetup --no-progress -y
+      - name: Build per-user installer
+        shell: powershell
+        run: .\build_installer.ps1 -Version "${{ github.ref_name }}"
       - name: Package release
         shell: powershell
         run: |
@@ -30,12 +36,19 @@ jobs:
           Compress-Archive -Path release\* -DestinationPath $archive
           $hash = (Get-FileHash $archive -Algorithm SHA256).Hash.ToLower()
           "$hash *$archive" | Set-Content "$archive.sha256"
+          $installer = Get-Item "dist\installer\Skrivi-*-windows-x64-setup.exe"
+          $publishedInstaller = "Skrivi-${{ github.ref_name }}-windows-x64-setup.exe"
+          Copy-Item $installer.FullName $publishedInstaller
+          $installerHash = (Get-FileHash $publishedInstaller -Algorithm SHA256).Hash.ToLower()
+          "$installerHash *$publishedInstaller" | Set-Content "$publishedInstaller.sha256"
       - uses: actions/upload-artifact@v4
         with:
           name: Skrivi-${{ github.ref_name }}-windows-x64
           path: |
             Skrivi-${{ github.ref_name }}-windows-x64.zip
             Skrivi-${{ github.ref_name }}-windows-x64.zip.sha256
+            Skrivi-*-windows-x64-setup.exe
+            Skrivi-*-windows-x64-setup.exe.sha256
       - name: Publish GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
@@ -44,5 +57,7 @@ jobs:
           gh release create "${{ github.ref_name }}"
           "Skrivi-${{ github.ref_name }}-windows-x64.zip"
           "Skrivi-${{ github.ref_name }}-windows-x64.zip.sha256"
+          "Skrivi-${{ github.ref_name }}-windows-x64-setup.exe"
+          "Skrivi-${{ github.ref_name }}-windows-x64-setup.exe.sha256"
           --generate-notes
           --title "Skrivi ${{ github.ref_name }}"
