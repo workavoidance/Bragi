@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - "release/VERSION"
+      - ".github/workflows/release.yml"
   workflow_dispatch:
 
 permissions:
@@ -83,8 +84,12 @@ jobs:
           if ($tag.Contains("-")) {
             $prereleaseArgs = @("--prerelease")
           }
+          $originalErrorActionPreference = $ErrorActionPreference
+          $ErrorActionPreference = "SilentlyContinue"
           & gh release view $tag *> $null
-          if ($LASTEXITCODE -eq 0) {
+          $releaseExists = $LASTEXITCODE -eq 0
+          $ErrorActionPreference = $originalErrorActionPreference
+          if ($releaseExists) {
             & gh release upload $tag @assets --clobber
             if ($LASTEXITCODE -ne 0) { throw "GitHub release upload failed." }
             & gh release edit $tag --title "Skrivi $tag" @notesArgs @prereleaseArgs

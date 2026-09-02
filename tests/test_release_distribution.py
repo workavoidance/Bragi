@@ -42,6 +42,8 @@ def test_tagged_release_uses_curated_notes_and_marks_alpha_as_prerelease() -> No
     assert '$prereleaseArgs = @("--prerelease")' in workflow
     assert '--target "${{ github.sha }}"' in workflow
     assert "gh release upload $tag @assets --clobber" in workflow
+    assert '$ErrorActionPreference = "SilentlyContinue"' in workflow
+    assert '".github/workflows/release.yml"' in workflow
     assert notes.is_file()
     assert "not code-signed" in notes.read_text(encoding="utf-8")
 
