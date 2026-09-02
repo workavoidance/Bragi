@@ -6,7 +6,9 @@ from PySide6.QtCore import QLineF, QRectF, Qt
 from PySide6.QtGui import QColor, QIcon, QPainter, QPen, QPixmap
 from PySide6.QtWidgets import QApplication
 
-SKRIVI_ORANGE = QColor("#F05A24")
+SKRIVI_INK = QColor("#181817")
+SKRIVI_ICON_EDGE = QColor("#FFFDF9")
+SKRIVI_ICON_SIZES = (16, 20, 24, 32, 48, 64, 128, 256)
 
 APP_STYLESHEET = """
 QDialog {
@@ -70,19 +72,29 @@ QMenu::item:selected {
 """
 
 
-def skrivi_icon(size: int = 64) -> QIcon:
-    """Create Skrivi's dot-and-speaking-marks icon in memory."""
+def _skrivi_icon_pixmap(size: int) -> QPixmap:
+    """Render a high-contrast Skrivi mark at one native icon size."""
     pixmap = QPixmap(size, size)
     pixmap.fill(Qt.GlobalColor.transparent)
 
     painter = QPainter(pixmap)
     painter.setRenderHint(QPainter.RenderHint.Antialiasing)
 
-    dot_radius = size * 0.115
-    dot_x = size * 0.27
+    dot_radius = size * 0.14
+    dot_x = size * 0.17
     dot_y = size * 0.50
     painter.setPen(Qt.PenStyle.NoPen)
-    painter.setBrush(SKRIVI_ORANGE)
+    edge_width = max(1.0, size * 0.045)
+    painter.setBrush(SKRIVI_ICON_EDGE)
+    painter.drawEllipse(
+        QRectF(
+            dot_x - dot_radius - edge_width,
+            dot_y - dot_radius - edge_width,
+            (dot_radius + edge_width) * 2,
+            (dot_radius + edge_width) * 2,
+        )
+    )
+    painter.setBrush(SKRIVI_INK)
     painter.drawEllipse(
         QRectF(
             dot_x - dot_radius,
@@ -92,16 +104,36 @@ def skrivi_icon(size: int = 64) -> QIcon:
         )
     )
 
-    mark_pen = QPen(SKRIVI_ORANGE)
-    mark_pen.setWidthF(max(2.0, size * 0.105))
+    lines = (
+        QLineF(size * 0.50, size * 0.38, size * 0.78, size * 0.17),
+        QLineF(size * 0.52, size * 0.50, size * 0.94, size * 0.50),
+        QLineF(size * 0.50, size * 0.62, size * 0.78, size * 0.83),
+    )
+    mark_width = max(2.0, size * 0.13)
+    edge_pen = QPen(SKRIVI_ICON_EDGE)
+    edge_pen.setWidthF(mark_width + edge_width * 2)
+    edge_pen.setCapStyle(Qt.PenCapStyle.RoundCap)
+    painter.setPen(edge_pen)
+    painter.setBrush(Qt.BrushStyle.NoBrush)
+    for line in lines:
+        painter.drawLine(line)
+
+    mark_pen = QPen(SKRIVI_INK)
+    mark_pen.setWidthF(mark_width)
     mark_pen.setCapStyle(Qt.PenCapStyle.RoundCap)
     painter.setPen(mark_pen)
-    painter.setBrush(Qt.BrushStyle.NoBrush)
-    painter.drawLine(QLineF(size * 0.54, size * 0.39, size * 0.72, size * 0.29))
-    painter.drawLine(QLineF(size * 0.56, size * 0.50, size * 0.80, size * 0.50))
-    painter.drawLine(QLineF(size * 0.54, size * 0.61, size * 0.72, size * 0.71))
+    for line in lines:
+        painter.drawLine(line)
     painter.end()
-    return QIcon(pixmap)
+    return pixmap
+
+
+def skrivi_icon() -> QIcon:
+    """Create Skrivi's readable multi-size tray and application icon."""
+    icon = QIcon()
+    for size in SKRIVI_ICON_SIZES:
+        icon.addPixmap(_skrivi_icon_pixmap(size))
+    return icon
 
 
 def create_application(title: str) -> QApplication:

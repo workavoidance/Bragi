@@ -13,7 +13,11 @@ from PySide6.QtCore import QEvent, Qt
 from PySide6.QtGui import QKeyEvent, QKeySequence
 from PySide6.QtWidgets import QApplication
 
-from whisper_dictate.application import create_application
+from whisper_dictate.application import (
+    SKRIVI_ICON_SIZES,
+    create_application,
+    skrivi_icon,
+)
 from whisper_dictate.i18n import InterfaceLanguage, set_interface_language
 from whisper_dictate.indicator import FloatingIndicator, overlay_position
 from whisper_dictate.model_ui import ModelManagerPanel
@@ -44,6 +48,27 @@ def process_events_until(predicate, timeout: float = 1.0) -> None:
     while time.monotonic() < deadline and not predicate():
         app.processEvents()
         time.sleep(0.005)
+
+
+def test_tray_icon_has_native_small_sizes_and_uses_the_available_canvas() -> None:
+    application()
+    icon = skrivi_icon()
+
+    assert {(size.width(), size.height()) for size in icon.availableSizes()} == {
+        (size, size) for size in SKRIVI_ICON_SIZES
+    }
+
+    image = icon.pixmap(16, 16).toImage()
+    visible = [
+        (x, y)
+        for y in range(image.height())
+        for x in range(image.width())
+        if image.pixelColor(x, y).alpha() > 0
+    ]
+    assert min(x for x, _ in visible) <= 1
+    assert max(x for x, _ in visible) >= 14
+    assert min(y for _, y in visible) <= 1
+    assert max(y for _, y in visible) >= 14
 
 
 def test_overlay_position_handles_displays_on_either_side() -> None:

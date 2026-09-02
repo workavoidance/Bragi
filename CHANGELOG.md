@@ -53,6 +53,8 @@ here before a release.
 
 ### Fixed
 
+- Keep every letter in the website wordmark at one consistent size and enlarge
+  the tray icon with light-and-dark taskbar contrast.
 - Return to Ready after a transcription failure, discard the recording, and
   allow the next dictation to proceed without restarting.
 - Wait for a newly captured push-to-talk key to be released before restarting

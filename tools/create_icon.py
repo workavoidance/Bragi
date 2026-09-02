@@ -4,7 +4,8 @@ from PIL import Image, ImageDraw
 
 ROOT = Path(__file__).resolve().parents[1]
 OUTPUT = ROOT / "assets" / "skrivi.ico"
-SKRIVI_ORANGE = "#F05A24"
+SKRIVI_INK = "#181817"
+SKRIVI_ICON_EDGE = "#FFFDF9"
 
 
 def _rounded_line(
@@ -13,13 +14,14 @@ def _rounded_line(
     end: tuple[float, float],
     *,
     width: int,
+    color: str,
 ) -> None:
-    draw.line((start, end), fill=SKRIVI_ORANGE, width=width)
+    draw.line((start, end), fill=color, width=width)
     radius = width / 2
     for x, y in (start, end):
         draw.ellipse(
             (x - radius, y - radius, x + radius, y + radius),
-            fill=SKRIVI_ORANGE,
+            fill=color,
         )
 
 
@@ -28,9 +30,19 @@ def main() -> None:
     image = Image.new("RGBA", (size, size), (0, 0, 0, 0))
     draw = ImageDraw.Draw(image)
 
-    dot_x = size * 0.27
+    dot_x = size * 0.17
     dot_y = size * 0.50
-    dot_radius = size * 0.115
+    dot_radius = size * 0.14
+    edge_width = size * 0.045
+    draw.ellipse(
+        (
+            dot_x - dot_radius - edge_width,
+            dot_y - dot_radius - edge_width,
+            dot_x + dot_radius + edge_width,
+            dot_y + dot_radius + edge_width,
+        ),
+        fill=SKRIVI_ICON_EDGE,
+    )
     draw.ellipse(
         (
             dot_x - dot_radius,
@@ -38,28 +50,32 @@ def main() -> None:
             dot_x + dot_radius,
             dot_y + dot_radius,
         ),
-        fill=SKRIVI_ORANGE,
+        fill=SKRIVI_INK,
     )
 
-    width = round(size * 0.105)
-    _rounded_line(
-        draw,
-        (size * 0.54, size * 0.39),
-        (size * 0.72, size * 0.29),
-        width=width,
+    lines = (
+        ((size * 0.50, size * 0.38), (size * 0.78, size * 0.17)),
+        ((size * 0.52, size * 0.50), (size * 0.94, size * 0.50)),
+        ((size * 0.50, size * 0.62), (size * 0.78, size * 0.83)),
     )
-    _rounded_line(
-        draw,
-        (size * 0.56, size * 0.50),
-        (size * 0.80, size * 0.50),
-        width=width,
-    )
-    _rounded_line(
-        draw,
-        (size * 0.54, size * 0.61),
-        (size * 0.72, size * 0.71),
-        width=width,
-    )
+    width = round(size * 0.13)
+    outlined_width = width + round(edge_width * 2)
+    for start, end in lines:
+        _rounded_line(
+            draw,
+            start,
+            end,
+            width=outlined_width,
+            color=SKRIVI_ICON_EDGE,
+        )
+    for start, end in lines:
+        _rounded_line(
+            draw,
+            start,
+            end,
+            width=width,
+            color=SKRIVI_INK,
+        )
 
     icon = image.resize((256, 256), Image.Resampling.LANCZOS)
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
