@@ -65,7 +65,7 @@ Copy-Item -LiteralPath "THIRD_PARTY_NOTICES.md" -Destination $packageRoot
 $manifest = Get-Content "store\AppxManifest.xml" -Raw
 $manifest = $manifest.Replace("__PACKAGE_VERSION__", $packageVersion)
 $manifestPath = Join-Path $packageRoot "AppxManifest.xml"
-Set-Content -LiteralPath $manifestPath -Value $manifest -Encoding utf8NoBOM
+Set-Content -LiteralPath $manifestPath -Value $manifest -Encoding UTF8
 
 $makeAppx = Get-Command makeappx.exe -ErrorAction SilentlyContinue
 if ($makeAppx) {
