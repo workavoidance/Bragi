@@ -21,6 +21,12 @@
     footer.insertBefore(makeAlphaLink(), footer.firstChild);
   }
 
+  const heroCopy = document.querySelector('.hero-copy');
+  if (heroCopy) {
+    heroCopy.dataset.nb = 'Nøyaktig, lokal tale-til-tekst. Gratis for alle.';
+    heroCopy.dataset.en = 'Accurate, local speech-to-text. Free for everyone.';
+  }
+
   const setLanguage = (language) => {
     const norwegian = language === 'nb';
     document.documentElement.lang = norwegian ? 'nb' : 'en';
@@ -40,8 +46,8 @@
     const description = document.querySelector('meta[name="description"]');
     if (description) {
       description.content = norwegian
-        ? 'Skrivi er svært nøyaktig, lokal tale-til-tekst. Gratis for alle.'
-        : 'Skrivi is highly accurate, local speech-to-text. Free for everyone.';
+        ? 'Skrivi er nøyaktig, lokal tale-til-tekst. Gratis for alle.'
+        : 'Skrivi is accurate, local speech-to-text. Free for everyone.';
     }
 
     button.textContent = norwegian ? 'EN' : 'NO';
