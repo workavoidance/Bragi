@@ -2,7 +2,9 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-ALPHA_PAGE = ROOT / "website" / "alpha" / "index.html"
+ALPHA_ROOT = ROOT / "website" / "alpha"
+ALPHA_PAGE = ALPHA_ROOT / "index.html"
+ALPHA_SCRIPT = ALPHA_ROOT / "alpha.js"
 MAIN_SCRIPT = ROOT / "website" / "script.js"
 
 
@@ -35,6 +37,18 @@ def test_alpha_page_explains_language_and_model_experiments() -> None:
     assert "Base" in page
     assert "Medium" in page
     assert "hvilket verktøy barnet faktisk velger" in page
+
+
+def test_alpha_guide_includes_visual_settings_walkthrough() -> None:
+    script = ALPHA_SCRIPT.read_text(encoding="utf-8")
+
+    assert "assets/tray-settings.webp" in script
+    assert "assets/settings-window.webp" in script
+    assert "Finn Skrivi og åpne Innstillinger" in script
+    assert "Try languages and models" in script
+    assert (ALPHA_ROOT / "assets" / "tray-settings.webp").is_file()
+    assert (ALPHA_ROOT / "assets" / "settings-window.webp").is_file()
+    assert (ALPHA_ROOT / "screenshots.css").is_file()
 
 
 def test_main_site_links_to_alpha_guide() -> None:
