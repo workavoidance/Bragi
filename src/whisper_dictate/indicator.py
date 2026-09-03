@@ -3,9 +3,10 @@ from __future__ import annotations
 from collections.abc import Callable
 
 from PySide6.QtCore import Qt, QTimer, Signal, Slot
-from PySide6.QtGui import QCursor, QGuiApplication
+from PySide6.QtGui import QCursor, QGuiApplication, QPalette
 from PySide6.QtWidgets import QApplication, QFrame, QHBoxLayout, QLabel, QWidget
 
+from whisper_dictate.application import theme_colors
 from whisper_dictate.i18n import add_interface_language_listener, tr
 
 
@@ -21,6 +22,26 @@ def overlay_position(
     x = left + max(0, (screen_width - overlay_width) // 2)
     y = top + max(0, screen_height - overlay_height - bottom_margin)
     return x, y
+
+
+def indicator_stylesheet(
+    palette: QPalette, *, high_contrast: bool | None = None
+) -> str:
+    colors = theme_colors(palette, high_contrast=high_contrast)
+    return f"""
+        QFrame#skriviStatusFrame {{
+            background: {colors["surface"]};
+            border: 1px solid {colors["control_border"]};
+            border-radius: 16px;
+        }}
+        QLabel {{
+            color: {colors["text"]};
+            background: transparent;
+        }}
+        QLabel#skriviStateMark {{
+            color: {colors["accent"]};
+        }}
+    """
 
 
 class FloatingIndicator(QWidget):
@@ -52,7 +73,8 @@ class FloatingIndicator(QWidget):
     }
 
     def __init__(self, title: str = "Skrivi", *, enabled: bool = True) -> None:
-        if QApplication.instance() is None:
+        app = QApplication.instance()
+        if app is None:
             raise RuntimeError("create_application() must be called before the UI")
         super().__init__(
             None,
@@ -70,22 +92,8 @@ class FloatingIndicator(QWidget):
         )
         self.setMinimumWidth(300)
         self.setMaximumWidth(480)
-        self.setStyleSheet(
-            """
-            QFrame#skriviStatusFrame {
-                background: #FFFDF9;
-                border: 1px solid #DED7CF;
-                border-radius: 16px;
-            }
-            QLabel {
-                color: #181817;
-                background: transparent;
-            }
-            QLabel#skriviStateMark {
-                color: #F05A24;
-            }
-            """
-        )
+        self._refresh_theme(app.palette())
+        app.paletteChanged.connect(self._refresh_theme)
 
         self._enabled = enabled
         self._exit_handler: Callable[[], None] | None = None
@@ -127,6 +135,10 @@ class FloatingIndicator(QWidget):
         self.state_requested.connect(self._render)
         self.exit_requested.connect(self._exit)
         add_interface_language_listener(self.retranslate_ui)
+
+    @Slot(QPalette)
+    def _refresh_theme(self, palette: QPalette) -> None:
+        self.setStyleSheet(indicator_stylesheet(palette))
 
     def set_exit_handler(self, handler: Callable[[], None]) -> None:
         self._exit_handler = handler

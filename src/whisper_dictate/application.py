@@ -7,10 +7,7 @@ from PySide6.QtCore import QLineF, QRectF, Qt
 from PySide6.QtGui import QColor, QIcon, QPainter, QPalette, QPen, QPixmap
 from PySide6.QtWidgets import QApplication
 
-SKRIVI_INK = QColor("#181817")
-SKRIVI_ICON_EDGE = QColor("#FFFDF9")
 SKRIVI_ICON_SIZES = (16, 20, 24, 32, 48, 64, 128, 256)
-
 SKRIVI_ORANGE = QColor("#F05A24")
 
 
@@ -35,10 +32,17 @@ def _windows_high_contrast_enabled() -> bool:
     return bool(available and state.flags & 0x00000001)
 
 
-def application_stylesheet(
+def _qss_color(color: QColor) -> str:
+    """Preserve translucent Windows palette colours in Qt stylesheets."""
+    if color.alpha() == 255:
+        return color.name()
+    return f"rgba({color.red()}, {color.green()}, {color.blue()}, {color.alpha()})"
+
+
+def theme_colors(
     palette: QPalette, *, high_contrast: bool | None = None
-) -> str:
-    """Build a warm Skrivi theme that yields to Windows accessibility colours."""
+) -> dict[str, str]:
+    """Return theme colours that yield to Windows accessibility settings."""
     if high_contrast is None:
         high_contrast = _windows_high_contrast_enabled()
     dark = palette.color(QPalette.ColorRole.Window).lightness() < 128
@@ -89,22 +93,29 @@ def application_stylesheet(
         error = QColor("#A9362A")
         success = QColor("#157A52")
 
-    colors = {
-        "window": window.name(),
-        "surface": surface.name(),
-        "surface_muted": surface_muted.name(),
-        "border": border.name(),
-        "control_border": control_border.name(),
-        "text": text.name(),
-        "muted": muted.name(),
-        "accent": accent.name(),
-        "accent_textual": accent_textual.name(),
-        "accent_text": accent_text.name(),
-        "selection": selection.name(),
-        "selection_text": selection_text.name(),
-        "error": error.name(),
-        "success": success.name(),
+    return {
+        "window": _qss_color(window),
+        "surface": _qss_color(surface),
+        "surface_muted": _qss_color(surface_muted),
+        "border": _qss_color(border),
+        "control_border": _qss_color(control_border),
+        "text": _qss_color(text),
+        "muted": _qss_color(muted),
+        "accent": _qss_color(accent),
+        "accent_textual": _qss_color(accent_textual),
+        "accent_text": _qss_color(accent_text),
+        "selection": _qss_color(selection),
+        "selection_text": _qss_color(selection_text),
+        "error": _qss_color(error),
+        "success": _qss_color(success),
     }
+
+
+def application_stylesheet(
+    palette: QPalette, *, high_contrast: bool | None = None
+) -> str:
+    """Build a warm Skrivi theme that yields to Windows accessibility colours."""
+    colors = theme_colors(palette, high_contrast=high_contrast)
     return f"""
 QDialog {{
     background: {colors["window"]};
@@ -272,17 +283,7 @@ def _skrivi_icon_pixmap(size: int) -> QPixmap:
     dot_x = size * 0.17
     dot_y = size * 0.50
     painter.setPen(Qt.PenStyle.NoPen)
-    edge_width = max(1.0, size * 0.045)
-    painter.setBrush(SKRIVI_ICON_EDGE)
-    painter.drawEllipse(
-        QRectF(
-            dot_x - dot_radius - edge_width,
-            dot_y - dot_radius - edge_width,
-            (dot_radius + edge_width) * 2,
-            (dot_radius + edge_width) * 2,
-        )
-    )
-    painter.setBrush(SKRIVI_INK)
+    painter.setBrush(SKRIVI_ORANGE)
     painter.drawEllipse(
         QRectF(
             dot_x - dot_radius,
@@ -298,15 +299,7 @@ def _skrivi_icon_pixmap(size: int) -> QPixmap:
         QLineF(size * 0.50, size * 0.62, size * 0.78, size * 0.83),
     )
     mark_width = max(2.0, size * 0.13)
-    edge_pen = QPen(SKRIVI_ICON_EDGE)
-    edge_pen.setWidthF(mark_width + edge_width * 2)
-    edge_pen.setCapStyle(Qt.PenCapStyle.RoundCap)
-    painter.setPen(edge_pen)
-    painter.setBrush(Qt.BrushStyle.NoBrush)
-    for line in lines:
-        painter.drawLine(line)
-
-    mark_pen = QPen(SKRIVI_INK)
+    mark_pen = QPen(SKRIVI_ORANGE)
     mark_pen.setWidthF(mark_width)
     mark_pen.setCapStyle(Qt.PenCapStyle.RoundCap)
     painter.setPen(mark_pen)

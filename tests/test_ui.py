@@ -10,7 +10,7 @@ import pytest
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from PySide6.QtCore import QEvent, Qt
-from PySide6.QtGui import QKeyEvent, QKeySequence
+from PySide6.QtGui import QColor, QKeyEvent, QKeySequence, QPalette
 from PySide6.QtWidgets import QApplication
 
 from whisper_dictate.application import (
@@ -18,9 +18,14 @@ from whisper_dictate.application import (
     application_stylesheet,
     create_application,
     skrivi_icon,
+    theme_colors,
 )
 from whisper_dictate.i18n import InterfaceLanguage, set_interface_language
-from whisper_dictate.indicator import FloatingIndicator, overlay_position
+from whisper_dictate.indicator import (
+    FloatingIndicator,
+    indicator_stylesheet,
+    overlay_position,
+)
 from whisper_dictate.model_ui import ModelManagerPanel
 from whisper_dictate.models import LocalModelManager, ModelState, ModelStatus
 from whisper_dictate.settings import LanguageMode, SettingsStore, UserSettings
@@ -70,6 +75,9 @@ def test_tray_icon_has_native_small_sizes_and_uses_the_available_canvas() -> Non
     assert max(x for x, _ in visible) >= 14
     assert min(y for _, y in visible) <= 1
     assert max(y for _, y in visible) >= 14
+
+    large_image = icon.pixmap(64, 64).toImage()
+    assert large_image.pixelColor(11, 32).name() == "#f05a24"
 
 
 def test_overlay_position_handles_displays_on_either_side() -> None:
@@ -296,6 +304,43 @@ def test_theme_has_visible_focus_disabled_states_and_high_contrast_fallback() ->
     assert "QPushButton:disabled, QComboBox:disabled" in normal
     assert "#faf7f2" in normal.lower()
     assert "#faf7f2" not in high_contrast.lower()
+
+
+def test_dark_theme_preserves_translucent_windows_palette_colours() -> None:
+    palette = QPalette()
+    palette.setColor(QPalette.ColorRole.Window, QColor("#1e1e1e"))
+    palette.setColor(QPalette.ColorRole.WindowText, QColor("#ffffff"))
+    palette.setColor(QPalette.ColorRole.Base, QColor("#2d2d2d"))
+    palette.setColor(
+        QPalette.ColorRole.AlternateBase,
+        QColor.fromRgb(255, 255, 255, 15),
+    )
+    palette.setColor(
+        QPalette.ColorRole.PlaceholderText,
+        QColor.fromRgb(255, 255, 255, 128),
+    )
+
+    colors = theme_colors(palette, high_contrast=False)
+    stylesheet = application_stylesheet(palette, high_contrast=False)
+
+    assert colors["surface_muted"] == "rgba(255, 255, 255, 15)"
+    assert colors["muted"] == "rgba(255, 255, 255, 128)"
+    assert "background: rgba(255, 255, 255, 15);" in stylesheet
+    assert "color: rgba(255, 255, 255, 128);" in stylesheet
+
+
+def test_indicator_uses_application_palette_in_dark_mode() -> None:
+    palette = QPalette()
+    palette.setColor(QPalette.ColorRole.Window, QColor("#1e1e1e"))
+    palette.setColor(QPalette.ColorRole.WindowText, QColor("#ffffff"))
+    palette.setColor(QPalette.ColorRole.Base, QColor("#2d2d2d"))
+    palette.setColor(QPalette.ColorRole.Midlight, QColor("#5a5a5a"))
+
+    stylesheet = indicator_stylesheet(palette, high_contrast=False)
+
+    assert "background: #2d2d2d;" in stylesheet
+    assert "border: 1px solid #5a5a5a;" in stylesheet
+    assert "color: #ffffff;" in stylesheet
 
 
 def test_model_download_progress_is_specific_and_cancellable(tmp_path: Path) -> None:
