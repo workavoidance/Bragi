@@ -40,15 +40,15 @@ def test_alpha_page_explains_language_and_model_experiments() -> None:
     assert "hvilket verktøy barnet faktisk velger" in page
 
 
-def test_alpha_guide_includes_visual_settings_walkthrough() -> None:
+def test_alpha_guide_includes_stable_visual_settings_walkthrough() -> None:
     script = ALPHA_SCRIPT.read_text(encoding="utf-8")
 
     assert "assets/tray-settings.webp" in script
-    assert "assets/settings-window.webp" in script
+    assert "assets/settings-window.webp" not in script
+    assert "walkthrough-settings-map" in script
     assert "Finn Skrivi og åpne Innstillinger" in script
     assert "Try languages and models" in script
     assert (ALPHA_ROOT / "assets" / "tray-settings.webp").is_file()
-    assert (ALPHA_ROOT / "assets" / "settings-window.webp").is_file()
     assert (ALPHA_ROOT / "screenshots.css").is_file()
 
 

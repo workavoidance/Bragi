@@ -38,22 +38,25 @@
       </figure>
 
       <figure class="walkthrough-card walkthrough-card-settings">
-        <div class="walkthrough-image-frame walkthrough-image-frame-settings">
-          <img
-            src="assets/settings-window.webp"
-            alt="Skrivi-innstillinger med språk, talemodell, mikrofon og dikteringstast"
-            data-alt-nb="Skrivi-innstillinger med språk, talemodell, mikrofon og dikteringstast"
-            data-alt-en="Skrivi settings showing language, speech model, microphone and dictation key"
-            width="520"
-            height="639"
-            loading="lazy"
-          >
+        <div class="walkthrough-settings-map">
+          <div class="settings-map-title" data-nb="Innstillinger" data-en="Settings">Innstillinger</div>
+          <div class="settings-map-section">
+            <span data-nb="Språk" data-en="Language">Språk</span>
+            <strong data-nb="Automatisk ▾" data-en="Automatic ▾">Automatisk ▾</strong>
+          </div>
+          <p data-nb="Hvis automatisk velger feil, prøv fast Norsk eller English." data-en="If automatic chooses the wrong language, try fixed Norwegian or English.">Hvis automatisk velger feil, prøv fast Norsk eller English.</p>
+          <div class="settings-map-section settings-map-model">
+            <span data-nb="Talemodell" data-en="Speech model">Talemodell</span>
+            <strong>small</strong>
+            <span class="settings-map-button" data-nb="Modeller …" data-en="Models…">Modeller …</span>
+          </div>
+          <p data-nb="Small er standard. Hvis det føles tregt, åpne Modeller og prøv Base." data-en="Small is the default. If it feels slow, open Models and try Base.">Small er standard. Hvis det føles tregt, åpne Modeller og prøv Base.</p>
         </div>
         <figcaption>
           <span class="walkthrough-step">02</span>
           <div>
             <strong data-nb="Prøv språk og modell" data-en="Try languages and models">Prøv språk og modell</strong>
-            <p data-nb="Start med Automatisk og Small. Hvis språket velges feil, prøv fast Norsk eller English. Hvis Skrivi føles tregt, åpne «Modeller …» og prøv Base." data-en="Start with Automatic and Small. If the wrong language is chosen, try fixed Norwegian or English. If Skrivi feels slow, open “Models…” and try Base.">Start med Automatisk og Small. Hvis språket velges feil, prøv fast Norsk eller English. Hvis Skrivi føles tregt, åpne «Modeller …» og prøv Base.</p>
+            <p data-nb="Du finner begge valgene under Generelt. Start med Automatisk og Small, og endre bare hvis du har en grunn." data-en="Both controls are under General. Start with Automatic and Small, and only change them if you have a reason.">Du finner begge valgene under Generelt. Start med Automatisk og Small, og endre bare hvis du har en grunn.</p>
           </div>
         </figcaption>
       </figure>
