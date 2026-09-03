@@ -14,7 +14,6 @@ from whisper_dictate.i18n import (
     tr,
 )
 
-
 FEEDBACK_URL = "https://skrivi.no/feedback/"
 
 
