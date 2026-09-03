@@ -12,7 +12,7 @@ MAIN_SCRIPT = ROOT / "website" / "script.js"
 def test_alpha_page_has_current_install_feedback_and_school_paths() -> None:
     page = ALPHA_PAGE.read_text(encoding="utf-8")
 
-    assert "Skrivi-v0.2.0-alpha.2-windows-x64-setup.exe" in page
+    assert "Skrivi-v0.2.0-alpha.3-windows-x64-setup.exe" in page
     assert 'href="../feedback/"' in page
     assert 'href="../#schools"' in page
     assert "SCHOOL_EXPLAINER_NB.md" in page
