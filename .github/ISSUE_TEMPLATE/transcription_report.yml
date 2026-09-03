@@ -1,0 +1,67 @@
+name: Transcription problem
+description: Tell us when Skrivi did not transcribe your words correctly
+title: "[Transcription]: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping improve Skrivi. GitHub Issues are public.
+        Do not attach private audio, student information, or sensitive transcripts. Use anonymised or synthetic examples where possible.
+  - type: input
+    id: version
+    attributes:
+      label: Skrivi version
+      placeholder: e.g. v0.2.0-alpha.2
+    validations:
+      required: true
+  - type: dropdown
+    id: language
+    attributes:
+      label: Dictation language
+      options:
+        - Norwegian
+        - English
+        - Automatic
+        - Multilingual
+        - Other / not sure
+    validations:
+      required: true
+  - type: dropdown
+    id: problem_type
+    attributes:
+      label: What went wrong?
+      options:
+        - Words were misunderstood
+        - Words were missing
+        - Unexpected words appeared
+        - Norwegian or dialect recognition was poor
+        - Punctuation was poor
+        - Transcription was too slow
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: Describe the problem without including private or sensitive content.
+    validations:
+      required: true
+  - type: textarea
+    id: example
+    attributes:
+      label: Optional anonymised example
+      description: If useful, provide a short synthetic or anonymised example of what you said and what Skrivi produced.
+      placeholder: |
+        Said: "..."
+        Skrivi wrote: "..."
+  - type: input
+    id: environment
+    attributes:
+      label: Windows and hardware
+      placeholder: e.g. Windows 11, Intel i7, 16 GB RAM
+  - type: input
+    id: microphone
+    attributes:
+      label: Microphone
+      placeholder: e.g. laptop microphone, headset, DJI Mic Mini

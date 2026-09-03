@@ -2,11 +2,36 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping
 
-from PySide6.QtGui import QAction
+from PySide6.QtCore import QUrl
+from PySide6.QtGui import QAction, QDesktopServices
 from PySide6.QtWidgets import QApplication, QMenu, QSystemTrayIcon
 
 from whisper_dictate.application import skrivi_icon
-from whisper_dictate.i18n import add_interface_language_listener, tr
+from whisper_dictate.i18n import (
+    InterfaceLanguage,
+    add_interface_language_listener,
+    current_interface_language,
+    tr,
+)
+
+
+FEEDBACK_URL = "https://skrivi.no/feedback/"
+
+
+def _feedback_text() -> str:
+    if current_interface_language() is InterfaceLanguage.NORWEGIAN_BOKMAL:
+        return "Gi tilbakemelding"
+    return "Give feedback"
+
+
+def _feedback_tooltip() -> str:
+    if current_interface_language() is InterfaceLanguage.NORWEGIAN_BOKMAL:
+        return "Åpne Skrivi-siden for tilbakemeldinger i nettleseren"
+    return "Open the Skrivi feedback page in your web browser"
+
+
+def open_feedback_page() -> None:
+    QDesktopServices.openUrl(QUrl(FEEDBACK_URL))
 
 
 class TrayIcon:
@@ -18,6 +43,7 @@ class TrayIcon:
         *,
         on_settings: Callable[[], None],
         on_retry_model: Callable[[], object] | None = None,
+        on_feedback: Callable[[], None] | None = None,
         title: str = "Skrivi",
         preview_actions: Mapping[str, Callable[[], None]] | None = None,
     ) -> None:
@@ -27,6 +53,7 @@ class TrayIcon:
         self._on_exit = on_exit
         self._on_settings = on_settings
         self._on_retry_model = on_retry_model
+        self._on_feedback = on_feedback or open_feedback_page
         self._title = title
         self._preview_actions = dict(preview_actions or {})
         self._status_state = "starting"
@@ -48,6 +75,11 @@ class TrayIcon:
         self.settings_action.setToolTip(tr("Open Skrivi settings"))
         self.settings_action.triggered.connect(self._settings_clicked)
         self._menu.addAction(self.settings_action)
+
+        self.feedback_action = QAction(f"&{_feedback_text()}", self._menu)
+        self.feedback_action.setToolTip(_feedback_tooltip())
+        self.feedback_action.triggered.connect(self._feedback_clicked)
+        self._menu.addAction(self.feedback_action)
 
         self.retry_model_action = QAction(f"&{tr('Retry speech model')}", self._menu)
         self.retry_model_action.setToolTip(
@@ -100,6 +132,8 @@ class TrayIcon:
         self._menu.setAccessibleName(tr("Skrivi tray menu"))
         self.settings_action.setText(f"&{tr('Settings')}…")
         self.settings_action.setToolTip(tr("Open Skrivi settings"))
+        self.feedback_action.setText(f"&{_feedback_text()}")
+        self.feedback_action.setToolTip(_feedback_tooltip())
         self.retry_model_action.setText(f"&{tr('Retry speech model')}")
         self.retry_model_action.setToolTip(
             tr("Try loading the selected local speech model again")
@@ -114,6 +148,10 @@ class TrayIcon:
     def _settings_clicked(self, checked: bool = False) -> None:
         del checked
         self._on_settings()
+
+    def _feedback_clicked(self, checked: bool = False) -> None:
+        del checked
+        self._on_feedback()
 
     def _exit_clicked(self, checked: bool = False) -> None:
         del checked
