@@ -21,6 +21,12 @@
     footer.insertBefore(makeAlphaLink(), footer.firstChild);
   }
 
+  const heroCopy = document.querySelector('.hero-copy');
+  if (heroCopy) {
+    heroCopy.dataset.nb = 'Nøyaktig, lokal tale-til-tekst. Gratis for alle.';
+    heroCopy.dataset.en = 'Accurate, local speech-to-text. Free for everyone.';
+  }
+
   const setLanguage = (language) => {
     const norwegian = language === 'nb';
     document.documentElement.lang = norwegian ? 'nb' : 'en';
