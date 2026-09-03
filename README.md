@@ -17,8 +17,8 @@ hardware testing are being developed.
 
 ## What this first version does
 
-- Recognises English and Norwegian automatically, with fixed English, fixed
-  Norwegian, and per-segment Multilingual modes available in Settings.
+- Offers Automatic, Norwegian, and English dictation modes. Automatic compares
+  only Norwegian and English for each recording.
 - Uses the Windows default microphone initially and can select another Windows
   input device.
 - Offers verified local Tiny, Base, Small, and Medium models. Small remains the
@@ -111,7 +111,7 @@ SignPath Foundation open-source programme.
 
 - The first model load can take a little while on a CPU, particularly the first
   time the app starts.
-- Very short phrases can be misidentified as the wrong language.
+- Very short phrases can still be misidentified as Norwegian or English.
 - A normal app cannot type into an administrator-elevated window. Run Skrivi as
   administrator only if that is genuinely required.
 - Windows secure fields and some games intentionally reject simulated input.

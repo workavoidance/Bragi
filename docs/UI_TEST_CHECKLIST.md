@@ -41,8 +41,9 @@ issue #8.
 - Start a non-default model download, exit Skrivi, and confirm the process closes
   without hanging. Restart and confirm the cancelled model is not installed and
   can be downloaded normally.
-- In Settings, change the language between Automatic, English, Norwegian, and
-  Multilingual. Confirm the next recording uses the new choice without a restart.
+- In Settings, confirm the language choices are Automatic, Norwegian, and
+  English in that order. Confirm Automatic selects only Norwegian or English,
+  and that the next recording uses each new choice without a restart.
 - Select an available microphone, save, and dictate without restarting. Then
   disconnect it and confirm the next dictation temporarily uses Windows Default.
   Reconnect it and confirm Skrivi automatically returns to the selection.

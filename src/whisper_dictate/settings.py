@@ -17,7 +17,7 @@ from whisper_dictate.i18n import InterfaceLanguage
 from whisper_dictate.models import MODEL_BY_ID
 from whisper_dictate.runtime import settings_directory
 
-CURRENT_SCHEMA_VERSION = 5
+CURRENT_SCHEMA_VERSION = 6
 SETTINGS_FILENAME = "settings.json"
 READ_ERRORS = (OSError, UnicodeError)
 JSON_ERRORS = (json.JSONDecodeError, RecursionError)
@@ -36,7 +36,6 @@ class LanguageMode(StrEnum):
     AUTOMATIC = "auto"
     ENGLISH = "en"
     NORWEGIAN = "no"
-    MULTILINGUAL = "multilingual"
 
 
 class SettingsValidationError(ValueError):
@@ -207,12 +206,21 @@ def _migrate_v4_to_v5(document: dict[str, object]) -> dict[str, object]:
     return migrated
 
 
+def _migrate_v5_to_v6(document: dict[str, object]) -> dict[str, object]:
+    migrated = dict(document)
+    if migrated.get("language") == "multilingual":
+        migrated["language"] = LanguageMode.AUTOMATIC.value
+    migrated["schema_version"] = 6
+    return migrated
+
+
 MIGRATIONS = {
     0: _migrate_v0_to_v1,
     1: _migrate_v1_to_v2,
     2: _migrate_v2_to_v3,
     3: _migrate_v3_to_v4,
     4: _migrate_v4_to_v5,
+    5: _migrate_v5_to_v6,
 }
 
 

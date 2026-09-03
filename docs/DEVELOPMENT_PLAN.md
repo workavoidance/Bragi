@@ -5,7 +5,7 @@ for development progress. Update it in the same pull request that completes or
 changes an item. The [roadmap](ROADMAP.md) describes intended releases; this
 file records the work, its order, and its status.
 
-Last reviewed: 2026-09-02
+Last reviewed: 2026-09-03
 
 ## Product requirements that must remain true
 
@@ -45,8 +45,8 @@ The v0.2 tracking issue is
 - [x] Prove the core Windows 11 push-to-talk workflow.
 - [x] Use Right Ctrl as the initial hold-to-talk key.
 - [x] Use the Windows default microphone.
-- [x] Run multilingual Whisper locally on CPU with English and Norwegian
-  automatic detection.
+- [x] Run multilingual Whisper locally on CPU with automatic detection
+  restricted to Norwegian and English.
 - [x] Insert Unicode directly without using the clipboard.
 - [x] Avoid writing audio, transcripts, or content logs to disk.
 - [x] Show compact loading, recording, and transcription feedback.
@@ -116,7 +116,8 @@ Tracked by [#9](https://github.com/workavoidance/Skrivi/issues/9) and
 
 Tracked by [#6](https://github.com/workavoidance/Skrivi/issues/6).
 
-- [x] Offer Automatic, English, Norwegian, and Multilingual language modes.
+- [x] Offer Automatic, Norwegian, and English language modes, with Automatic
+  restricted to those two languages.
 - [x] Apply language changes to the next recording without restarting Skrivi.
 - [x] Enumerate microphones while keeping Windows Default as the default.
 - [x] Recover clearly when a selected microphone is disconnected.

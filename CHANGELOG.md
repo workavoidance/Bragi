@@ -5,6 +5,12 @@ here before a release.
 
 ## [Unreleased]
 
+### Changed
+
+- Simplify dictation language selection to Automatic, Norwegian, and English.
+  Automatic now compares only Norwegian and English instead of allowing
+  Whisper to select any supported language.
+
 ## [0.2.0-alpha.2] - 2026-09-02
 
 ### Changed

@@ -10,7 +10,8 @@ Skrivi is a Windows tray application with a privacy-first local speech pipeline.
    capture. Right Ctrl is the default.
 2. Releasing the configured key closes the audio stream.
 3. Audio is normalised to mono 16 kHz float32 data.
-4. faster-whisper detects the language and transcribes locally.
+4. In Automatic mode, faster-whisper compares only Norwegian and English;
+   Skrivi selects the stronger match and transcribes locally in that language.
 5. Windows `SendInput` inserts UTF-16 text at the existing cursor.
 6. Audio buffers are overwritten on a best-effort basis and references are
    released.

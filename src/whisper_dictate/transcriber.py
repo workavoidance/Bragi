@@ -11,6 +11,8 @@ from whisper_dictate.config import AppConfig
 from whisper_dictate.core import join_segments
 from whisper_dictate.settings import LanguageMode
 
+AUTOMATIC_LANGUAGES = ("no", "en")
+
 
 @dataclass(frozen=True)
 class Transcription:
@@ -25,14 +27,29 @@ class LoadedModelSnapshot:
     model: object
 
 
-def language_options(mode: LanguageMode) -> tuple[str | None, bool]:
+def language_options(mode: LanguageMode) -> str | None:
     if mode is LanguageMode.ENGLISH:
-        return "en", False
+        return "en"
     if mode is LanguageMode.NORWEGIAN:
-        return "no", False
-    if mode is LanguageMode.MULTILINGUAL:
-        return None, True
-    return None, False
+        return "no"
+    return None
+
+
+def restricted_language(
+    probabilities: list[tuple[str, float]],
+) -> tuple[str, float]:
+    supported = {
+        language: probability
+        for language, probability in probabilities
+        if language in AUTOMATIC_LANGUAGES
+    }
+    if not supported:
+        raise RuntimeError("Whisper returned no Norwegian or English language scores")
+    language = max(
+        AUTOMATIC_LANGUAGES,
+        key=lambda candidate: supported.get(candidate, float("-inf")),
+    )
+    return language, supported[language]
 
 
 class LocalWhisperTranscriber:
@@ -122,9 +139,19 @@ class LocalWhisperTranscriber:
         self.load()
         with self._settings_lock:
             mode = self._language
-        language, multilingual = language_options(mode)
         with self._model_lock:
             model = self._model
+        language = language_options(mode)
+        detected_language = None
+        language_probability = None
+        if language is None:
+            _unrestricted, _probability, probabilities = model.detect_language(
+                audio=audio_16khz
+            )
+            detected_language, language_probability = restricted_language(probabilities)
+            language = detected_language
+            if cancel_event is not None and cancel_event.is_set():
+                return Transcription("", None, None)
         segments, info = model.transcribe(
             audio_16khz,
             language=language,
@@ -133,7 +160,7 @@ class LocalWhisperTranscriber:
             condition_on_previous_text=False,
             vad_filter=False,
             word_timestamps=False,
-            multilingual=multilingual,
+            multilingual=False,
         )
         if cancel_event is None:
             text = join_segments(segments)
@@ -146,6 +173,14 @@ class LocalWhisperTranscriber:
             text = "" if cancel_event.is_set() else "".join(text_parts).strip()
         return Transcription(
             text=text,
-            detected_language=getattr(info, "language", None),
-            language_probability=getattr(info, "language_probability", None),
+            detected_language=(
+                detected_language
+                if detected_language is not None
+                else getattr(info, "language", None)
+            ),
+            language_probability=(
+                language_probability
+                if language_probability is not None
+                else getattr(info, "language_probability", None)
+            ),
         )
