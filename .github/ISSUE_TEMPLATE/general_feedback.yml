@@ -1,0 +1,32 @@
+name: General feedback
+description: Tell us what worked well or share other feedback
+title: "[Feedback]: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to tell us about your experience with Skrivi. GitHub Issues are public, so please do not include private student information, sensitive text, or private audio recordings.
+  - type: dropdown
+    id: feedback_type
+    attributes:
+      label: What kind of feedback is this?
+      options:
+        - Something worked especially well
+        - General feedback
+        - School or classroom feedback
+        - Accessibility feedback
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: feedback
+    attributes:
+      label: Tell us about it
+      description: What should we understand, keep, or pay attention to?
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Skrivi version (optional)
+      placeholder: e.g. v0.2.0-alpha.2
