@@ -2,6 +2,25 @@
   const button = document.querySelector('.language-switch');
   if (!button) return;
 
+  const makeAlphaLink = () => {
+    const link = document.createElement('a');
+    link.href = 'alpha/';
+    link.dataset.nb = 'Test Skrivi';
+    link.dataset.en = 'Test Skrivi';
+    link.textContent = 'Test Skrivi';
+    return link;
+  };
+
+  const header = document.querySelector('.header-actions');
+  if (header) {
+    header.insertBefore(makeAlphaLink(), button);
+  }
+
+  const footer = document.querySelector('.footer-links');
+  if (footer) {
+    footer.insertBefore(makeAlphaLink(), footer.firstChild);
+  }
+
   const setLanguage = (language) => {
     const norwegian = language === 'nb';
     document.documentElement.lang = norwegian ? 'nb' : 'en';

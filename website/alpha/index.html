@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="nb">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Hjelp oss å teste Skrivi. En enkel guide til installasjon, utprøving og tilbakemelding for tidlige testfamilier.">
+  <meta name="theme-color" content="#faf7f2">
+  <title>Test Skrivi — alpha</title>
+  <link rel="icon" href="../assets/skrivi-mark.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../styles.css">
+  <link rel="stylesheet" href="alpha.css">
+  <script src="alpha.js" defer></script>
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="../" aria-label="Skrivi">
+      <img class="wordmark" src="../assets/skrivi-wordmark.svg" alt="">
+    </a>
+    <nav class="header-actions" aria-label="Hovedmeny" data-aria-nb="Hovedmeny" data-aria-en="Main navigation">
+      <a href="../#schools" data-nb="For skoler" data-en="For schools">For skoler</a>
+      <a href="../feedback/" data-nb="Tilbakemelding" data-en="Feedback">Tilbakemelding</a>
+      <button class="language-switch" type="button" aria-label="Switch to English" aria-pressed="false">EN</button>
+    </nav>
+  </header>
+
+  <main id="top">
+    <section class="alpha-hero section-shell">
+      <div class="eyebrow" data-nb="Alpha-testing" data-en="Alpha testing">Alpha-testing</div>
+      <h1 data-nb="Hjelp oss å finne ut om Skrivi faktisk er bedre." data-en="Help us find out whether Skrivi is actually better.">Hjelp oss å finne ut om Skrivi faktisk er bedre.</h1>
+      <p class="hero-copy" data-nb="Skrivi er et lite, gratis tale-til-tekst-verktøy laget for å få egne ord raskt ned på siden. Nå trenger vi noen få familier som vil prøve det i virkeligheten og fortelle oss hva som fungerer, og hva som ikke gjør det." data-en="Skrivi is a small, free speech-to-text tool designed to get your own words onto the page quickly. We now need a small number of families willing to try it in real life and tell us what works, and what does not.">Skrivi er et lite, gratis tale-til-tekst-verktøy laget for å få egne ord raskt ned på siden. Nå trenger vi noen få familier som vil prøve det i virkeligheten og fortelle oss hva som fungerer, og hva som ikke gjør det.</p>
+      <div class="hero-actions">
+        <a class="button button-primary" href="https://github.com/workavoidance/Skrivi/releases/download/v0.2.0-alpha.2/Skrivi-v0.2.0-alpha.2-windows-x64-setup.exe" data-nb="Last ned Skrivi alpha" data-en="Download Skrivi alpha">Last ned Skrivi alpha</a>
+        <a class="button button-secondary" href="#install" data-nb="Se installasjonsguiden" data-en="See the install guide">Se installasjonsguiden</a>
+      </div>
+      <div class="alpha-status">
+        <strong data-nb="Dette er tidlig programvare." data-en="This is early software.">Dette er tidlig programvare.</strong>
+        <span data-nb="Windows 11, 64-bit. Ikke bruk Skrivi som eneste verktøy i viktige prøver eller eksamener ennå." data-en="Windows 11, 64-bit. Do not rely on Skrivi as your only tool in important tests or exams yet.">Windows 11, 64-bit. Ikke bruk Skrivi som eneste verktøy i viktige prøver eller eksamener ennå.</span>
+      </div>
+    </section>
+
+    <section class="section section-shell compact-section">
+      <div class="section-heading wide-heading">
+        <p class="kicker" data-nb="Hvem vi leter etter" data-en="Who we are looking for">Hvem vi leter etter</p>
+        <h2 data-nb="Du trenger ikke være teknisk." data-en="You do not need to be technical.">Du trenger ikke være teknisk.</h2>
+        <p data-nb="Det viktigste er at noen faktisk har nytte av diktering og er villige til å fortelle oss hvordan Skrivi fungerer sammenlignet med det de bruker i dag." data-en="The important thing is that someone genuinely benefits from dictation and is willing to tell us how Skrivi compares with what they use today.">Det viktigste er at noen faktisk har nytte av diktering og er villige til å fortelle oss hvordan Skrivi fungerer sammenlignet med det de bruker i dag.</p>
+      </div>
+      <div class="tester-grid">
+        <article class="tester-card">
+          <span class="tester-symbol" aria-hidden="true">A</span>
+          <h3 data-nb="Elever og foreldre" data-en="Students and parents">Elever og foreldre</h3>
+          <p data-nb="Særlig interessant hvis dere allerede bruker Lingdys, IntoWords, Windows-diktering eller et annet lese- og skrivestøtteverktøy." data-en="Especially useful if you already use Lingdys, IntoWords, Windows dictation or another reading and writing support tool.">Særlig interessant hvis dere allerede bruker Lingdys, IntoWords, Windows-diktering eller et annet lese- og skrivestøtteverktøy.</p>
+        </article>
+        <article class="tester-card">
+          <span class="tester-symbol" aria-hidden="true">B</span>
+          <h3 data-nb="Lærere og støttepersonell" data-en="Teachers and support staff">Lærere og støttepersonell</h3>
+          <p data-nb="Hjelp oss å forstå når diktering faktisk fungerer i skolehverdagen, og når den ikke gjør det." data-en="Help us understand when dictation really works in everyday school life, and when it does not.">Hjelp oss å forstå når diktering faktisk fungerer i skolehverdagen, og når den ikke gjør det.</p>
+        </article>
+        <article class="tester-card">
+          <span class="tester-symbol" aria-hidden="true">C</span>
+          <h3 data-nb="Teknisk nysgjerrige" data-en="Technically curious">Teknisk nysgjerrige</h3>
+          <p data-nb="Kodehjelp er velkommen, men det er også verdifullt å teste ulike PC-er, mikrofoner, dialekter, modeller og installasjoner." data-en="Code help is welcome, but testing different PCs, microphones, dialects, models and installations is just as valuable.">Kodehjelp er velkommen, men det er også verdifullt å teste ulike PC-er, mikrofoner, dialekter, modeller og installasjoner.</p>
+        </article>
+      </div>
+    </section>
+
+    <section id="install" class="section alpha-dark">
+      <div class="section-shell">
+        <div class="section-heading wide-heading alpha-dark-heading">
+          <p class="kicker kicker-light" data-nb="Installer" data-en="Install">Installer</p>
+          <h2 data-nb="Fem steg, og én litt irriterende Windows-advarsel." data-en="Five steps, and one slightly annoying Windows warning.">Fem steg, og én litt irriterende Windows-advarsel.</h2>
+          <p data-nb="Skrivi er ikke kodesignert ennå. Derfor kan Windows SmartScreen advare mot installasjonsfilen. Vi jobber med en bærekraftig signeringsløsning, men akkurat nå kan vi ikke fjerne denne advarselen." data-en="Skrivi is not code-signed yet. Windows SmartScreen may therefore warn about the installer. We are working on a sustainable signing solution, but we cannot remove this warning yet.">Skrivi er ikke kodesignert ennå. Derfor kan Windows SmartScreen advare mot installasjonsfilen. Vi jobber med en bærekraftig signeringsløsning, men akkurat nå kan vi ikke fjerne denne advarselen.</p>
+        </div>
+
+        <ol class="install-list">
+          <li>
+            <span class="install-number">01</span>
+            <div>
+              <h3 data-nb="Last ned installasjonsfilen" data-en="Download the installer">Last ned installasjonsfilen</h3>
+              <p data-nb="Bruk knappen på denne siden. Den laster ned den publiserte Windows-installasjonen direkte fra Skrivis GitHub-utgivelse." data-en="Use the button on this page. It downloads the published Windows installer directly from Skrivi's GitHub release.">Bruk knappen på denne siden. Den laster ned den publiserte Windows-installasjonen direkte fra Skrivis GitHub-utgivelse.</p>
+              <a class="inline-action" href="https://github.com/workavoidance/Skrivi/releases/download/v0.2.0-alpha.2/Skrivi-v0.2.0-alpha.2-windows-x64-setup.exe" data-nb="Last ned v0.2.0 alpha 2 →" data-en="Download v0.2.0 alpha 2 →">Last ned v0.2.0 alpha 2 →</a>
+            </div>
+          </li>
+          <li>
+            <span class="install-number">02</span>
+            <div>
+              <h3 data-nb="Åpne filen" data-en="Open the file">Åpne filen</h3>
+              <p data-nb="Windows kan vise «Windows beskyttet PC-en». Det betyr ikke at Windows har funnet skadevare. Det betyr at denne tidlige utgaven ikke har et etablert signeringsomdømme." data-en="Windows may show “Windows protected your PC”. This does not mean Windows has detected malware. It means this early release does not yet have an established signing reputation.">Windows kan vise «Windows beskyttet PC-en». Det betyr ikke at Windows har funnet skadevare. Det betyr at denne tidlige utgaven ikke har et etablert signeringsomdømme.</p>
+              <div class="smartscreen-callout">
+                <span class="callout-label" data-nb="Hvis du får SmartScreen-advarselen" data-en="If SmartScreen appears">Hvis du får SmartScreen-advarselen</span>
+                <strong data-nb="Velg «Mer informasjon», deretter «Kjør likevel»." data-en="Choose “More info”, then “Run anyway”.">Velg «Mer informasjon», deretter «Kjør likevel».</strong>
+                <span data-nb="Installer bare hvis du er komfortabel med å stole på prosjektet. Kildekoden og hele utviklingshistorikken er offentlig på GitHub." data-en="Only install if you are comfortable trusting the project. The source code and complete development history are public on GitHub.">Installer bare hvis du er komfortabel med å stole på prosjektet. Kildekoden og hele utviklingshistorikken er offentlig på GitHub.</span>
+              </div>
+            </div>
+          </li>
+          <li>
+            <span class="install-number">03</span>
+            <div>
+              <h3 data-nb="Fullfør installasjonen" data-en="Finish installation">Fullfør installasjonen</h3>
+              <p data-nb="Skrivi installeres for den innloggede brukeren og krever normalt ikke administratorrettigheter. Start deretter Skrivi fra Start-menyen." data-en="Skrivi installs for the signed-in user and normally does not require administrator permission. Then start Skrivi from the Start menu.">Skrivi installeres for den innloggede brukeren og krever normalt ikke administratorrettigheter. Start deretter Skrivi fra Start-menyen.</p>
+            </div>
+          </li>
+          <li>
+            <span class="install-number">04</span>
+            <div>
+              <h3 data-nb="La talemodellen lastes ned" data-en="Let the speech model download">La talemodellen lastes ned</h3>
+              <p data-nb="Første gang trenger Skrivi internett for å laste ned og kontrollere den lokale talemodellen. Standardmodellen Small er omtrent 486 MB. Etterpå skjer vanlig diktering lokalt uten at lyd sendes til en skytjeneste." data-en="The first time, Skrivi needs internet access to download and verify the local speech model. The default Small model is about 486 MB. After that, normal dictation runs locally without sending audio to a cloud service.">Første gang trenger Skrivi internett for å laste ned og kontrollere den lokale talemodellen. Standardmodellen Small er omtrent 486 MB. Etterpå skjer vanlig diktering lokalt uten at lyd sendes til en skytjeneste.</p>
+            </div>
+          </li>
+          <li>
+            <span class="install-number">05</span>
+            <div>
+              <h3 data-nb="Prøv i Notisblokk eller Word" data-en="Try it in Notepad or Word">Prøv i Notisblokk eller Word</h3>
+              <p data-nb="Klikk der du vil skrive. Hold inne Høyre Ctrl, snakk naturlig, og slipp tasten. Når transkripsjonen er ferdig, skrives teksten der markøren står." data-en="Click where you want to type. Hold Right Ctrl, speak naturally, and release the key. When transcription finishes, the text is typed wherever the cursor is.">Klikk der du vil skrive. Hold inne Høyre Ctrl, snakk naturlig, og slipp tasten. Når transkripsjonen er ferdig, skrives teksten der markøren står.</p>
+            </div>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <section id="play" class="section section-shell">
+      <div class="section-heading wide-heading">
+        <p class="kicker" data-nb="Lek litt med det" data-en="Play with it">Lek litt med det</p>
+        <h2 data-nb="Ikke bare les opp en testsetning." data-en="Do not just read a test sentence.">Ikke bare les opp en testsetning.</h2>
+        <p data-nb="Det vi egentlig vil vite er om Skrivi fungerer når noen prøver å få ekte tanker ned som tekst. Bruk det på lekser, meldinger, notater eller andre normale skriveoppgaver der det føles naturlig." data-en="What we really want to know is whether Skrivi works when someone is trying to turn real thoughts into text. Use it for homework, messages, notes or other normal writing tasks where it feels natural.">Det vi egentlig vil vite er om Skrivi fungerer når noen prøver å få ekte tanker ned som tekst. Bruk det på lekser, meldinger, notater eller andre normale skriveoppgaver der det føles naturlig.</p>
+      </div>
+
+      <div class="settings-grid">
+        <article class="settings-card settings-card-featured">
+          <div class="settings-topline">
+            <span class="mini-kicker" data-nb="Innstillinger → Generelt" data-en="Settings → General">Innstillinger → Generelt</span>
+            <span class="settings-chip" data-nb="Språk" data-en="Language">Språk</span>
+          </div>
+          <h3 data-nb="Prøv både automatisk og fast språk." data-en="Try automatic and fixed languages.">Prøv både automatisk og fast språk.</h3>
+          <p data-nb="Automatisk er ment å velge norsk eller engelsk for hver diktering. Hvis det velger feil, eller du vet hvilket språk du skal bruke, prøv fast Norsk eller English og se om nøyaktigheten blir bedre." data-en="Automatic is intended to choose Norwegian or English for each dictation. If it chooses incorrectly, or you know which language you will use, try fixed Norwegian or English and see whether accuracy improves.">Automatisk er ment å velge norsk eller engelsk for hver diktering. Hvis det velger feil, eller du vet hvilket språk du skal bruke, prøv fast Norsk eller English og se om nøyaktigheten blir bedre.</p>
+          <div class="settings-path" data-nb="Høyreklikk Skrivi-ikonet ved klokken → Innstillinger → Generelt → Språk" data-en="Right-click the Skrivi tray icon → Settings → General → Language">Høyreklikk Skrivi-ikonet ved klokken → Innstillinger → Generelt → Språk</div>
+        </article>
+
+        <article class="settings-card">
+          <div class="settings-topline">
+            <span class="mini-kicker" data-nb="Innstillinger → Modeller" data-en="Settings → Models">Innstillinger → Modeller</span>
+            <span class="settings-chip" data-nb="Hastighet / nøyaktighet" data-en="Speed / accuracy">Hastighet / nøyaktighet</span>
+          </div>
+          <h3 data-nb="Small er utgangspunktet. Prøv andre modeller hvis du vil." data-en="Small is the starting point. Try other models if you want.">Small er utgangspunktet. Prøv andre modeller hvis du vil.</h3>
+          <p data-nb="Small er anbefalt for vanlige PC-er. Base er raskere, men kan være mindre nøyaktig. Medium kan være mer nøyaktig, men er betydelig tyngre og tregere på mange skole-PC-er." data-en="Small is recommended for typical PCs. Base is faster but may be less accurate. Medium may be more accurate, but it is substantially heavier and slower on many school laptops.">Small er anbefalt for vanlige PC-er. Base er raskere, men kan være mindre nøyaktig. Medium kan være mer nøyaktig, men er betydelig tyngre og tregere på mange skole-PC-er.</p>
+          <p class="settings-note" data-nb="Hvis Skrivi føles for tregt, er Base det første vi ville prøvd. Hvis Small fungerer fint, trenger du ikke endre noe." data-en="If Skrivi feels too slow, Base is the first model we would try. If Small works well, there is no need to change anything.">Hvis Skrivi føles for tregt, er Base det første vi ville prøvd. Hvis Small fungerer fint, trenger du ikke endre noe.</p>
+        </article>
+
+        <article class="settings-card">
+          <div class="settings-topline">
+            <span class="mini-kicker" data-nb="Mikrofon" data-en="Microphone">Mikrofon</span>
+            <span class="settings-chip" data-nb="Virkelige forhold" data-en="Real conditions">Virkelige forhold</span>
+          </div>
+          <h3 data-nb="Bruk den mikrofonen eleven faktisk kommer til å bruke." data-en="Use the microphone the student will really use.">Bruk den mikrofonen eleven faktisk kommer til å bruke.</h3>
+          <p data-nb="Vi vil heller vite hvordan Skrivi fungerer med en vanlig skole-PC i et ekte rom enn hvor perfekt det kan bli med studioutstyr." data-en="We would rather know how Skrivi works with an ordinary school laptop in a real room than how perfect it can be with studio equipment.">Vi vil heller vite hvordan Skrivi fungerer med en vanlig skole-PC i et ekte rom enn hvor perfekt det kan bli med studioutstyr.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section compare-section">
+      <div class="section-shell compare-grid">
+        <div>
+          <p class="kicker" data-nb="Det viktigste eksperimentet" data-en="The most useful experiment">Det viktigste eksperimentet</p>
+          <h2 data-nb="Hva velger barnet når alle alternativene er tilgjengelige?" data-en="What does the child choose when all the options are available?">Hva velger barnet når alle alternativene er tilgjengelige?</h2>
+        </div>
+        <div class="compare-copy">
+          <p data-nb="Hvis dere allerede bruker Lingdys, IntoWords, Windows-diktering eller noe annet, ikke slutt med det for testen. La Skrivi ligge ved siden av." data-en="If you already use Lingdys, IntoWords, Windows dictation or something else, do not stop using it for this test. Leave Skrivi alongside it.">Hvis dere allerede bruker Lingdys, IntoWords, Windows-diktering eller noe annet, ikke slutt med det for testen. La Skrivi ligge ved siden av.</p>
+          <p class="compare-emphasis" data-nb="Etter noen dager er vi mer interessert i hvilket verktøy barnet faktisk velger, og hvorfor, enn om noen kan gi Skrivi fem stjerner." data-en="After a few days, we care much more about which tool the child actually chooses, and why, than whether someone can give Skrivi five stars.">Etter noen dager er vi mer interessert i hvilket verktøy barnet faktisk velger, og hvorfor, enn om noen kan gi Skrivi fem stjerner.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="notice" class="section section-shell">
+      <div class="section-heading wide-heading">
+        <p class="kicker" data-nb="Legg merke til dette" data-en="Things to notice">Legg merke til dette</p>
+        <h2 data-nb="Gode, dårlige og litt rare erfaringer er alle nyttige." data-en="Good, bad and slightly strange experiences are all useful.">Gode, dårlige og litt rare erfaringer er alle nyttige.</h2>
+      </div>
+      <div class="notice-grid">
+        <div><strong data-nb="Nøyaktighet" data-en="Accuracy">Nøyaktighet</strong><span data-nb="Misforstår den ord, navn, dialekt eller faguttrykk?" data-en="Does it misunderstand words, names, dialect or subject vocabulary?">Misforstår den ord, navn, dialekt eller faguttrykk?</span></div>
+        <div><strong data-nb="Hastighet" data-en="Speed">Hastighet</strong><span data-nb="Er ventetiden etter at du slipper tasten grei, eller irriterende?" data-en="Is the wait after releasing the key acceptable or annoying?">Er ventetiden etter at du slipper tasten grei, eller irriterende?</span></div>
+        <div><strong data-nb="Valg" data-en="Choice">Valg</strong><span data-nb="Velger eleven frivillig Skrivi når andre alternativer finnes?" data-en="Does the student voluntarily choose Skrivi when alternatives are available?">Velger eleven frivillig Skrivi når andre alternativer finnes?</span></div>
+        <div><strong data-nb="Sted" data-en="Setting">Sted</strong><span data-nb="Fungerer diktering hjemme, men ikke i klasserommet? Det er viktig å vite." data-en="Does dictation work at home but not in the classroom? That matters.">Fungerer diktering hjemme, men ikke i klasserommet? Det er viktig å vite.</span></div>
+        <div><strong data-nb="Språk" data-en="Language">Språk</strong><span data-nb="Er norsk bedre eller dårligere enn engelsk? Hjelper fast språk?" data-en="Is Norwegian better or worse than English? Does fixed language help?">Er norsk bedre eller dårligere enn engelsk? Hjelper fast språk?</span></div>
+        <div><strong data-nb="Friksjon" data-en="Friction">Friksjon</strong><span data-nb="Hva gjør at dere slutter å bruke Skrivi, selv om transkripsjonen er god?" data-en="What makes you stop using Skrivi even if transcription is good?">Hva gjør at dere slutter å bruke Skrivi, selv om transkripsjonen er god?</span></div>
+      </div>
+    </section>
+
+    <section class="section school-strip">
+      <div class="section-shell school-strip-grid">
+        <div>
+          <p class="kicker kicker-light" data-nb="Hvis skolen spør" data-en="If the school asks">Hvis skolen spør</p>
+          <h2 data-nb="Send dem hit. De trenger ikke stole på et Facebook-innlegg." data-en="Send them here. They do not need to trust a Facebook post.">Send dem hit. De trenger ikke stole på et Facebook-innlegg.</h2>
+          <p data-nb="Hovedsiden forklarer lokal behandling, personvern, åpen kildekode og hva Skrivi gjør og ikke gjør. Vi har også mer detaljert skole-, personvern-, sikkerhets- og arkitekturdokumentasjon." data-en="The main site explains local processing, privacy, open source and what Skrivi does and does not do. We also publish more detailed school, privacy, security and architecture documentation.">Hovedsiden forklarer lokal behandling, personvern, åpen kildekode og hva Skrivi gjør og ikke gjør. Vi har også mer detaljert skole-, personvern-, sikkerhets- og arkitekturdokumentasjon.</p>
+        </div>
+        <div class="school-actions">
+          <a class="button button-paper" href="../#schools" data-nb="Informasjon for skoler" data-en="Information for schools">Informasjon for skoler</a>
+          <a class="school-text-link" href="https://github.com/workavoidance/Skrivi/blob/main/docs/SCHOOL_EXPLAINER_NB.md" data-href-nb="https://github.com/workavoidance/Skrivi/blob/main/docs/SCHOOL_EXPLAINER_NB.md" data-href-en="https://github.com/workavoidance/Skrivi/blob/main/docs/SCHOOL_EXPLAINER.md" target="_blank" rel="noreferrer" data-nb="Åpne den detaljerte skoleforklaringen ↗" data-en="Open the detailed school explainer ↗">Åpne den detaljerte skoleforklaringen ↗</a>
+        </div>
+      </div>
+    </section>
+
+    <section id="feedback" class="section section-shell feedback-section">
+      <div class="feedback-panel">
+        <div>
+          <p class="kicker" data-nb="Fortell oss hva som skjedde" data-en="Tell us what happened">Fortell oss hva som skjedde</p>
+          <h2 data-nb="Ikke vær høflig. Vær nyttig." data-en="Do not be polite. Be useful.">Ikke vær høflig. Vær nyttig.</h2>
+          <p data-nb="Positive erfaringer er hyggelige, men problemer og skuffelser er minst like verdifulle nå. Fortell oss hva dere prøvde, hva dere forventet, og hva som faktisk skjedde." data-en="Positive experiences are lovely, but problems and disappointments are at least as valuable right now. Tell us what you tried, what you expected, and what actually happened.">Positive erfaringer er hyggelige, men problemer og skuffelser er minst like verdifulle nå. Fortell oss hva dere prøvde, hva dere forventet, og hva som faktisk skjedde.</p>
+          <p class="privacy-reminder" data-nb="Ikke legg ut private elevopplysninger, lydopptak eller sensitiv skoletekst i en offentlig GitHub-sak. Bruk anonymiserte eller oppdiktede eksempler når det er mulig." data-en="Do not post private student information, audio recordings or sensitive school text in a public GitHub issue. Use anonymised or synthetic examples where possible.">Ikke legg ut private elevopplysninger, lydopptak eller sensitiv skoletekst i en offentlig GitHub-sak. Bruk anonymiserte eller oppdiktede eksempler når det er mulig.</p>
+        </div>
+        <div class="feedback-actions">
+          <a class="button button-primary" href="../feedback/" data-nb="Gi tilbakemelding" data-en="Give feedback">Gi tilbakemelding</a>
+          <a class="button button-secondary" href="https://github.com/workavoidance/Skrivi" target="_blank" rel="noreferrer" data-nb="Bidra på GitHub" data-en="Contribute on GitHub">Bidra på GitHub</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer section-shell">
+    <a class="footer-brand" href="../" aria-label="Skrivi">
+      <img class="wordmark" src="../assets/skrivi-wordmark.svg" alt="">
+    </a>
+    <div class="footer-links">
+      <a href="../" data-nb="Forside" data-en="Home">Forside</a>
+      <a href="../feedback/" data-nb="Tilbakemelding" data-en="Feedback">Tilbakemelding</a>
+      <a href="https://github.com/workavoidance/Skrivi" target="_blank" rel="noreferrer">GitHub</a>
+    </div>
+  </footer>
+</body>
+</html>
