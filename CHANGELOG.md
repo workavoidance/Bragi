@@ -5,11 +5,27 @@ here before a release.
 
 ## [Unreleased]
 
+## [0.2.0-alpha.3] - 2026-09-03
+
+### Added
+
+- Add a Give feedback tray action that opens Skrivi's feedback page.
+- Add automated unsigned MSIX packaging for Microsoft Store submission.
+- Add an alpha testing guide and structured feedback forms to the website.
+
 ### Changed
 
 - Simplify dictation language selection to Automatic, Norwegian, and English.
   Automatic now compares only Norwegian and English instead of allowing
   Whisper to select any supported language.
+- Explain when automatic startup is unavailable in an MSIX-packaged build.
+
+### Fixed
+
+- Preserve translucent Windows palette colours so status, privacy, and model
+  panels remain readable in dark mode.
+- Make the floating dictation indicator follow the active Windows theme.
+- Keep Skrivi's orange application mark visible in dark mode.
 
 ## [0.2.0-alpha.2] - 2026-09-02
 
