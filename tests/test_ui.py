@@ -250,15 +250,25 @@ def test_settings_guidance_and_navigation_follow_the_current_choice(
     application()
     window = SettingsWindow(SettingsStore(tmp_path / "settings.json"))
 
+    assert [
+        window.language_combo.itemData(index)
+        for index in range(window.language_combo.count())
+    ] == [
+        LanguageMode.AUTOMATIC.value,
+        LanguageMode.NORWEGIAN.value,
+        LanguageMode.ENGLISH.value,
+    ]
     assert window._language_help.text() == (
-        "Detects English or Norwegian for each dictation. Best for most people."
+        "Detects Norwegian or English for each dictation. Best for most people."
     )
     window.language_combo.setCurrentIndex(
-        window.language_combo.findData(LanguageMode.MULTILINGUAL.value)
+        window.language_combo.findData(LanguageMode.NORWEGIAN.value)
     )
-    assert window._language_help.text() == (
-        "Can switch languages within one dictation, but may be less accurate."
+    assert window._language_help.text() == "Always listens for Norwegian."
+    window.language_combo.setCurrentIndex(
+        window.language_combo.findData(LanguageMode.ENGLISH.value)
     )
+    assert window._language_help.text() == "Always listens for English."
 
     window.manage_models_button.click()
     assert window.tabs.currentWidget() is window.model_panel
@@ -380,7 +390,8 @@ def test_norwegian_interface_covers_settings_models_tray_and_overlay(
         assert window.model_panel.download_button.text().replace("&", "") == (
             "Last ned modell"
         )
-        assert window.language_combo.itemText(1) == "English"
+        assert window.language_combo.itemText(1) == "Norsk"
+        assert window.language_combo.itemText(2) == "English"
         assert window.interface_language_combo.itemText(1) == "English"
         assert window.interface_language_combo.itemText(2) == "Norsk bokmål"
         assert tray.settings_action.text().replace("&", "") == "Innstillinger…"

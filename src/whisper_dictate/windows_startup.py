@@ -117,7 +117,7 @@ def _running_with_package_identity() -> bool:
         result = ctypes.windll.kernel32.GetCurrentPackageFullName(
             ctypes.byref(length), None
         )
-    except AttributeError, OSError:
+    except (AttributeError, OSError):
         return False
     return result != APPMODEL_ERROR_NO_PACKAGE
 

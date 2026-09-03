@@ -56,9 +56,8 @@ from whisper_dictate.settings import (
 
 LANGUAGE_CHOICES = (
     ("Automatic", LanguageMode.AUTOMATIC),
-    ("English", LanguageMode.ENGLISH),
     ("Norwegian", LanguageMode.NORWEGIAN),
-    ("Multilingual", LanguageMode.MULTILINGUAL),
+    ("English", LanguageMode.ENGLISH),
 )
 
 INTERFACE_LANGUAGE_CHOICES = (
@@ -813,13 +812,10 @@ class SettingsWindow(QDialog):
     def _set_language_help(self, _index: int = -1) -> None:
         descriptions = {
             LanguageMode.AUTOMATIC.value: (
-                "Detects English or Norwegian for each dictation. Best for most people."
+                "Detects Norwegian or English for each dictation. Best for most people."
             ),
             LanguageMode.ENGLISH.value: "Always listens for English.",
             LanguageMode.NORWEGIAN.value: "Always listens for Norwegian.",
-            LanguageMode.MULTILINGUAL.value: (
-                "Can switch languages within one dictation, but may be less accurate."
-            ),
         }
         key = self.language_combo.currentData() or LanguageMode.AUTOMATIC.value
         self._language_help.setText(tr(descriptions[str(key)]))

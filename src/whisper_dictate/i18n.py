@@ -61,22 +61,14 @@ NORWEGIAN_BOKMAL = {
     "Dictation setup": "Oppsett for diktering",
     "Dictation language": "Dikteringsspråk",
     "Language": "Språk",
-    "Detects English or Norwegian for each dictation. Best for most people.": (
-        "Oppdager English eller norsk for hver diktering. Passer best for de fleste."
+    "Detects Norwegian or English for each dictation. Best for most people.": (
+        "Oppdager norsk eller engelsk for hver diktering. Passer best for de fleste."
     ),
-    "Always listens for English.": "Lytter alltid etter English.",
+    "Always listens for English.": "Lytter alltid etter engelsk.",
     "Always listens for Norwegian.": "Lytter alltid etter norsk.",
-    "Can switch languages within one dictation, but may be less accurate.": (
-        "Kan bytte språk i samme diktering, men kan være mindre nøyaktig."
-    ),
     "Dictation language guidance": "Veiledning for dikteringsspråk",
     "Automatic": "Automatisk",
     "Norwegian": "Norsk",
-    "Multilingual": "Flerspråklig",
-    "Automatic detects one language per recording and works best with a complete phrase. Multilingual can detect language again within a recording.": (
-        "Automatisk oppdager ett språk per opptak og fungerer best med en hel "
-        "setning. Flerspråklig kan oppdage språket på nytt i samme opptak."
-    ),
     "Speech model": "Talemodell",
     "Speech model value": "Verdi for talemodell",
     "Models…": "Modeller …",

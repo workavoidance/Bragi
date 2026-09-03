@@ -13,7 +13,8 @@ current priority is a trustworthy personal desktop application.
 - Show model download and loading progress.
 - Verify pinned model files before atomic installation.
 - Allow microphone and hotkey selection.
-- Support automatic, English, Norwegian and multilingual language modes.
+- Support Automatic, Norwegian, and English language modes, with Automatic
+  restricted to Norwegian and English detection.
 - Offer the complete interface in English and Norwegian Bokmål, following the
   Windows display language initially with an explicit language choice in Settings.
 - Add start-with-Windows and overlay appearance settings.

@@ -28,11 +28,11 @@ Downloaded models remain separately stored under
 `%LOCALAPPDATA%\Skrivi\models`. Settings contain model identifiers, never model
 data.
 
-## Version 5 schema
+## Version 6 schema
 
 ```json
 {
-  "schema_version": 5,
+  "schema_version": 6,
   "language": "auto",
   "model": "small",
   "hotkey": "right_ctrl",
@@ -43,11 +43,10 @@ data.
 }
 ```
 
-The defaults preserve Skrivi's existing behaviour. Supported language values are
-`auto`, `en`, `no`, and `multilingual`. Automatic detects one language for a
-recording. Multilingual allows faster-whisper to detect the language again for
-individual segments. Very short automatic-language recordings may not contain
-enough speech for reliable detection.
+The defaults preserve Skrivi's existing behaviour. Supported language values
+are `auto`, `no`, and `en`. Automatic compares only Norwegian and English for
+each recording, then uses the better match for the complete transcription.
+Very short recordings may not contain enough speech for reliable detection.
 
 Supported interface-language values are `auto`, `en`, and `nb`. Automatic uses
 the Windows display language when it is Norwegian and otherwise uses English.
@@ -95,7 +94,9 @@ equivalents. Version 1 documents migrate to version 2 without changing their
 existing choices. Version 2 documents migrate to version 3, which restricts the
 model field to Skrivi's trusted local catalogue. Version 3 documents migrate to
 version 4 with automatic Windows interface-language selection. Version 4
-documents migrate to version 5 with automatic startup disabled.
+documents migrate to version 5 with automatic startup disabled. Version 5
+documents migrate to version 6, with the removed `multilingual` choice mapped
+safely to restricted Automatic detection.
 
 A migrated document is written in the current format the next time settings are
 explicitly saved. A schema newer than this Skrivi version is never downgraded or

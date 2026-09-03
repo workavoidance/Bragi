@@ -8,20 +8,63 @@ import pytest
 
 from whisper_dictate.config import AppConfig
 from whisper_dictate.settings import LanguageMode
-from whisper_dictate.transcriber import LocalWhisperTranscriber, language_options
+from whisper_dictate.transcriber import (
+    LocalWhisperTranscriber,
+    language_options,
+    restricted_language,
+)
 
 
 @pytest.mark.parametrize(
     ("mode", "expected"),
     [
-        (LanguageMode.AUTOMATIC, (None, False)),
-        (LanguageMode.ENGLISH, ("en", False)),
-        (LanguageMode.NORWEGIAN, ("no", False)),
-        (LanguageMode.MULTILINGUAL, (None, True)),
+        (LanguageMode.AUTOMATIC, None),
+        (LanguageMode.NORWEGIAN, "no"),
+        (LanguageMode.ENGLISH, "en"),
     ],
 )
 def test_language_options(mode, expected) -> None:
     assert language_options(mode) == expected
+
+
+def test_restricted_language_ignores_unsupported_languages() -> None:
+    assert restricted_language([("de", 0.72), ("en", 0.18), ("no", 0.10)]) == (
+        "en",
+        0.18,
+    )
+
+
+def test_restricted_language_prefers_norwegian_when_scores_are_equal() -> None:
+    assert restricted_language([("en", 0.4), ("no", 0.4)]) == ("no", 0.4)
+
+
+def test_automatic_detection_forces_the_best_norwegian_or_english_score(
+    tmp_path,
+) -> None:
+    calls: list[dict[str, object]] = []
+
+    class FakeModel:
+        def detect_language(self, *, audio):
+            assert audio.shape == (16_000,)
+            return "de", 0.72, [("de", 0.72), ("en", 0.18), ("no", 0.10)]
+
+        def transcribe(self, audio, **options):
+            del audio
+            calls.append(options)
+            return [SimpleNamespace(text=" Hello")], SimpleNamespace(
+                language="en", language_probability=1.0
+            )
+
+    transcriber = LocalWhisperTranscriber(AppConfig(), tmp_path)
+    transcriber._model = FakeModel()
+
+    result = transcriber.transcribe(np.ones(16_000, dtype=np.float32))
+
+    assert result.text == "Hello"
+    assert result.detected_language == "en"
+    assert result.language_probability == 0.18
+    assert calls[0]["language"] == "en"
+    assert calls[0]["multilingual"] is False
 
 
 def test_language_change_applies_to_the_next_recording(tmp_path) -> None:

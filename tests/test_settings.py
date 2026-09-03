@@ -173,7 +173,7 @@ def test_unversioned_v0_document_is_migrated_in_memory(tmp_path) -> None:
     assert json.loads(path.read_text(encoding="utf-8")) == legacy
 
 
-def test_version_1_document_migrates_to_multilingual_capable_schema(tmp_path) -> None:
+def test_version_1_document_migrates_through_the_current_schema(tmp_path) -> None:
     legacy = defaults_document()
     legacy["schema_version"] = 1
     path = tmp_path / "settings.json"
@@ -221,6 +221,22 @@ def test_version_4_document_adds_disabled_automatic_startup(tmp_path) -> None:
 
     assert result.settings.start_with_system is False
     assert result.migrated_from == 4
+
+
+def test_version_5_multilingual_choice_migrates_to_restricted_automatic(
+    tmp_path,
+) -> None:
+    legacy = defaults_document()
+    legacy["schema_version"] = 5
+    legacy["language"] = "multilingual"
+    path = tmp_path / "settings.json"
+    path.write_text(json.dumps(legacy), encoding="utf-8")
+
+    result = SettingsStore(path).load()
+
+    assert result.settings.language is LanguageMode.AUTOMATIC
+    assert result.migrated_from == 5
+    assert result.warning is None
 
 
 def test_save_rejects_an_invalid_directly_constructed_model(tmp_path) -> None:

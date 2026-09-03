@@ -11,7 +11,8 @@ lokal kjede for behandling av tale.
    minnet. Høyre Ctrl-tast er standard.
 2. Når den valgte tasten slippes, lukkes lydstrømmen.
 3. Lyden normaliseres til én kanal med 16 kHz float32-data.
-4. faster-whisper oppdager språket og transkriberer lokalt.
+4. I automatisk modus sammenligner faster-whisper bare norsk og engelsk. Skrivi
+   velger det sterkeste treffet og transkriberer lokalt på dette språket.
 5. Windows `SendInput` setter inn UTF-16-tekst ved den eksisterende markøren.
 6. Lydbufferne overskrives etter beste evne, og referansene frigis.
 
