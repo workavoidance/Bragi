@@ -51,12 +51,12 @@ jobs:
           } | ConvertTo-Json | Set-Content preview\BUILD_INFO.json
           $archive = "Skrivi-$buildId-windows-x64.zip"
           Compress-Archive -Path preview\* -DestinationPath $archive
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: Skrivi-PR-${{ github.event.pull_request.number }}-${{ github.event.pull_request.head.sha }}
           path: Skrivi-PR-*-windows-x64.zip
           retention-days: 7
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: Skrivi-PR-${{ github.event.pull_request.number }}-installer-${{ github.event.pull_request.head.sha }}
           path: dist/installer/Skrivi-*-windows-x64-setup.exe
