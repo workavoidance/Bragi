@@ -8,8 +8,9 @@ lokal kjede for behandling av tale.
 ## Nåværende dataflyt
 
 1. En konfigurerbar, global trykk-og-snakk-lytter starter mikrofonopptak i
-   minnet. Høyre Ctrl-tast er standard.
-2. Når den valgte tasten slippes, lukkes lydstrømmen.
+   minnet. Høyre Ctrl-tast er standard, og kombinasjoner med to taster er også
+   tilgjengelige for bærbare PC-er.
+2. Når én av tastene i den valgte snarveien slippes, lukkes lydstrømmen.
 3. Lyden normaliseres til én kanal med 16 kHz float32-data.
 4. I automatisk modus sammenligner faster-whisper bare norsk og engelsk. Skrivi
    velger det sterkeste treffet og transkriberer lokalt på dette språket.
@@ -113,6 +114,13 @@ og stopper den forrige generasjonen før den nye startes, slik at sene
 tilbakekall fra en gammel lytter ikke kan starte diktering. Hvis aktivering
 eller lagring mislykkes, gjenopprettes den forrige kjørekonfigurasjonen der det
 er mulig.
+
+Kombinasjoner som bare består av modifikatortaster, bruker en kort forsinkelse
+før aktivering. En tredje tast som trykkes før aktivering, blokkerer bevegelsen
+slik at vanlige Windows-snarveier fungerer som før. En tredje tast under
+diktering avbryter opptaket. Lytteren skiller mellom de fysiske tastene på
+venstre og høyre side, slik at norsk Høyre Alt/AltGr ikke kan forveksles med
+Venstre Ctrl + Venstre Alt.
 
 ## Implementasjon av brukergrensesnittet
 

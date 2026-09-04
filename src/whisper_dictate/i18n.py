@@ -31,6 +31,8 @@ NORWEGIAN_BOKMAL = {
     ),
     "Windows Default": "Windows-standard",
     "Right Ctrl": "Høyre Ctrl",
+    "Left Ctrl + Windows": "Venstre Ctrl + Windows",
+    "Left Ctrl + Left Alt": "Venstre Ctrl + Venstre Alt",
     "Settings": "Innstillinger",
     "Choose how Skrivi listens, looks and starts.": (
         "Velg hvordan Skrivi lytter, ser ut og starter."
@@ -81,25 +83,28 @@ NORWEGIAN_BOKMAL = {
     "Push-to-talk key value": "Verdi for dikteringstast",
     "Change…": "Endre …",
     "Change push-to-talk key": "Endre dikteringstast",
-    "Press this button, then press Right Ctrl or F6 through F12.": (
-        "Trykk på denne knappen, og trykk deretter Høyre Ctrl eller F6 til F12."
+    "Press this button, then press Right Ctrl, a supported two-key combination, or F6 through F12.": (
+        "Trykk på denne knappen, og trykk deretter Høyre Ctrl, en støttet "
+        "kombinasjon med to taster eller F6 til F12."
     ),
     "Finish the current recording before changing the push-to-talk key.": (
         "Fullfør det gjeldende opptaket før du endrer dikteringstasten."
     ),
-    "Press a key…": "Trykk på en tast …",
+    "Press a key or combination…": "Trykk på en tast eller kombinasjon …",
+    "Press the second key…": "Trykk på den andre tasten …",
     "Waiting for a push-to-talk key": "Venter på en dikteringstast",
-    "Use Right Ctrl or F6 through F12. Letters, Windows keys, and common editing keys are not safe choices.": (
-        "Bruk Høyre Ctrl eller F6 til F12. Bokstaver, Windows-taster og vanlige "
-        "redigeringstaster er ikke trygge valg."
+    "Use Right Ctrl, Left Ctrl + Windows, Left Ctrl + Left Alt, or F6 through F12.": (
+        "Bruk Høyre Ctrl, Venstre Ctrl + Windows, Venstre Ctrl + Venstre Alt "
+        "eller F6 til F12."
     ),
     "Release key…": "Slipp tasten …",
     "Release the selected push-to-talk key": "Slipp den valgte dikteringstasten",
     "Restore Default": "Gjenopprett standard",
     "Restore default push-to-talk key": "Gjenopprett standard dikteringstast",
-    "Safe choices are Right Ctrl and F6 through F12. Press Escape to cancel key capture.": (
-        "Trygge valg er Høyre Ctrl og F6 til F12. Trykk Escape for å avbryte "
-        "tastregistreringen."
+    "Recommended for laptops: Left Ctrl + Windows. Right Ctrl and Left Ctrl + Left Alt also work. F6 through F12 can conflict with shortcuts in other apps.": (
+        "Anbefalt på bærbare PC-er: Venstre Ctrl + Windows. Høyre Ctrl og "
+        "Venstre Ctrl + Venstre Alt fungerer også. F6 til F12 kan komme i "
+        "konflikt med snarveier i andre programmer."
     ),
     "Push-to-talk key guidance": "Veiledning for dikteringstast",
     "Appearance": "Utseende",
@@ -214,7 +219,7 @@ NORWEGIAN_BOKMAL = {
     "Preview state": "Forhåndsvis status",
     "Exit": "Avslutt",
     "Preparing local speech model…": "Klargjør lokal talemodell …",
-    "Ready. Hold Right Ctrl to dictate": "Klar. Hold Høyre Ctrl for å diktere",
+    "Ready. Hold {hotkey} to dictate": "Klar. Hold {hotkey} for å diktere",
     "Listening. Release your dictation key, or press Esc to cancel": (
         "Lytter. Slipp dikteringstasten, eller trykk Esc for å avbryte"
     ),
@@ -466,10 +471,6 @@ NORWEGIAN_BOKMAL = {
     ),
     "Preview ready — choose a state from the tray icon": (
         "Forhåndsvisningen er klar. Velg en status fra ikonet i systemstatusfeltet"
-    ),
-    "Use Right Ctrl or F6 through F12. Letters, Windows keys, and common editing keys are not safe push-to-talk choices.": (
-        "Bruk Høyre Ctrl eller F6 til F12. Bokstaver, Windows-taster og vanlige "
-        "redigeringstaster er ikke trygge valg som dikteringstast."
     ),
     "Unsupported key": "Tasten støttes ikke",
     "That push-to-talk key could not be activated. The previous key has been restored where possible.": (

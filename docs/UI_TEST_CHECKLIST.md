@@ -53,6 +53,13 @@ issue #8.
   discarded, Skrivi returns to Ready, and the next dictation can start normally.
 - Change the push-to-talk key, confirm the old key no longer records, and confirm
   the new key records exactly once per press. Restore Right Ctrl afterward.
+- Select Left Ctrl + Windows and Left Ctrl + Left Alt in either press order.
+  Confirm each starts only after a deliberate short hold and stops when either
+  key is released.
+- While each laptop combination is selected, confirm common three-key Windows
+  shortcuts still work without starting dictation. Confirm Right Alt/AltGr does
+  not activate the Left Ctrl + Left Alt choice on a Norwegian keyboard. Confirm
+  the Start menu does not open after a Left Ctrl + Windows dictation.
 - Dictate Norwegian text containing `æ`, `ø`, and `å` after each configuration
   change and confirm direct insertion is still correct.
 - Open Models and confirm Tiny, Base, Small, and Medium show download size, RAM

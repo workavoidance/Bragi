@@ -5,6 +5,18 @@ here before a release.
 
 ## [Unreleased]
 
+### Added
+
+- Add Left Ctrl + Windows as the recommended laptop push-to-talk combination
+  and Left Ctrl + Left Alt as a fallback.
+
+### Changed
+
+- Delay two-key push-to-talk activation briefly and abandon it when a third key
+  is pressed, preserving ordinary Windows shortcuts.
+- Show the selected push-to-talk key in Skrivi's ready status instead of always
+  naming Right Ctrl.
+
 ## [0.2.0-alpha.3] - 2026-09-03
 
 ### Added

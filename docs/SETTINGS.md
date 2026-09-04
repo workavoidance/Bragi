@@ -28,11 +28,11 @@ Downloaded models remain separately stored under
 `%LOCALAPPDATA%\Skrivi\models`. Settings contain model identifiers, never model
 data.
 
-## Version 6 schema
+## Version 7 schema
 
 ```json
 {
-  "schema_version": 6,
+  "schema_version": 7,
   "language": "auto",
   "model": "small",
   "hotkey": "right_ctrl",
@@ -61,12 +61,16 @@ entry. It is disabled by default, needs no administrator rights, and is
 unavailable during source development so a Python development process is never
 registered accidentally.
 
-Supported push-to-talk identifiers are `right_ctrl` and `f6` through `f12`.
-Letters, Windows keys, modifier keys such as Alt, and common editing keys are
-rejected. Microphones use `windows_default` or a stable `portaudio:`
-identifier derived from the Windows audio host API and device name. A device is
-resolved to its current PortAudio index when recording begins, so stored indexes
-do not become stale.
+Supported push-to-talk identifiers are `right_ctrl`, `left_ctrl_windows`,
+`left_ctrl_left_alt`, and `f6` through `f12`. Left Ctrl + Windows is the
+recommended laptop combination. Two-key combinations wait briefly before
+activation and are abandoned when a third key is pressed, preserving ordinary
+Windows and application shortcuts. Right Alt remains unavailable because it is
+AltGr on Norwegian keyboards. Letters, individual Windows or modifier keys,
+and common editing keys are rejected. Microphones use `windows_default` or a
+stable `portaudio:` identifier derived from the Windows audio host API and
+device name. A device is resolved to its current PortAudio index when recording
+begins, so stored indexes do not become stale.
 
 Supported model identifiers are the packaged `tiny`, `base`, `small`, and
 `medium` catalogue. Arbitrary repository names are rejected. Settings store
@@ -96,7 +100,9 @@ model field to Skrivi's trusted local catalogue. Version 3 documents migrate to
 version 4 with automatic Windows interface-language selection. Version 4
 documents migrate to version 5 with automatic startup disabled. Version 5
 documents migrate to version 6, with the removed `multilingual` choice mapped
-safely to restricted Automatic detection.
+safely to restricted Automatic detection. Version 6 documents migrate to
+version 7 without changing existing choices; version 7 adds the supported
+laptop combinations.
 
 A migrated document is written in the current format the next time settings are
 explicitly saved. A schema newer than this Skrivi version is never downgraded or

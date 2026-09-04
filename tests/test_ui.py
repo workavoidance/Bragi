@@ -180,8 +180,10 @@ def test_hotkey_capture_translation_accepts_only_safe_keys() -> None:
     assert hotkey_from_qt_key(int(Qt.Key.Key_Alt), 0xA5) is None
     assert hotkey_from_qt_key(int(Qt.Key.Key_Control), 0x11, 0xE01D) == ("right_ctrl")
     assert hotkey_from_qt_key(int(Qt.Key.Key_Alt), 0x12, 0xE038) is None
-    assert hotkey_from_qt_key(int(Qt.Key.Key_Control), 0x11, 0x1D) is None
-    assert hotkey_from_qt_key(int(Qt.Key.Key_Alt), 0x12, 0x38) is None
+    assert hotkey_from_qt_key(int(Qt.Key.Key_Control), 0x11, 0x1D) == "left_ctrl"
+    assert hotkey_from_qt_key(int(Qt.Key.Key_Alt), 0x12, 0x38) == "left_alt"
+    assert hotkey_from_qt_key(int(Qt.Key.Key_Meta), 0x5B) == "left_windows"
+    assert hotkey_from_qt_key(int(Qt.Key.Key_Meta), 0x5C) is None
     assert hotkey_from_qt_key(int(Qt.Key.Key_F8), 0) == "f8"
     assert hotkey_from_qt_key(int(Qt.Key.Key_A), 0) is None
 
@@ -228,6 +230,68 @@ def test_hotkey_listener_restarts_only_after_captured_key_is_released() -> None:
 
     assert button.is_capturing is False
     assert events == ["listener stopped", "captured f8", "listener started"]
+
+
+def test_hotkey_capture_accepts_laptop_combination_in_either_order() -> None:
+    application()
+    button = HotkeyCaptureButton()
+    captured: list[str] = []
+    button.hotkey_captured.connect(captured.append)
+
+    button.begin_capture()
+    left_windows = QKeyEvent(
+        QEvent.Type.KeyPress,
+        Qt.Key.Key_Meta,
+        Qt.KeyboardModifier.MetaModifier,
+        0x5B,
+        0x5B,
+        0,
+    )
+    left_ctrl = QKeyEvent(
+        QEvent.Type.KeyPress,
+        Qt.Key.Key_Control,
+        Qt.KeyboardModifier.ControlModifier,
+        0x1D,
+        0xA2,
+        0,
+    )
+
+    button.keyPressEvent(left_windows)
+    assert captured == []
+    assert button.text() == "Press the second key…"
+
+    button.keyPressEvent(left_ctrl)
+    assert captured == ["left_ctrl_windows"]
+
+    release_ctrl = QKeyEvent(
+        QEvent.Type.KeyRelease,
+        Qt.Key.Key_Control,
+        Qt.KeyboardModifier.MetaModifier,
+        0x1D,
+        0xA2,
+        0,
+    )
+    button.keyReleaseEvent(release_ctrl)
+    assert button.is_capturing is False
+
+
+def test_ready_status_uses_the_selected_hotkey() -> None:
+    application()
+    indicator = FloatingIndicator(
+        enabled=False,
+        hotkey="left_ctrl_windows",
+    )
+    statuses: list[str] = []
+    indicator.status_changed.connect(lambda _state, text: statuses.append(text))
+
+    indicator.post("ready")
+    process_events_until(lambda: bool(statuses))
+    indicator.set_hotkey("left_ctrl_left_alt")
+
+    assert statuses == [
+        "Ready. Hold Left Ctrl + Windows to dictate",
+        "Ready. Hold Left Ctrl + Left Alt to dictate",
+    ]
 
 
 def test_settings_actions_are_named_and_keyboard_operable(tmp_path: Path) -> None:
@@ -442,6 +506,11 @@ def test_norwegian_interface_covers_settings_models_tray_and_overlay(
         assert tray.settings_action.text().replace("&", "") == "Innstillinger…"
         assert tray.exit_action.text().replace("&", "") == "Avslutt"
         assert statuses == ["Transkriberer lokalt …"]
+
+        indicator.set_hotkey("left_ctrl_windows")
+        indicator.post("ready")
+        process_events_until(lambda: len(statuses) == 2)
+        assert statuses[-1] == "Klar. Hold Venstre Ctrl + Windows for å diktere"
     finally:
         set_interface_language(InterfaceLanguage.ENGLISH)
 

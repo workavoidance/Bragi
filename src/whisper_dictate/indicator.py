@@ -7,6 +7,7 @@ from PySide6.QtGui import QCursor, QGuiApplication, QPalette
 from PySide6.QtWidgets import QApplication, QFrame, QHBoxLayout, QLabel, QWidget
 
 from whisper_dictate.application import theme_colors
+from whisper_dictate.hotkeys import DEFAULT_HOTKEY, hotkey_display_name, validate_hotkey
 from whisper_dictate.i18n import add_interface_language_listener, tr
 
 
@@ -53,7 +54,7 @@ class FloatingIndicator(QWidget):
 
     STATES = {
         "loading": ("…", "Preparing local speech model…"),
-        "ready": ("✓", "Ready. Hold Right Ctrl to dictate"),
+        "ready": ("✓", "Ready to dictate"),
         "recording": (
             "●",
             "Listening. Release your dictation key, or press Esc to cancel",
@@ -72,7 +73,13 @@ class FloatingIndicator(QWidget):
         "error": 6000,
     }
 
-    def __init__(self, title: str = "Skrivi", *, enabled: bool = True) -> None:
+    def __init__(
+        self,
+        title: str = "Skrivi",
+        *,
+        enabled: bool = True,
+        hotkey: str = DEFAULT_HOTKEY,
+    ) -> None:
         app = QApplication.instance()
         if app is None:
             raise RuntimeError("create_application() must be called before the UI")
@@ -100,6 +107,7 @@ class FloatingIndicator(QWidget):
         self._exiting = False
         self._current_state: str | None = None
         self._current_detail: str | None = None
+        self._hotkey = validate_hotkey(hotkey)
 
         frame = QFrame(self)
         frame.setObjectName("skriviStatusFrame")
@@ -156,6 +164,12 @@ class FloatingIndicator(QWidget):
             self._hide_timer.stop()
             self.hide()
 
+    @Slot(str)
+    def set_hotkey(self, identifier: str) -> None:
+        self._hotkey = validate_hotkey(identifier)
+        if self._current_state == "ready" and self._current_detail is None:
+            self._update_text("ready", None)
+
     @Slot(str, object)
     def _render(self, state: str, detail: object) -> None:
         self._current_state = state
@@ -185,7 +199,13 @@ class FloatingIndicator(QWidget):
 
     def _update_text(self, state: str, detail: str | None) -> None:
         symbol, default_text = self.STATES.get(state, self.STATES["error"])
-        text = tr(detail or default_text)
+        if state == "ready" and detail is None:
+            text = tr(
+                "Ready. Hold {hotkey} to dictate",
+                hotkey=tr(hotkey_display_name(self._hotkey)),
+            )
+        else:
+            text = tr(detail or default_text)
         self._state_mark.setText(symbol)
         self._state_mark.setAccessibleDescription(text)
         self._message.setText(text)

@@ -108,7 +108,9 @@ def main(argv: list[str] | None = None) -> None:
     _application = create_application(identity.title)
     config = AppConfig(model_name=settings.model)
     indicator = FloatingIndicator(
-        title=identity.title, enabled=settings.overlay_enabled
+        title=identity.title,
+        enabled=settings.overlay_enabled,
+        hotkey=settings.hotkey,
     )
     recorder = AudioRecorder(settings.microphone)
     model_cache = model_cache_directory()
@@ -202,6 +204,9 @@ def main(argv: list[str] | None = None) -> None:
     indicator.status_changed.connect(settings_window.set_status)
     settings_window.settings_saved.connect(
         lambda saved: indicator.set_enabled(saved.overlay_enabled)
+    )
+    settings_window.settings_saved.connect(
+        lambda saved: indicator.set_hotkey(saved.hotkey)
     )
     settings_window.hotkey_capture_started.connect(listener.stop)
     settings_window.hotkey_capture_finished.connect(listener.start)

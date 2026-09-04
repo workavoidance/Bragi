@@ -31,8 +31,11 @@ from whisper_dictate.audio import (
 )
 from whisper_dictate.hotkeys import (
     DEFAULT_HOTKEY,
+    HOTKEY_PARTS,
     HotkeyValidationError,
     hotkey_display_name,
+    hotkey_identifier_for_parts,
+    is_hotkey_part_prefix,
     validate_hotkey,
 )
 from whisper_dictate.i18n import (
@@ -129,7 +132,7 @@ def _scrollable_page(page: QWidget, owner: QWidget) -> QScrollArea:
 def hotkey_from_qt_key(
     key: int, native_virtual_key: int, native_scan_code: int = 0
 ) -> str | None:
-    """Translate a captured Windows key into a supported Skrivi identifier."""
+    """Translate a captured Windows key into a supported hotkey part."""
     # Qt normally receives the generic VK_CONTROL/VK_MENU values from Windows.
     # Right-side modifier keys are distinguished by their extended scan codes.
     # Accept the side-specific virtual keys too, because synthetic events and
@@ -138,6 +141,16 @@ def hotkey_from_qt_key(
         key == int(Qt.Key.Key_Control) and native_scan_code in {0xE01D, 0x11D}
     ):
         return "right_ctrl"
+    if native_virtual_key == 0xA2 or (
+        key == int(Qt.Key.Key_Control) and native_scan_code == 0x1D
+    ):
+        return "left_ctrl"
+    if native_virtual_key == 0x5B:
+        return "left_windows"
+    if native_virtual_key == 0xA4 or (
+        key == int(Qt.Key.Key_Alt) and native_scan_code == 0x38
+    ):
+        return "left_alt"
     function_keys = {
         int(getattr(Qt.Key, f"Key_F{number}")): f"f{number}" for number in range(6, 13)
     }
@@ -159,10 +172,14 @@ class HotkeyCaptureButton(QPushButton):
         super().__init__(f"&{tr('Change…')}", parent)
         self._capturing = False
         self._captured_identifier: str | None = None
+        self._pressed_parts: set[str] = set()
         self._can_capture = can_capture or (lambda: True)
         self.setAccessibleName(tr("Change push-to-talk key"))
         self.setAccessibleDescription(
-            tr("Press this button, then press Right Ctrl or F6 through F12.")
+            tr(
+                "Press this button, then press Right Ctrl, a supported two-key "
+                "combination, or F6 through F12."
+            )
         )
         self.clicked.connect(self.begin_capture)
 
@@ -181,7 +198,8 @@ class HotkeyCaptureButton(QPushButton):
             return
         self._capturing = True
         self._captured_identifier = None
-        self.setText(tr("Press a key…"))
+        self._pressed_parts.clear()
+        self.setText(tr("Press a key or combination…"))
         self.setAccessibleName(tr("Waiting for a push-to-talk key"))
         self.grabKeyboard()
         self.setFocus(Qt.FocusReason.ShortcutFocusReason)
@@ -196,6 +214,7 @@ class HotkeyCaptureButton(QPushButton):
         self.releaseKeyboard()
         self._capturing = False
         self._captured_identifier = None
+        self._pressed_parts.clear()
         self.setText(f"&{tr('Change…')}")
         self.setAccessibleName(tr("Change push-to-talk key"))
         self.capture_finished.emit()
@@ -214,23 +233,33 @@ class HotkeyCaptureButton(QPushButton):
         identifier = hotkey_from_qt_key(
             event.key(), event.nativeVirtualKey(), event.nativeScanCode()
         )
-        if identifier is None:
+        if identifier is not None:
+            self._pressed_parts.add(identifier)
+        selected = hotkey_identifier_for_parts(self._pressed_parts)
+        if selected is not None:
+            self._captured_identifier = selected
+            self.hotkey_captured.emit(selected)
+            self.setText(tr("Release key…"))
+            self.setAccessibleName(tr("Release the selected push-to-talk key"))
+            event.accept()
+            return
+        if is_hotkey_part_prefix(self._pressed_parts):
+            self.setText(tr("Press the second key…"))
+            event.accept()
+            return
+        if identifier is None or self._pressed_parts:
+            self._pressed_parts.clear()
             self.capture_rejected.emit(
                 tr(
-                    "Use Right Ctrl or F6 through F12. Letters, Windows "
-                    "keys, and common editing keys are not safe choices."
+                    "Use Right Ctrl, Left Ctrl + Windows, Left Ctrl + Left Alt, "
+                    "or F6 through F12."
                 )
             )
             event.accept()
             return
-        self._captured_identifier = identifier
-        self.hotkey_captured.emit(identifier)
-        self.setText(tr("Release key…"))
-        self.setAccessibleName(tr("Release the selected push-to-talk key"))
-        event.accept()
 
     def keyReleaseEvent(self, event: QKeyEvent) -> None:  # noqa: N802
-        if not self._capturing or self._captured_identifier is None:
+        if not self._capturing:
             super().keyReleaseEvent(event)
             return
         if event.isAutoRepeat():
@@ -239,7 +268,12 @@ class HotkeyCaptureButton(QPushButton):
         identifier = hotkey_from_qt_key(
             event.key(), event.nativeVirtualKey(), event.nativeScanCode()
         )
-        if identifier == self._captured_identifier:
+        if self._captured_identifier is None:
+            if identifier is not None:
+                self._pressed_parts.discard(identifier)
+            if not self._pressed_parts:
+                self.setText(tr("Press a key or combination…"))
+        elif identifier in HOTKEY_PARTS[self._captured_identifier]:
             # Keep the global listener stopped until the selected key is
             # physically up. Restarting it on key-down can give pynput half of
             # the capture event and leave push-to-talk permanently pressed.
@@ -248,13 +282,16 @@ class HotkeyCaptureButton(QPushButton):
 
     def retranslate_ui(self) -> None:
         self.setAccessibleDescription(
-            tr("Press this button, then press Right Ctrl or F6 through F12.")
+            tr(
+                "Press this button, then press Right Ctrl, a supported two-key "
+                "combination, or F6 through F12."
+            )
         )
         if not self._capturing:
             self.setText(f"&{tr('Change…')}")
             self.setAccessibleName(tr("Change push-to-talk key"))
         elif self._captured_identifier is None:
-            self.setText(tr("Press a key…"))
+            self.setText(tr("Press a key or combination…"))
             self.setAccessibleName(tr("Waiting for a push-to-talk key"))
         else:
             self.setText(tr("Release key…"))
@@ -508,8 +545,9 @@ class SettingsWindow(QDialog):
         setup_layout.addRow(self._hotkey_label, hotkey_row)
         self._hotkey_help = _text_label(
             tr(
-                "Safe choices are Right Ctrl and F6 through F12. "
-                "Press Escape to cancel key capture."
+                "Recommended for laptops: Left Ctrl + Windows. Right Ctrl and "
+                "Left Ctrl + Left Alt also work. F6 through F12 can conflict "
+                "with shortcuts in other apps."
             ),
             self._dictation_card,
             role="secondary",
@@ -786,8 +824,9 @@ class SettingsWindow(QDialog):
         self._hotkey.setText(tr(hotkey_display_name(self._selected_hotkey)))
         self._hotkey_help.setText(
             tr(
-                "Safe choices are Right Ctrl and F6 through F12. "
-                "Press Escape to cancel key capture."
+                "Recommended for laptops: Left Ctrl + Windows. Right Ctrl and "
+                "Left Ctrl + Left Alt also work. F6 through F12 can conflict "
+                "with shortcuts in other apps."
             )
         )
 

@@ -7,8 +7,9 @@ Skrivi is a Windows tray application with a privacy-first local speech pipeline.
 ## Current flow
 
 1. A configurable global push-to-talk listener starts in-memory microphone
-   capture. Right Ctrl is the default.
-2. Releasing the configured key closes the audio stream.
+   capture. Right Ctrl is the default; two-key laptop combinations are also
+   available.
+2. Releasing either key in the configured shortcut closes the audio stream.
 3. Audio is normalised to mono 16 kHz float32 data.
 4. In Automatic mode, faster-whisper compares only Norwegian and English;
    Skrivi selects the stronger match and transcribes locally in that language.
@@ -105,6 +106,12 @@ is validated before activation. A replacement global key listener invalidates
 and stops the previous generation before starting the next, so callbacks from a
 late old listener cannot trigger dictation. If activation or persistence fails,
 the previous runtime configuration is restored where possible.
+
+Modifier-only laptop combinations use a short activation delay. A third key
+pressed before activation blocks the gesture so normal Windows shortcuts pass
+through; a third key pressed during dictation cancels it. The listener tracks
+physical left-side modifiers so Norwegian Right Alt/AltGr cannot be mistaken
+for Left Ctrl + Left Alt.
 
 ## Interface implementation
 

@@ -49,7 +49,7 @@ def test_settings_survive_save_and_reload(tmp_path) -> None:
     expected = UserSettings(
         language=LanguageMode.NORWEGIAN,
         model="base",
-        hotkey="f8",
+        hotkey="left_ctrl_windows",
         microphone=microphone_identifier("Windows WASAPI", "USB microphone æøå"),
         overlay_enabled=False,
         interface_language=InterfaceLanguage.NORWEGIAN_BOKMAL,
@@ -236,6 +236,19 @@ def test_version_5_multilingual_choice_migrates_to_restricted_automatic(
 
     assert result.settings.language is LanguageMode.AUTOMATIC
     assert result.migrated_from == 5
+    assert result.warning is None
+
+
+def test_version_6_document_migrates_to_laptop_hotkey_schema(tmp_path) -> None:
+    legacy = defaults_document()
+    legacy["schema_version"] = 6
+    path = tmp_path / "settings.json"
+    path.write_text(json.dumps(legacy), encoding="utf-8")
+
+    result = SettingsStore(path).load()
+
+    assert result.settings == UserSettings()
+    assert result.migrated_from == 6
     assert result.warning is None
 
 
