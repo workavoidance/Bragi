@@ -3,7 +3,8 @@
 Skrivi is a private, local push-to-talk dictation app for Windows 11.
 Hold **Right Ctrl**, speak, and release the key. The complete transcription is
 typed into the application that already has the cursor. Language, microphone,
-and push-to-talk key can be changed from the tray's Settings window.
+and push-to-talk key can be changed from the tray's Settings window. On laptops
+without Right Ctrl, **Left Ctrl + Windows** is the recommended combination.
 
 Press **Escape** while Skrivi is recording or transcribing to cancel the current
 dictation. Recordings are automatically cancelled after five minutes so an
@@ -36,6 +37,8 @@ hardware testing are being developed.
   Settings. This is off by default and requires no administrator rights.
 - Uses the native Windows palette and scaling, including high-DPI displays and
   high-contrast themes.
+- Supports Right Ctrl, laptop-friendly two-key combinations, and optional F6
+  through F12 push-to-talk choices.
 
 Whisper itself may add punctuation or omit hesitations. The app does not perform
 any additional rewriting or filler-word removal.
@@ -52,6 +55,8 @@ any additional rewriting or filler-word removal.
    download of roughly 486 MB shared by later Skrivi versions.
 5. Put the cursor in Word, Outlook, Notepad, or a browser text field.
 6. Hold **Right Ctrl**, speak, then release it. Press **Escape** to cancel.
+   If the laptop has no Right Ctrl, open Settings and select
+   **Left Ctrl + Windows** instead.
 
 After the first model download, speech recognition does not require an internet
 connection and no speech is sent to a cloud service.
@@ -115,8 +120,9 @@ SignPath Foundation open-source programme.
 - A normal app cannot type into an administrator-elevated window. Run Skrivi as
   administrator only if that is genuinely required.
 - Windows secure fields and some games intentionally reject simulated input.
-- Only one dictation can be processed at a time. Right Ctrl is ignored while the
-  model is loading or the previous dictation is being transcribed.
+- Only one dictation can be processed at a time. The push-to-talk shortcut is
+  ignored while the model is loading or the previous dictation is being
+  transcribed.
 
 ## Troubleshooting
 

@@ -6,8 +6,11 @@ from collections.abc import Callable
 from whisper_dictate.i18n import tr
 
 DEFAULT_HOTKEY = "right_ctrl"
+CHORD_ACTIVATION_DELAY_SECONDS = 0.2
 SUPPORTED_HOTKEYS = {
     "right_ctrl": "Right Ctrl",
+    "left_ctrl_windows": "Left Ctrl + Windows",
+    "left_ctrl_left_alt": "Left Ctrl + Left Alt",
     "f6": "F6",
     "f7": "F7",
     "f8": "F8",
@@ -15,6 +18,12 @@ SUPPORTED_HOTKEYS = {
     "f10": "F10",
     "f11": "F11",
     "f12": "F12",
+}
+HOTKEY_PARTS = {
+    "right_ctrl": frozenset({"right_ctrl"}),
+    "left_ctrl_windows": frozenset({"left_ctrl", "left_windows"}),
+    "left_ctrl_left_alt": frozenset({"left_ctrl", "left_alt"}),
+    **{f"f{number}": frozenset({f"f{number}"}) for number in range(6, 13)},
 }
 
 
@@ -30,8 +39,8 @@ def validate_hotkey(identifier: str) -> str:
     if identifier not in SUPPORTED_HOTKEYS:
         raise HotkeyValidationError(
             tr(
-                "Use Right Ctrl or F6 through F12. Letters, Windows keys, and "
-                "common editing keys are not safe push-to-talk choices."
+                "Use Right Ctrl, Left Ctrl + Windows, Left Ctrl + Left Alt, "
+                "or F6 through F12."
             )
         )
     return identifier
@@ -39,6 +48,140 @@ def validate_hotkey(identifier: str) -> str:
 
 def hotkey_display_name(identifier: str) -> str:
     return SUPPORTED_HOTKEYS.get(identifier, tr("Unsupported key"))
+
+
+def hotkey_identifier_for_parts(parts: set[str] | frozenset[str]) -> str | None:
+    selected = frozenset(parts)
+    for identifier, required in HOTKEY_PARTS.items():
+        if selected == required:
+            return identifier
+    return None
+
+
+def is_hotkey_part_prefix(parts: set[str] | frozenset[str]) -> bool:
+    selected = frozenset(parts)
+    return bool(selected) and any(
+        selected < required for required in HOTKEY_PARTS.values()
+    )
+
+
+class HotkeyGesture:
+    """Turn raw key transitions into one safe push-to-talk gesture."""
+
+    def __init__(
+        self,
+        identifier: str,
+        on_press: Callable[[], None],
+        on_release: Callable[[], None],
+        on_cancel: Callable[[], None],
+        *,
+        timer_factory=threading.Timer,
+    ) -> None:
+        self.required = HOTKEY_PARTS[validate_hotkey(identifier)]
+        self._on_press = on_press
+        self._on_release = on_release
+        self._on_cancel = on_cancel
+        self._timer_factory = timer_factory
+        self._down: set[str] = set()
+        self._active = False
+        self._blocked = False
+        self._cancel_notified = False
+        self._timer = None
+        self._lock = threading.Lock()
+
+    def press(self, part: str) -> None:
+        if part == "escape":
+            if len(self.required) > 1:
+                with self._lock:
+                    if self._down & self.required:
+                        self._blocked = True
+                        self._cancel_pending_locked()
+            self._on_cancel()
+            return
+
+        activate_now = False
+        cancel_now = False
+        with self._lock:
+            if part in self._down:
+                return
+            self._down.add(part)
+
+            if len(self.required) == 1:
+                if part in self.required and not self._active:
+                    self._active = True
+                    activate_now = True
+            elif part not in self.required:
+                if self._down & self.required:
+                    self._blocked = True
+                    self._cancel_pending_locked()
+                    if self._active and not self._cancel_notified:
+                        self._cancel_notified = True
+                        cancel_now = True
+            elif (
+                self.required <= self._down
+                and not self._blocked
+                and not self._active
+                and self._timer is None
+                and not (self._down - self.required)
+            ):
+                timer = self._timer_factory(
+                    CHORD_ACTIVATION_DELAY_SECONDS,
+                    self._activate_chord,
+                )
+                if hasattr(timer, "daemon"):
+                    timer.daemon = True
+                self._timer = timer
+                timer.start()
+            elif self.required <= self._down and self._down - self.required:
+                self._blocked = True
+
+        if activate_now:
+            self._on_press()
+        if cancel_now:
+            self._on_cancel()
+
+    def release(self, part: str) -> None:
+        release_now = False
+        with self._lock:
+            self._down.discard(part)
+            if part not in self.required:
+                return
+            self._cancel_pending_locked()
+            if self._active:
+                self._active = False
+                release_now = True
+            if not (self._down & self.required):
+                self._blocked = False
+                self._cancel_notified = False
+
+        if release_now:
+            self._on_release()
+
+    def close(self) -> None:
+        with self._lock:
+            self._cancel_pending_locked()
+            self._down.clear()
+            self._active = False
+            self._blocked = False
+            self._cancel_notified = False
+
+    def _activate_chord(self) -> None:
+        with self._lock:
+            self._timer = None
+            if (
+                not self._active
+                and not self._blocked
+                and self.required <= self._down
+                and not (self._down - self.required)
+            ):
+                self._active = True
+                self._on_press()
+
+    def _cancel_pending_locked(self) -> None:
+        timer = self._timer
+        self._timer = None
+        if timer is not None:
+            timer.cancel()
 
 
 def _pynput_listener_factory(
@@ -49,23 +192,41 @@ def _pynput_listener_factory(
 ):
     from pynput import keyboard
 
-    key_names = {
-        "right_ctrl": "ctrl_r",
-        **{f"f{number}": f"f{number}" for number in range(6, 13)},
+    key_parts = {
+        keyboard.Key.ctrl_r: "right_ctrl",
+        keyboard.Key.ctrl_l: "left_ctrl",
+        keyboard.Key.cmd_l: "left_windows",
+        keyboard.Key.alt_l: "left_alt",
+        keyboard.Key.esc: "escape",
+        **{
+            getattr(keyboard.Key, f"f{number}"): f"f{number}" for number in range(6, 13)
+        },
     }
-    expected = getattr(keyboard.Key, key_names[identifier])
+    gesture = HotkeyGesture(identifier, on_press, on_release, on_cancel)
+
+    def part_for(key) -> str:
+        return key_parts.get(key, f"other:{key!r}")
 
     def pressed(key) -> None:
-        if key == expected:
-            on_press()
-        elif key == keyboard.Key.esc:
-            on_cancel()
+        gesture.press(part_for(key))
 
     def released(key) -> None:
-        if key == expected:
-            on_release()
+        gesture.release(part_for(key))
 
-    return keyboard.Listener(on_press=pressed, on_release=released)
+    native_listener = keyboard.Listener(on_press=pressed, on_release=released)
+
+    class GestureListener:
+        def start(self) -> None:
+            native_listener.start()
+
+        def stop(self) -> None:
+            gesture.close()
+            native_listener.stop()
+
+        def join(self, timeout=None) -> None:
+            native_listener.join(timeout=timeout)
+
+    return GestureListener()
 
 
 class PushToTalkListener:

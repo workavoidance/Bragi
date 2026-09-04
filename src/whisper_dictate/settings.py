@@ -17,7 +17,7 @@ from whisper_dictate.i18n import InterfaceLanguage
 from whisper_dictate.models import MODEL_BY_ID
 from whisper_dictate.runtime import settings_directory
 
-CURRENT_SCHEMA_VERSION = 6
+CURRENT_SCHEMA_VERSION = 7
 SETTINGS_FILENAME = "settings.json"
 READ_ERRORS = (OSError, UnicodeError)
 JSON_ERRORS = (json.JSONDecodeError, RecursionError)
@@ -65,7 +65,7 @@ class UserSettings:
     schema_version: int = CURRENT_SCHEMA_VERSION
     language: LanguageMode = LanguageMode.AUTOMATIC
     model: str = "small"
-    hotkey: str = "right_ctrl"
+    hotkey: str = DEFAULT_HOTKEY
     microphone: str = "windows_default"
     overlay_enabled: bool = True
     interface_language: InterfaceLanguage = InterfaceLanguage.AUTOMATIC
@@ -214,6 +214,12 @@ def _migrate_v5_to_v6(document: dict[str, object]) -> dict[str, object]:
     return migrated
 
 
+def _migrate_v6_to_v7(document: dict[str, object]) -> dict[str, object]:
+    migrated = dict(document)
+    migrated["schema_version"] = 7
+    return migrated
+
+
 MIGRATIONS = {
     0: _migrate_v0_to_v1,
     1: _migrate_v1_to_v2,
@@ -221,6 +227,7 @@ MIGRATIONS = {
     3: _migrate_v3_to_v4,
     4: _migrate_v4_to_v5,
     5: _migrate_v5_to_v6,
+    6: _migrate_v6_to_v7,
 }
 
 
