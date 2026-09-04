@@ -25,7 +25,7 @@ jobs:
             throw "release/VERSION must contain a tag such as v0.2.0-alpha.1."
           }
           "tag=$tag" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.14"
           cache: pip
@@ -117,7 +117,7 @@ jobs:
             throw "release/VERSION must contain a tag such as v0.2.0-alpha.1."
           }
           "tag=$tag" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.14"
           cache: pip
