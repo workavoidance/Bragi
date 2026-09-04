@@ -5,10 +5,14 @@ here before a release.
 
 ## [Unreleased]
 
+## [0.2.0-alpha.4] - 2026-09-04
+
 ### Added
 
 - Add Left Ctrl + Windows as the recommended laptop push-to-talk combination
   and Left Ctrl + Left Alt as a fallback.
+- Support opt-in automatic startup in the Microsoft Store edition through the
+  Windows packaged startup-task API.
 
 ### Changed
 

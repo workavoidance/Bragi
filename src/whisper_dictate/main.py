@@ -23,7 +23,10 @@ from whisper_dictate.settings_window import SettingsWindow
 from whisper_dictate.transcriber import LocalWhisperTranscriber
 from whisper_dictate.tray import TrayIcon
 from whisper_dictate.windows_input import WindowsTextInjector
-from whisper_dictate.windows_startup import startup_manager_for_current_app
+from whisper_dictate.windows_startup import (
+    reconcile_startup_preference,
+    startup_manager_for_current_app,
+)
 
 
 def _single_instance_mutex():
@@ -80,12 +83,15 @@ def main(argv: list[str] | None = None) -> None:
     settings_store = SettingsStore.for_user(development=identity.development)
     settings = settings_store.load().settings
     startup_manager = startup_manager_for_current_app()
-    if settings.start_with_system and startup_manager.available:
+    actual_startup = reconcile_startup_preference(
+        startup_manager,
+        settings.start_with_system,
+    )
+    if actual_startup != settings.start_with_system:
+        settings = replace(settings, start_with_system=actual_startup)
         try:
-            # Repair the command if a portable copy was deliberately moved and
-            # then launched manually from its new permanent folder.
-            startup_manager.set_enabled(True)
-        except OSError:
+            settings_store.save(settings)
+        except SettingsWriteError:
             pass
     set_interface_language(settings.interface_language)
     if args.preview:

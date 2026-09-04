@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "skrivi"
-version = "0.2.0a3"
+version = "0.2.0a4"
 description = "Private, local push-to-talk dictation for Windows"
 readme = "README.md"
 license = "MIT"
@@ -25,6 +25,7 @@ dependencies = [
     "PySide6-Essentials>=6.11,<6.12",
     "sounddevice>=0.5,<1",
     "tqdm>=4.65,<5",
+    "winrt-Windows.ApplicationModel>=3.2,<4",
 ]
 
 [tool.setuptools.packages.find]

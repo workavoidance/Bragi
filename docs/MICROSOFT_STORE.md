@@ -26,12 +26,13 @@ publication.
 Microsoft signs the package after certification. Do not publish the unsigned
 workflow artifact as a direct download: it is intended only for Partner Center.
 
-Before the first public submission, verify microphone capture, global
-push-to-talk, text insertion, model download and settings persistence from an
-installed Store package. Automatic startup is intentionally unavailable in the
-first Store package because MSIX virtualizes the registry mechanism used by the
-website build. Also avoid installing the Store and website editions together;
-they are separate installations and may keep separate application data.
+Before each public submission, verify microphone capture, global push-to-talk,
+text insertion, model download, settings persistence and automatic startup from
+an installed Store package. The Store package declares a `windows.startupTask`
+and Skrivi controls it through Windows' packaged `StartupTask` API. Users and
+organisation policies remain able to control Skrivi through Windows Startup
+settings. Also avoid installing the Store and website editions together; they
+are separate installations and may keep separate application data.
 
 After the first submission is accepted, automate future free-app updates with
 the Microsoft Store Developer CLI. Store credentials belong in GitHub Actions

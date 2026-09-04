@@ -12,3 +12,5 @@ tqdm==4.70.0
 pyinstaller==6.22.2
 pytest==9.1.1
 ruff==0.16.5
+winrt-Windows.ApplicationModel==3.2.1
+winrt-runtime==3.2.1

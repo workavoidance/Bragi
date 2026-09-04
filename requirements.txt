@@ -5,3 +5,4 @@ pynput>=1.7,<2
 PySide6-Essentials>=6.11,<6.12
 sounddevice>=0.5,<1
 tqdm>=4.65,<5
+winrt-Windows.ApplicationModel>=3.2,<4
