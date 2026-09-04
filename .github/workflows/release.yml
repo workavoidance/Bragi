@@ -15,7 +15,7 @@ jobs:
   build:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Read and validate release version
         id: version
         shell: powershell
@@ -107,7 +107,7 @@ jobs:
     continue-on-error: true
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Read and validate release version
         id: version
         shell: powershell
