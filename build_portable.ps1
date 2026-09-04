@@ -34,6 +34,7 @@ $BuildPython = Join-Path $PSScriptRoot ".build-venv\Scripts\python.exe"
     --collect-all ctranslate2 `
     --collect-all tokenizers `
     --collect-all sounddevice `
+    --collect-all winrt.windows.applicationmodel `
     --hidden-import pynput.keyboard._win32 `
     --hidden-import pynput.mouse._win32 `
     src\whisper_dictate\__main__.py

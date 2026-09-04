@@ -7,6 +7,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 FOUNDATION = "http://schemas.microsoft.com/appx/manifest/foundation/windows10"
 UAP = "http://schemas.microsoft.com/appx/manifest/uap/windows10"
+UAP5 = "http://schemas.microsoft.com/appx/manifest/uap/windows10/5"
 RESCAP = (
     "http://schemas.microsoft.com/appx/manifest/"
     "foundation/windows10/restrictedcapabilities"
@@ -40,6 +41,24 @@ def test_store_manifest_declares_full_trust_desktop_app() -> None:
     assert capability is not None
     assert capability.attrib["Name"] == "runFullTrust"
     assert visual_elements is not None
+
+
+def test_store_manifest_declares_opt_in_startup_task() -> None:
+    root = ET.parse(ROOT / "store" / "AppxManifest.xml").getroot()
+    application = root.find(f"{{{FOUNDATION}}}Applications/{{{FOUNDATION}}}Application")
+    extension = application.find(f"{{{FOUNDATION}}}Extensions/{{{UAP5}}}Extension")
+    startup_task = extension.find(f"{{{UAP5}}}StartupTask")
+
+    assert extension.attrib == {
+        "Category": "windows.startupTask",
+        "Executable": "Skrivi.exe",
+        "EntryPoint": "Windows.FullTrustApplication",
+    }
+    assert startup_task.attrib == {
+        "TaskId": "SkriviStartup",
+        "Enabled": "false",
+        "DisplayName": "Skrivi",
+    }
 
 
 def _png_size(path: Path) -> tuple[int, int]:

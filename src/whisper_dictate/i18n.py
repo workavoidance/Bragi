@@ -125,9 +125,9 @@ NORWEGIAN_BOKMAL = {
     ),
     "Start Skrivi automatically": "Start Skrivi automatisk",
     "Automatic startup guidance": "Veiledning for automatisk oppstart",
-    "Skrivi starts quietly in the system tray. Keep a portable copy in a permanent folder while this is enabled.": (
-        "Skrivi starter stille i systemstatusfeltet. Oppbevar en portabel kopi i "
-        "en permanent mappe mens dette er aktivert."
+    "Skrivi starts quietly in the system tray. You can also manage startup apps in Windows Settings.": (
+        "Skrivi starter stille i systemstatusfeltet. Du kan også administrere "
+        "oppstartsapper i Windows-innstillingene."
     ),
     "Automatic startup is available in packaged Skrivi builds.": (
         "Automatisk oppstart er tilgjengelig i pakkede Skrivi-versjoner."
@@ -140,6 +140,19 @@ NORWEGIAN_BOKMAL = {
     ),
     "Skrivi could not change Windows startup settings.": (
         "Skrivi kunne ikke endre oppstartsinnstillingene i Windows."
+    ),
+    "Windows has disabled Skrivi at startup. Enable it in Windows Startup settings, then try again.": (
+        "Windows har deaktivert Skrivi ved oppstart. Aktiver Skrivi under "
+        "Oppstartsapper i Windows-innstillingene, og prøv igjen."
+    ),
+    "Automatic startup is disabled by your organisation's Windows policy.": (
+        "Automatisk oppstart er deaktivert av organisasjonens Windows-policy."
+    ),
+    "Automatic startup is required by your organisation's Windows policy.": (
+        "Automatisk oppstart kreves av organisasjonens Windows-policy."
+    ),
+    "Windows did not enable Skrivi at startup.": (
+        "Windows aktiverte ikke Skrivi ved oppstart."
     ),
     "Speech is processed locally on this PC. Skrivi does not save your recordings or transcripts, does not use the clipboard for dictated text, and needs no account. After the selected speech model has been downloaded, normal dictation does not require internet access.": (
         "Tale behandles lokalt på denne PC-en. Skrivi lagrer ikke opptak eller "

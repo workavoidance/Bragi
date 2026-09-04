@@ -32,7 +32,7 @@ jobs:
           $shortSha = $sha.Substring(0, 7)
           $buildId = "PR-${{ github.event.pull_request.number }}-$shortSha"
           .\build_installer.ps1 `
-            -Version "0.2.0-alpha.3-pr.${{ github.event.pull_request.number }}" `
+            -Version "0.2.0-alpha.4-pr.${{ github.event.pull_request.number }}" `
             -BuildId $buildId `
             -Development
       - name: Package identifiable preview

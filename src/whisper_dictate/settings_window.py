@@ -834,8 +834,8 @@ class SettingsWindow(QDialog):
         if self._startup_available:
             self._startup_help.setText(
                 tr(
-                    "Skrivi starts quietly in the system tray. Keep a portable "
-                    "copy in a permanent folder while this is enabled."
+                    "Skrivi starts quietly in the system tray. You can also "
+                    "manage startup apps in Windows Settings."
                 )
             )
         else:

@@ -7,8 +7,12 @@ import pytest
 from whisper_dictate.platform_services import StartupRegistrationError
 from whisper_dictate.windows_startup import (
     RUN_KEY,
+    STARTUP_TASK_ID,
     VALUE_NAME,
+    PackagedStartupState,
+    PackagedWindowsStartupManager,
     WindowsStartupManager,
+    reconcile_startup_preference,
     startup_manager_for_current_app,
 )
 
@@ -25,6 +29,27 @@ class MemoryRegistry:
 
     def delete(self, key: str, name: str) -> None:
         self.values.pop((key, name), None)
+
+
+class MemoryPackagedStartup:
+    def __init__(self, state: PackagedStartupState) -> None:
+        self.current = state
+        self.requested: list[str] = []
+        self.disabled: list[str] = []
+
+    def state(self, task_id: str) -> PackagedStartupState:
+        assert task_id == STARTUP_TASK_ID
+        return self.current
+
+    def request_enable(self, task_id: str) -> PackagedStartupState:
+        self.requested.append(task_id)
+        if self.current is PackagedStartupState.DISABLED:
+            self.current = PackagedStartupState.ENABLED
+        return self.current
+
+    def disable(self, task_id: str) -> None:
+        self.disabled.append(task_id)
+        self.current = PackagedStartupState.DISABLED
 
 
 def test_windows_startup_quotes_and_registers_the_exact_executable(tmp_path) -> None:
@@ -79,9 +104,7 @@ def test_registry_errors_are_reported_without_exposing_the_path(tmp_path) -> Non
     assert "private registry detail" not in str(caught.value)
 
 
-def test_msix_build_does_not_offer_virtualized_registry_startup(
-    monkeypatch,
-) -> None:
+def test_msix_build_uses_packaged_startup_task(monkeypatch) -> None:
     monkeypatch.setattr("whisper_dictate.windows_startup.os.name", "nt")
     monkeypatch.setattr(
         "whisper_dictate.windows_startup.sys.frozen", True, raising=False
@@ -89,7 +112,79 @@ def test_msix_build_does_not_offer_virtualized_registry_startup(
 
     manager = startup_manager_for_current_app(packaged=True)
 
-    assert manager.available is False
+    assert isinstance(manager, PackagedWindowsStartupManager)
+    assert manager.available is True
+
+
+def test_packaged_startup_can_be_enabled_and_disabled() -> None:
+    backend = MemoryPackagedStartup(PackagedStartupState.DISABLED)
+    manager = PackagedWindowsStartupManager(backend=backend)
+
+    manager.set_enabled(True)
+
+    assert manager.is_enabled() is True
+    assert backend.requested == [STARTUP_TASK_ID]
+
+    manager.set_enabled(False)
+
+    assert manager.is_enabled() is False
+    assert backend.disabled == [STARTUP_TASK_ID]
+
+
+def test_packaged_startup_respects_a_user_disabled_task() -> None:
+    manager = PackagedWindowsStartupManager(
+        backend=MemoryPackagedStartup(PackagedStartupState.DISABLED_BY_USER)
+    )
+
+    with pytest.raises(StartupRegistrationError, match="Windows has disabled"):
+        manager.set_enabled(True)
+
+    assert reconcile_startup_preference(manager, requested=True) is False
+
+
+@pytest.mark.parametrize(
+    ("state", "enabled", "message"),
+    [
+        (
+            PackagedStartupState.DISABLED_BY_POLICY,
+            True,
+            "disabled by your organisation",
+        ),
+        (
+            PackagedStartupState.ENABLED_BY_POLICY,
+            False,
+            "required by your organisation",
+        ),
+    ],
+)
+def test_packaged_startup_respects_windows_policy(
+    state: PackagedStartupState,
+    enabled: bool,
+    message: str,
+) -> None:
+    manager = PackagedWindowsStartupManager(backend=MemoryPackagedStartup(state))
+
+    with pytest.raises(StartupRegistrationError, match=message):
+        manager.set_enabled(enabled)
+
+
+def test_packaged_startup_wraps_backend_errors() -> None:
+    class FailingPackagedStartup(MemoryPackagedStartup):
+        def state(self, task_id: str) -> PackagedStartupState:
+            del task_id
+            raise OSError("private Windows detail")
+
+    manager = PackagedWindowsStartupManager(
+        backend=FailingPackagedStartup(PackagedStartupState.DISABLED)
+    )
+
+    with pytest.raises(
+        StartupRegistrationError,
+        match="could not read Windows startup settings",
+    ) as caught:
+        manager.is_enabled()
+
+    assert "private Windows detail" not in str(caught.value)
 
 
 def test_unpacked_executable_keeps_registry_startup(monkeypatch, tmp_path) -> None:

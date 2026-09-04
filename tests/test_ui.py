@@ -127,6 +127,10 @@ def test_settings_window_saves_automatic_startup_choice(tmp_path: Path) -> None:
     window._save()
 
     assert store.load().settings.start_with_system is True
+    assert window._startup_help.text() == (
+        "Skrivi starts quietly in the system tray. You can also manage "
+        "startup apps in Windows Settings."
+    )
 
 
 def test_source_build_explains_that_automatic_startup_is_unavailable(

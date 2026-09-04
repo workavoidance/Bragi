@@ -45,7 +45,7 @@ any additional rewriting or filler-word removal.
 
 ## Install Skrivi
 
-1. [Download the Skrivi v0.2 alpha installer for Windows 11](https://github.com/workavoidance/Skrivi/releases/download/v0.2.0-alpha.3/Skrivi-v0.2.0-alpha.3-windows-x64-setup.exe).
+1. [Download the Skrivi v0.2 alpha installer for Windows 11](https://github.com/workavoidance/Skrivi/releases/download/v0.2.0-alpha.4/Skrivi-v0.2.0-alpha.4-windows-x64-setup.exe).
 2. Open the downloaded installer. This alpha is not code-signed yet, so Windows
    may show SmartScreen. If you trust this project, choose **More info**, then
    **Run anyway**.
@@ -63,7 +63,7 @@ connection and no speech is sent to a cloud service.
 
 The installer needs no administrator permission and provides standard Start
 menu and uninstall entries. Advanced users can instead download the portable
-ZIP from the [release page](https://github.com/workavoidance/Skrivi/releases/tag/v0.2.0-alpha.3)
+ZIP from the [release page](https://github.com/workavoidance/Skrivi/releases/tag/v0.2.0-alpha.4)
 or follow [the development guide](docs/DEVELOPMENT.md) to run from source.
 
 ## Build the portable executable
